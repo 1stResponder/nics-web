@@ -1,0 +1,459 @@
+/**
+ * Copyright (c) 2008-2015, Massachusetts Institute of Technology (MIT)
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright notice, this
+ * list of conditions and the following disclaimer.
+ *
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ * this list of conditions and the following disclaimer in the documentation
+ * and/or other materials provided with the distribution.
+ *
+ * 3. Neither the name of the copyright holder nor the names of its contributors
+ * may be used to endorse or promote products derived from this software without
+ * specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+.nontb_style {
+    display: inline-block;
+    outline: 0;
+    cursor: pointer;
+    white-space: nowrap;
+    text-decoration: none;
+    vertical-align: top;
+    overflow: hidden;
+    // buttons are position:relative because they may contain an absolutely positioned
+    // pseudo element for imitating box-shadow in IE8 when used in a segmented button
+    // see extjs-button-ui
+    position: relative;
+    .nontb_style > .x-frame {
+        height: 100%;
+        width: 100%;
+    }
+}
+
+.nontb_style-wrap {
+    display: table;
+    height: 100%;
+    width: 100%;
+}
+
+.nontb_style-button {
+    vertical-align: middle;
+    display: table-cell;
+    white-space: nowrap;
+    line-height: 0;
+}
+
+.nontb_style-inner {
+    display: inline-block;
+    vertical-align: middle;
+    overflow: hidden;
+    text-overflow: ellipsis;
+
+    .nontb_style-icon.nontb_style-no-text > & {
+        display: none;
+    }
+}
+
+.nontb_style-icon-el {
+    display: none;
+    vertical-align: middle;
+    background-position: center center;
+    background-repeat: no-repeat;
+
+    .nontb_style-icon > & {
+        display: inline-block;
+    }
+
+    .nontb_style-icon-top > &,
+    .nontb_style-icon-bottom > & {
+        display: block;
+    }
+}
+
+.nontb_style-button-center {
+    text-align: center;
+}
+
+.nontb_style-button-left {
+    text-align: left;
+}
+
+.nontb_style-button-right {
+    text-align: right;
+}
+
+.nontb_style-arrow:after,
+.nontb_style-split:after {
+    background-repeat: no-repeat;
+    content: '';
+    // pseudo elements don't match wildcard selectors, so ".x-border-box *" will not apply
+    // to this element
+    box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    -ms-box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+}
+
+.nontb_style-arrow-right:after,
+.nontb_style-split-right:after {
+    display: table-cell;
+    background-position: right center;
+}
+
+.nontb_style-arrow-bottom:after,
+.nontb_style-split-bottom:after {
+    display: table-row;
+    background-position: center bottom;
+    // when this pseudo el is display:table-row (with no table-cell inside) in needs
+    // content other than emtpy or space in order to render in some browsers (IE8-11
+    // and opera 12m currently), so use non-breaking space
+    content: '\00a0';
+    // line-height:0 is needed in opera 12 to prevent the pseudo el from inheriting
+    // line-height and being taller than specified by $icon-size.
+    line-height: 0;
+}
+
+.nontb_style-mc {
+    // buttons and tabs can have a focus outline on the btnWrap element.  The default
+    // overflow:hidden styling of the frame body hides the outline, so override it to
+    // overflow:visible.
+    overflow: visible;
+}
+
+.nontb_style-default-toolbar-small {
+  -webkit-border-radius: 3px;
+  -moz-border-radius: 3px;
+  -ms-border-radius: 3px;
+  -o-border-radius: 3px;
+  border-radius: 3px;
+  padding: 2px 2px 2px 2px;
+  border-width: 1px;
+  border-style: solid;
+  border-color: #81a4d0;
+  background-image: none;
+  background-color: #dbeeff;
+  background-image: -webkit-gradient(linear, 50% 0%, 50% 100%, color-stop(0%, #dbeeff), color-stop(48%, #d0e7ff), color-stop(52%, #bbd2f0), color-stop(100%, #bed6f5));
+  background-image: -webkit-linear-gradient(top, #dbeeff, #d0e7ff 48%, #bbd2f0 52%, #bed6f5);
+  background-image: -moz-linear-gradient(top, #dbeeff, #d0e7ff 48%, #bbd2f0 52%, #bed6f5);
+  background-image: -o-linear-gradient(top, #dbeeff, #d0e7ff 48%, #bbd2f0 52%, #bed6f5);
+  background-image: -ms-linear-gradient(top, #dbeeff, #d0e7ff 48%, #bbd2f0 52%, #bed6f5);
+  background-image: linear-gradient(top, #dbeeff, #d0e7ff 48%, #bbd2f0 52%, #bed6f5); }
+}
+
+./* line 237, ../../../ext-theme-base/sass/etc/mixins/frame.scss */
+.nontb_style-default-toolbar-small-mc {
+  background-color: #f5f5f5; }
+
+/* line 264, ../../../ext-theme-base/sass/etc/mixins/frame.scss */
+.x-nbr .nontb_style-default-toolbar-small {
+  padding: 0 !important;
+  border-width: 0 !important;
+  -webkit-border-radius: 0px;
+  -moz-border-radius: 0px;
+  -ms-border-radius: 0px;
+  -o-border-radius: 0px;
+  border-radius: 0px;
+  background-color: orange !important;
+  box-shadow: none !important; }
+
+/* line 281, ../../../ext-theme-base/sass/etc/mixins/frame.scss */
+.nontb_style-default-toolbar-small-frameInfo {
+  font-family: th-3-3-3-3-1-1-1-1-2-2-2-2; }
+
+/* line 347, ../../../ext-theme-base/sass/etc/mixins/frame.scss */
+.nontb_style-default-toolbar-small-tl {
+  background-position: 0 -6px; }
+
+/* line 351, ../../../ext-theme-base/sass/etc/mixins/frame.scss */
+.nontb_style-default-toolbar-small-tr {
+  background-position: right -9px; }
+
+/* line 355, ../../../ext-theme-base/sass/etc/mixins/frame.scss */
+.nontb_style-default-toolbar-small-bl {
+  background-position: 0 -12px; }
+
+/* line 359, ../../../ext-theme-base/sass/etc/mixins/frame.scss */
+.nontb_style-default-toolbar-small-br {
+  background-position: right -15px; }
+
+/* line 363, ../../../ext-theme-base/sass/etc/mixins/frame.scss */
+.nontb_style-default-toolbar-small-ml {
+  background-position: 0 top; }
+
+/* line 371, ../../../ext-theme-base/sass/etc/mixins/frame.scss */
+.nontb_style-default-toolbar-small-mr {
+  background-position: right top; }
+
+/* line 379, ../../../ext-theme-base/sass/etc/mixins/frame.scss */
+.nontb_style-default-toolbar-small-tc {
+  background-position: 0 0; }
+
+/* line 383, ../../../ext-theme-base/sass/etc/mixins/frame.scss */
+.nontb_style-default-toolbar-small-bc {
+  background-position: 0 -3px; }
+
+/* line 390, ../../../ext-theme-base/sass/etc/mixins/frame.scss */
+.nontb_style-default-toolbar-small-tr,
+.nontb_style-default-toolbar-small-br,
+.nontb_style-default-toolbar-small-mr {
+  padding-right: 3px; }
+
+/* line 396, ../../../ext-theme-base/sass/etc/mixins/frame.scss */
+.nontb_style-default-toolbar-small-tl,
+.nontb_style-default-toolbar-small-bl,
+.nontb_style-default-toolbar-small-ml {
+  padding-left: 3px; }
+
+/* line 400, ../../../ext-theme-base/sass/etc/mixins/frame.scss */
+.nontb_style-default-toolbar-small-tc {
+  height: 3px; }
+
+/* line 403, ../../../ext-theme-base/sass/etc/mixins/frame.scss */
+.nontb_style-default-toolbar-small-bc {
+  height: 3px; }
+
+/* line 464, ../../../ext-theme-base/sass/etc/mixins/frame.scss */
+.nontb_style-default-toolbar-small-mc {
+  padding: 0px 0px 0px 0px; }
+
+/*<if slicer>*/
+/* line 83, ../../../ext-theme-base/sass/etc/mixins/slicer.scss */
+.x-cmd-slicer.nontb_style-default-toolbar-small:before {
+  display: none;
+  content: "x-slicer:frame:3px 3px 3px 3px" !important; }
+
+/* line 430, ../../../ext-theme-neutral/sass/src/button/Button.scss */
+.nontb_style-button-default-toolbar-small {
+  height: 16px; }
+
+/* line 435, ../../../ext-theme-neutral/sass/src/button/Button.scss */
+.nontb_style-inner-default-toolbar-small {
+  font: normal 11px/16px tahoma, arial, verdana, sans-serif;
+  color: #333333;
+  padding: 0 4px;
+  max-width: 100%; }
+  /* line 446, ../../../ext-theme-neutral/sass/src/button/Button.scss */
+  .nontb_style-icon-right > .nontb_style-inner-default-toolbar-small, .nontb_style-icon-left > .nontb_style-inner-default-toolbar-small {
+    max-width: calc(100% - 16px); }
+
+/* line 453, ../../../ext-theme-neutral/sass/src/button/Button.scss */
+.nontb_style-icon-el-default-toolbar-small {
+  height: 16px; }
+  /* line 457, ../../../ext-theme-neutral/sass/src/button/Button.scss */
+  .nontb_style-icon-left > .nontb_style-icon-el-default-toolbar-small, .nontb_style-icon-right > .nontb_style-icon-el-default-toolbar-small {
+    width: 16px; }
+  /* line 462, ../../../ext-theme-neutral/sass/src/button/Button.scss */
+  .nontb_style-icon-top > .nontb_style-icon-el-default-toolbar-small, .nontb_style-icon-bottom > .nontb_style-icon-el-default-toolbar-small {
+    min-width: 16px; }
+  /* line 466, ../../../ext-theme-neutral/sass/src/button/Button.scss */
+  .nontb_style-icon-el-default-toolbar-small.x-btn-glyph {
+    font-size: 16px;
+    line-height: 16px;
+    color: #333333;
+    opacity: 0.5; }
+    /* line 486, ../../../ext-theme-neutral/sass/src/button/Button.scss */
+    .x-ie8 .nontb_style-icon-el-default-toolbar-small.x-btn-glyph {
+      color: #999999; }
+  /* line 493, ../../../ext-theme-neutral/sass/src/button/Button.scss */
+  .nontb_style-text.nontb_style-icon-left > .nontb_style-icon-el-default-toolbar-small {
+    margin-right: 0px; }
+  /* line 504, ../../../ext-theme-neutral/sass/src/button/Button.scss */
+  .nontb_style-text.nontb_style-icon-right > .nontb_style-icon-el-default-toolbar-small {
+    margin-left: 0px; }
+  /* line 515, ../../../ext-theme-neutral/sass/src/button/Button.scss */
+  .nontb_style-text.nontb_style-icon-top > .nontb_style-icon-el-default-toolbar-small {
+    margin-bottom: 4px; }
+  /* line 519, ../../../ext-theme-neutral/sass/src/button/Button.scss */
+  .nontb_style-text.nontb_style-icon-bottom > .nontb_style-icon-el-default-toolbar-small {
+    margin-top: 4px; }
+
+/* line 525, ../../../ext-theme-neutral/sass/src/button/Button.scss */
+.nontb_style-arrow-right > .nontb_style-icon.nontb_style-no-text.nontb_style-button-default-toolbar-small {
+  padding-right: 4px; }
+/* line 528, ../../../ext-theme-neutral/sass/src/button/Button.scss */
+.nontb_style-arrow-right > .nontb_style-text.nontb_style-icon-right > .nontb_style-icon-el-default-toolbar-small {
+  margin-right: 4px; }
+
+/* line 535, ../../../ext-theme-neutral/sass/src/button/Button.scss */
+.nontb_style-arrow-bottom > .nontb_style-button-default-toolbar-small,
+.nontb_style-split-bottom > .nontb_style-button-default-toolbar-small {
+  padding-bottom: 2px; }
+
+/* line 541, ../../../ext-theme-neutral/sass/src/button/Button.scss */
+.x-btn-wrap-default-toolbar-small.nontb_style-arrow-right:after {
+  width: 8px;
+  padding-right: 8px;
+  background-image: url(../../js/lib/extjs/build/packages/ext-theme-classic/build/resources/images/button/arrow.gif); }
+/* line 563, ../../../ext-theme-neutral/sass/src/button/Button.scss */
+.x-btn-wrap-default-toolbar-small.nontb_style-arrow-bottom:after {
+  height: 8px;
+  background-image: url(../../js/lib/extjs/build/packages/ext-theme-classic/build/resources/images/button/arrow.gif); }
+
+/* line 583, ../../../ext-theme-neutral/sass/src/button/Button.scss */
+.x-btn-wrap-default-toolbar-small.nontb_style-split-right:after {
+  width: 14px;
+  padding-right: 14px;
+  background-image: url(../../js/lib/extjs/build/packages/ext-theme-classic/build/resources/images/button/s-arrow-noline.gif); }
+/* line 597, ../../../ext-theme-neutral/sass/src/button/Button.scss */
+.x-btn-wrap-default-toolbar-small.nontb_style-split-bottom:after {
+  height: 14px;
+  background-image: url(../../js/lib/extjs/build/packages/ext-theme-classic/build/resources/images/button/s-arrow-b-noline.gif); }
+
+/* line 606, ../../../ext-theme-neutral/sass/src/button/Button.scss */
+.x-btn-over > .x-btn-wrap-default-toolbar-small.nontb_style-split-right:after {
+  background-image: url(../../js/lib/extjs/build/packages/ext-theme-classic/build/resources/images/button/s-arrow-o.gif); }
+/* line 616, ../../../ext-theme-neutral/sass/src/button/Button.scss */
+.x-btn-over > .x-btn-wrap-default-toolbar-small.nontb_style-split-bottom:after {
+  background-image: url(../../js/lib/extjs/build/packages/ext-theme-classic/build/resources/images/button/s-arrow-bo.gif); }
+
+/* line 624, ../../../ext-theme-neutral/sass/src/button/Button.scss */
+.nontb_style-split-right > .nontb_style-icon.nontb_style-no-text.nontb_style-button-default-toolbar-small {
+  padding-right: 4px; }
+/* line 627, ../../../ext-theme-neutral/sass/src/button/Button.scss */
+.nontb_style-split-right > .nontb_style-text.nontb_style-icon-right > .nontb_style-icon-el-default-toolbar-small {
+  margin-right: 4px; }
+
+/* line 632, ../../../ext-theme-neutral/sass/src/button/Button.scss */
+.nontb_style-focus.nontb_style-default-toolbar-small {
+  background-image: none;
+  background-color: transparent; 
+}
+
+/* line 644, ../../../ext-theme-neutral/sass/src/button/Button.scss */
+.nontb_style-focus.nontb_style-default-toolbar-small .nontb_style-wrap {
+    outline: 1px dotted #333333; }
+
+/* line 667, ../../../ext-theme-neutral/sass/src/button/Button.scss */
+.x-btn-over.nontb_style-default-toolbar-small {
+  border-color: #81a4d0;
+  background-image: none;
+  background-color: #dbeeff;
+  background-image: -webkit-gradient(linear, 50% 0%, 50% 100%, color-stop(0%, #dbeeff), color-stop(48%, #d0e7ff), color-stop(52%, #bbd2f0), color-stop(100%, #bed6f5));
+  background-image: -webkit-linear-gradient(top, #dbeeff, #d0e7ff 48%, #bbd2f0 52%, #bed6f5);
+  background-image: -moz-linear-gradient(top, #dbeeff, #d0e7ff 48%, #bbd2f0 52%, #bed6f5);
+  background-image: -o-linear-gradient(top, #dbeeff, #d0e7ff 48%, #bbd2f0 52%, #bed6f5);
+  background-image: -ms-linear-gradient(top, #dbeeff, #d0e7ff 48%, #bbd2f0 52%, #bed6f5);
+  background-image: linear-gradient(top, #dbeeff, #d0e7ff 48%, #bbd2f0 52%, #bed6f5); }
+
+/* line 723, ../../../ext-theme-neutral/sass/src/button/Button.scss */
+.nontb_style.x-btn-menu-active.nontb_style-default-toolbar-small,
+.nontb_style.x-btn-pressed.nontb_style-default-toolbar-small {
+  border-color: #7a9ac4;
+  background-image: none;
+  background-color: red;
+  background-image: -webkit-gradient(linear, 50% 0%, 50% 100%, color-stop(0%, #bccfe5), color-stop(48%, #c5d6e7), color-stop(52%, #95c4f4), color-stop(100%, #9fc9f5));
+  background-image: -webkit-linear-gradient(top, #bccfe5, #c5d6e7 48%, #95c4f4 52%, #9fc9f5);
+  background-image: -moz-linear-gradient(top, #bccfe5, #c5d6e7 48%, #95c4f4 52%, #9fc9f5);
+  background-image: -o-linear-gradient(top, #bccfe5, #c5d6e7 48%, #95c4f4 52%, #9fc9f5);
+  background-image: -ms-linear-gradient(top, #bccfe5, #c5d6e7 48%, #95c4f4 52%, #9fc9f5);
+  background-image: linear-gradient(top, #bccfe5, #c5d6e7 48%, #95c4f4 52%, #9fc9f5); }
+
+/* line 779, ../../../ext-theme-neutral/sass/src/button/Button.scss */
+.nontb_style.nontb_style-disabled.nontb_style-default-toolbar-small {
+  border-color: #e1e1e1;
+  background-image: none;
+  background-color: purple; }
+  /* line 790, ../../../ext-theme-neutral/sass/src/button/Button.scss */
+  .nontb_style.nontb_style-disabled.nontb_style-default-toolbar-small .nontb_style-inner {
+    color: #8c8c8c; }
+
+/* line 957, ../../../ext-theme-neutral/sass/src/button/Button.scss */
+.x-nbr .nontb_style-default-toolbar-small {
+  background-image: none; }
+
+/* line 963, ../../../ext-theme-neutral/sass/src/button/Button.scss */
+.x-btn-disabled.nontb_style-default-toolbar-small {
+  filter: progid:DXImageTransform.Microsoft.Alpha(Opacity=50);
+  opacity: 0.5; }
+
+/* line 982, ../../../ext-theme-neutral/sass/src/button/Button.scss */
+.x-nbr .x-segmented-button-item-horizontal.nontb_style-default-toolbar-small.x-segmented-button-first {
+  border-right-width: 1px !important; }
+  /* line 984, ../../../ext-theme-neutral/sass/src/button/Button.scss */
+  .x-nbr .x-segmented-button-item-horizontal.nontb_style-default-toolbar-small.x-segmented-button-first .nontb_style-default-toolbar-small-mc {
+    padding-right: 2px !important; }
+/* line 988, ../../../ext-theme-neutral/sass/src/button/Button.scss */
+.x-nbr .x-segmented-button-item-horizontal.nontb_style-default-toolbar-small.x-segmented-button-middle {
+  border-right-width: 1px !important; }
+  /* line 990, ../../../ext-theme-neutral/sass/src/button/Button.scss */
+  .x-nbr .x-segmented-button-item-horizontal.nontb_style-default-toolbar-small.x-segmented-button-middle .nontb_style-default-toolbar-small-mc {
+    padding-right: 2px !important;
+    padding-left: 2px !important; }
+/* line 996, ../../../ext-theme-neutral/sass/src/button/Button.scss */
+.x-nbr .x-segmented-button-item-horizontal.nontb_style-default-toolbar-small.x-segmented-button-last .nontb_style-default-toolbar-small-mc {
+  padding-left: 2px !important; }
+/* line 1003, ../../../ext-theme-neutral/sass/src/button/Button.scss */
+.x-nbr .x-segmented-button-item-vertical.nontb_style-default-toolbar-small.x-segmented-button-first {
+  border-bottom-width: 1px !important; }
+  /* line 1005, ../../../ext-theme-neutral/sass/src/button/Button.scss */
+  .x-nbr .x-segmented-button-item-vertical.nontb_style-default-toolbar-small.x-segmented-button-first .nontb_style-default-toolbar-small-mc {
+    padding-bottom: 2px !important; }
+/* line 1009, ../../../ext-theme-neutral/sass/src/button/Button.scss */
+.x-nbr .x-segmented-button-item-vertical.nontb_style-default-toolbar-small.x-segmented-button-middle {
+  border-bottom-width: 1px !important; }
+  /* line 1011, ../../../ext-theme-neutral/sass/src/button/Button.scss */
+  .x-nbr .x-segmented-button-item-vertical.nontb_style-default-toolbar-small.x-segmented-button-middle .nontb_style-default-toolbar-small-mc {
+    padding-top: 2px !important;
+    padding-bottom: 2px !important; }
+/* line 1017, ../../../ext-theme-neutral/sass/src/button/Button.scss */
+.x-nbr .x-segmented-button-item-vertical.nontb_style-default-toolbar-small.x-segmented-button-last .nontb_style-default-toolbar-small-mc {
+  padding-top: 2px !important; }
+/* line 1023, ../../../ext-theme-neutral/sass/src/button/Button.scss */
+.x-nbr .x-segmented-button-item.nontb_style-default-toolbar-small:after {
+  content: ' ';
+  border-style: solid;
+  border-width: 0;
+  position: absolute; }
+/* line 1041, ../../../ext-theme-neutral/sass/src/button/Button.scss */
+.x-nbr .x-segmented-button-item-horizontal.nontb_style-default-toolbar-small:after {
+  top: 1px;
+  right: 0;
+  bottom: 1px;
+  left: 0; }
+/* line 1047, ../../../ext-theme-neutral/sass/src/button/Button.scss */
+.x-nbr .x-segmented-button-item-horizontal.nontb_style-default-toolbar-small.x-segmented-button-first:after {
+  left: 1px; }
+/* line 1050, ../../../ext-theme-neutral/sass/src/button/Button.scss */
+.x-nbr .x-segmented-button-item-horizontal.nontb_style-default-toolbar-small.x-segmented-button-last:after {
+  right: 1px; }
+/* line 1056, ../../../ext-theme-neutral/sass/src/button/Button.scss */
+.x-nbr .x-segmented-button-item-vertical.nontb_style-default-toolbar-small:after {
+  top: 0;
+  right: 1px;
+  bottom: 0;
+  left: 1px; }
+/* line 1062, ../../../ext-theme-neutral/sass/src/button/Button.scss */
+.x-nbr .x-segmented-button-item-vertical.nontb_style-default-toolbar-small.x-segmented-button-first:after {
+  top: 1px; }
+/* line 1065, ../../../ext-theme-neutral/sass/src/button/Button.scss */
+.x-nbr .x-segmented-button-item-vertical.nontb_style-default-toolbar-small.x-segmented-button-last:after {
+  bottom: 1px; }
+
+/* make the menu scroller larger */
+.x-box-scroller.x-box-scroller-menu {
+  height: 7.5px;
+  width: 52.5px;
+  background-size: 100%;
+}
+.x-box-scroller-menu.x-box-scroller-top {
+  background-position: 0 -7px;
+}
+.x-box-scroller-menu.x-box-scroller-bottom.x-box-scroller-hover {
+  background-position: 0 -7px;
+}
+

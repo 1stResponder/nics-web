@@ -1,0 +1,25 @@
+# maven
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+
+# eclipse
+.settings/
+.project
+.classpath
+
+# vim
+*~
+*.swp
+*.swo
+
+# intelliJ
+*.iml
+.idea/
+
+#node
+node/
+node_modules/

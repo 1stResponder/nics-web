@@ -1,0 +1,255 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+
+    Copyright (c) 2008-2015, Massachusetts Institute of Technology (MIT)
+    All rights reserved.
+
+    Redistribution and use in source and binary forms, with or without
+    modification, are permitted provided that the following conditions are met:
+
+    1. Redistributions of source code must retain the above copyright notice, this
+    list of conditions and the following disclaimer.
+
+    2. Redistributions in binary form must reproduce the above copyright notice,
+    this list of conditions and the following disclaimer in the documentation
+    and/or other materials provided with the distribution.
+
+    3. Neither the name of the copyright holder nor the names of its contributors
+    may be used to endorse or promote products derived from this software without
+    specific prior written permission.
+
+    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+    AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+    IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+    DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+    FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+    DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+    SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+    CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+    OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+    OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>edu.mit.ll.nics</groupId>
+  <artifactId>nics-web</artifactId>
+  <packaging>pom</packaging>
+  <name>NICS Web Pom</name>
+  <version>6.1</version>
+
+  <modules>
+    <module>modules</module>
+    <module>modules/collabroom</module>
+    <module>modules/incident</module>
+    <module>modules/login</module>
+    <module>modules/report</module>
+    <module>modules/report-damage</module>
+    <module>modules/report-general</module>
+    <module>modules/report-explosives</module>
+    <module>modules/report-mitam</module>
+    <module>modules/datalayer</module>
+    <module>modules/whiteboard</module>
+    <module>modules/feature</module>
+    <module>modules/activeusers</module>
+    <module>modules/administration</module>
+    <module>modules/userprofile</module>
+    <module>modules/photos</module>
+    <module>modules/print</module>
+    <module>modules/accountinfo</module>
+    <module>webapp</module>
+  </modules>
+
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+
+    <servlet.api.version>3.0.1</servlet.api.version>
+    <jsp.api.version>2.2.1</jsp.api.version>
+    <jstl.api.version>1.2</jstl.api.version>
+    <websocket.api.version>1.1</websocket.api.version>
+    <json.version>20140107</json.version>
+
+    <junit.version>3.8.1</junit.version>
+
+    <iweb.version>${project.version}</iweb.version>
+    <nics.common.version>${project.version}</nics.common.version>
+    <sso.tools.version>${project.version}</sso.tools.version>
+    <openam.tools.version>${project.version}</openam.tools.version>
+
+    <maven.compiler.source>1.7</maven.compiler.source>
+    <maven.compiler.target>1.7</maven.compiler.target>
+
+	<license.plugin.version>1.9.0</license.plugin.version>
+  </properties>
+
+  <dependencyManagement>
+    <dependencies>
+
+      <dependency>
+        <groupId>edu.mit.ll.iweb</groupId>
+        <artifactId>core-module</artifactId>
+        <version>${iweb.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>edu.mit.ll.nics.tools</groupId>
+        <artifactId>sso-tools</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>edu.mit.ll.nics.tools</groupId>
+        <artifactId>openam-tools</artifactId>
+        <version>${openam.tools.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>javax.servlet</groupId>
+        <artifactId>javax.servlet-api</artifactId>
+        <version>${servlet.api.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>javax.servlet.jsp</groupId>
+        <artifactId>javax.servlet.jsp-api</artifactId>
+        <version>${jsp.api.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>javax.servlet</groupId>
+        <artifactId>jstl</artifactId>
+        <version>${jstl.api.version}</version>
+      </dependency>
+      
+      <dependency>
+        <groupId>javax.websocket</groupId>
+        <artifactId>javax.websocket-api</artifactId>
+        <version>${websocket.api.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.json</groupId>
+        <artifactId>json</artifactId>
+        <version>${json.version}</version>
+      </dependency>
+      
+      <!-- test dependencies -->
+      <dependency>
+        <groupId>junit</groupId>
+        <artifactId>junit</artifactId>
+        <version>${junit.version}</version>
+        <scope>test</scope>
+      </dependency>
+
+      <dependency>
+      	<groupId>edu.mit.ll.nics.common</groupId>
+      	<artifactId>web-service-request-lib</artifactId>
+      	<version>${project.version}</version>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+
+  <build>
+    <resources>
+      <resource>
+        <directory>src/main/js</directory>
+        <targetPath>META-INF/resources/js</targetPath>
+      </resource>
+      <resource>
+        <directory>src/main/resources</directory>
+      </resource>
+    </resources>
+
+    <pluginManagement>
+      <plugins>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-war-plugin</artifactId>
+          <version>2.6</version>
+        </plugin>
+        <plugin>
+          <groupId>com.github.eirslett</groupId>
+          <artifactId>frontend-maven-plugin</artifactId>
+          <version>0.0.23</version>
+        </plugin>
+		<plugin>
+                    <!-- This plugin formats source files by checking and adding a copyright 
+                        header if it's missing. -->
+                    <groupId>com.mycila.maven-license-plugin</groupId>
+                    <artifactId>maven-license-plugin</artifactId>
+                    <version>${license.plugin.version}</version>
+                    <configuration>
+                        <aggregate>true</aggregate>
+                        <header>${basedir}/copyright.txt</header>
+                        <strictCheck>true</strictCheck>
+                        <properties>
+                            <year>2015</year>
+                        </properties>
+                        <useDefaultExcludes>false</useDefaultExcludes>
+
+                        <!-- Additional file-to-comment-style mappings -->
+                        <mapping>
+                            <xslt>XML_STYLE</xslt>
+                        </mapping>
+
+                        <excludes>
+                            <!-- Some default excludes -->
+                            <exclude>**/*~</exclude>
+                            <exclude>**/*.jar</exclude>
+                            <exclude>**/*.zip</exclude>
+                            <exclude>**/*.tar*</exclude>
+                            <exclude>**/*.pdf</exclude>
+                            <exclude>**/*.jpg</exclude>
+                            <exclude>**/*.png</exclude>
+                            <exclude>**/*.gif</exclude>
+                            <exclude>**/*.ico</exclude>
+                            <exclude>**/*.bmp</exclude>
+                            <exclude>**/*.tif*</exclude>
+                            <exclude>**/*.cr2</exclude>
+                            <exclude>**/MANIFEST.MF</exclude>
+                            <exclude>**/.classpath</exclude>
+                            <exclude>**/.project</exclude>
+                            <exclude>**/.settings/**</exclude>
+                            <exclude>**/target/**</exclude>
+                            <exclude>**/test-output/**</exclude>
+						    <exclude>**/META-INF/services/**</exclude>
+                            <exclude>**/.git</exclude>
+                            <exclude>**/.gitignore</exclude>
+                            <exclude>**/.git/**</exclude>
+                            <exclude>**/*.log</exclude>
+                            <exclude>**/*.txt</exclude>		
+
+                            <!-- Project-specific excludes -->
+							<exclude>**/webapp/node/**</exclude>
+							<exclude>**/webapp/node_modules/**</exclude>
+                        </excludes>
+                    </configuration>
+                    <inherited>false</inherited>
+                    <executions>
+                        <execution>
+                            <id>update-copyright</id>
+                            <phase>generate-sources</phase>
+                            <goals>
+                                <goal>format</goal>
+                            </goals>
+                        </execution>
+                        <execution>
+                            <id>verify-copyright</id>
+                            <phase>verify</phase>
+                            <goals>
+                                <goal>check</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                </plugin>
+      </plugins>
+    </pluginManagement>
+	<plugins>
+		<plugin>
+	        <groupId>com.mycila.maven-license-plugin</groupId>
+            <artifactId>maven-license-plugin</artifactId>
+        </plugin>
+	</plugins>
+  </build>
+</project>

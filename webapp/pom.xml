@@ -1,0 +1,283 @@
+<!--
+
+    Copyright (c) 2008-2015, Massachusetts Institute of Technology (MIT)
+    All rights reserved.
+
+    Redistribution and use in source and binary forms, with or without
+    modification, are permitted provided that the following conditions are met:
+
+    1. Redistributions of source code must retain the above copyright notice, this
+    list of conditions and the following disclaimer.
+
+    2. Redistributions in binary form must reproduce the above copyright notice,
+    this list of conditions and the following disclaimer in the documentation
+    and/or other materials provided with the distribution.
+
+    3. Neither the name of the copyright holder nor the names of its contributors
+    may be used to endorse or promote products derived from this software without
+    specific prior written permission.
+
+    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+    AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+    IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+    DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+    FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+    DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+    SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+    CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+    OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+    OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<parent>
+		<groupId>edu.mit.ll.nics</groupId>
+		<artifactId>nics-web</artifactId>
+		<version>6.1</version>
+		<relativePath>..</relativePath>
+	</parent>
+
+	<artifactId>nics-webapp</artifactId>
+	<packaging>war</packaging>
+	<name>NICS Webapp</name>
+
+	<dependencies>
+
+		<!-- iWeb Module Dependencies -->
+		<dependency>
+			<groupId>edu.mit.ll.iweb</groupId>
+			<artifactId>core-module</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>edu.mit.ll.iweb</groupId>
+			<artifactId>map-module</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>edu.mit.ll.iweb</groupId>
+			<artifactId>draw-menu-module</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>edu.mit.ll.iweb</groupId>
+			<artifactId>core-view-module</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+
+		<!-- NICS Module Dependencies -->
+		<dependency>
+			<groupId>${project.groupId}</groupId>
+			<artifactId>login-module</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>${project.groupId}</groupId>
+			<artifactId>incident-module</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>${project.groupId}</groupId>
+			<artifactId>collabroom-module</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+		<dependency>
+	        <groupId>${project.groupId}</groupId>
+    	    <artifactId>report-module</artifactId>
+        	<version>${project.version}</version>
+	    </dependency>
+		<dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>general-report-module</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+    	<dependency>
+        	<groupId>${project.groupId}</groupId>
+	        <artifactId>damage-report-module</artifactId>
+    	    <version>${project.version}</version>
+	    </dependency>
+		<dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>explosives-report-module</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+		<dependency>
+		    <groupId>${project.groupId}</groupId>
+		    <artifactId>mitam-report-module</artifactId>
+		    <version>${project.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>${project.groupId}</groupId>
+			<artifactId>user-profile-module</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>${project.groupId}</groupId>
+			<artifactId>whiteboard-module</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>${project.groupId}</groupId>
+			<artifactId>datalayer-module</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>${project.groupId}</groupId>
+			<artifactId>activeusers-module</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>${project.groupId}</groupId>
+			<artifactId>feature-persistence-module</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>${project.groupId}</groupId>
+			<artifactId>administration-module</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>${project.groupId}</groupId>
+			<artifactId>feature-photos-module</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>${project.groupId}</groupId>
+			<artifactId>print-module</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>javax.servlet</groupId>
+			<artifactId>javax.servlet-api</artifactId>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>${project.groupId}</groupId>
+			<artifactId>account-info-module</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+
+		<!-- test dependencies -->
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+		</dependency>
+	</dependencies>
+
+	<build>
+		<finalName>nics</finalName>
+
+		<plugins>
+
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-war-plugin</artifactId>
+				<configuration>
+					<failOnMissingWebXml>false</failOnMissingWebXml>
+					<archive>
+						<manifest>
+							<addDefaultImplementationEntries>true</addDefaultImplementationEntries>
+						</manifest>
+					</archive>
+				</configuration>
+			</plugin>
+
+		</plugins>
+	</build>
+
+	<profiles>
+		<profile>
+			<activation>
+				<property>
+					<name>production</name>
+				</property>
+			</activation>
+			<id>production</id>
+			<build>
+				<plugins>
+
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-war-plugin</artifactId>
+						<configuration>
+							<failOnMissingWebXml>false</failOnMissingWebXml>
+							<webResources>
+								<resource>
+									<directory>target/compiled-js</directory>
+									<targetPath>js</targetPath>
+								</resource>
+							</webResources>
+						</configuration>
+					</plugin>
+
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-dependency-plugin</artifactId>
+						<executions>
+							<execution>
+								<id>unpack-dependencies</id>
+								<phase>prepare-package</phase>
+								<goals>
+									<goal>unpack-dependencies</goal>
+								</goals>
+								<configuration>
+									<outputDirectory>${project.build.directory}/dependency</outputDirectory>
+									<includes>META-INF/resources/js/,META-INF/resources/styles/</includes>
+								</configuration>
+							</execution>
+						</executions>
+					</plugin>
+
+					<plugin>
+						<groupId>com.github.eirslett</groupId>
+						<artifactId>frontend-maven-plugin</artifactId>
+						<executions>
+
+							<execution>
+								<id>install node and npm</id>
+								<goals>
+									<goal>install-node-and-npm</goal>
+								</goals>
+								<phase>generate-resources</phase>
+								<configuration>
+									<nodeVersion>v0.12.0</nodeVersion>
+									<npmVersion>2.5.0</npmVersion>
+								</configuration>
+							</execution>
+
+							<execution>
+								<id>npm install</id>
+								<goals>
+									<goal>npm</goal>
+								</goals>
+								<phase>generate-resources</phase>
+								<configuration>
+									<arguments>install</arguments>
+								</configuration>
+							</execution>
+
+							<execution>
+								<id>grunt build</id>
+								<goals>
+									<goal>grunt</goal>
+								</goals>
+								<phase>prepare-package</phase>
+
+								<configuration>
+									<arguments></arguments>
+								</configuration>
+							</execution>
+
+						</executions>
+					</plugin>
+				</plugins>
+
+			</build>
+
+		</profile>
+	</profiles>
+	
+</project>

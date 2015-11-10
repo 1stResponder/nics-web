@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+
+    Copyright (c) 2008-2015, Massachusetts Institute of Technology (MIT)
+    All rights reserved.
+
+    Redistribution and use in source and binary forms, with or without
+    modification, are permitted provided that the following conditions are met:
+
+    1. Redistributions of source code must retain the above copyright notice, this
+    list of conditions and the following disclaimer.
+
+    2. Redistributions in binary form must reproduce the above copyright notice,
+    this list of conditions and the following disclaimer in the documentation
+    and/or other materials provided with the distribution.
+
+    3. Neither the name of the copyright holder nor the names of its contributors
+    may be used to endorse or promote products derived from this software without
+    specific prior written permission.
+
+    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+    AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+    IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+    DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+    FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+    DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+    SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+    CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+    OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+    OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+-->
+<!DOCTYPE log4j:configuration SYSTEM "log4j.dtd" >
+<log4j:configuration>
+
+	<appender name="STDOUT" class="org.apache.log4j.ConsoleAppender">
+		<param name="Target" value="System.out" />
+		<layout class="org.apache.log4j.PatternLayout">
+			<!-- 
+			<param name="ConversionPattern"
+				value="[%d{ISO8601}] %-5p [%c] %m %n" />
+			-->
+			<param name="ConversionPattern" value="%-5p [%c] %m %n" />
+		</layout>
+	</appender>
+	
+	<appender name="STDERR" class="org.apache.log4j.ConsoleAppender">
+		<param name="Threshold" value="ERROR"/>
+		<param name="Target" value="System.err" />
+		<layout class="org.apache.log4j.PatternLayout">
+			<param name="ConversionPattern"
+				value="[%d{ISO8601}] %-5p [%c] %m %n" />
+		</layout>
+		<filter class="org.apache.log4j.varia.LevelRangeFilter">
+			<param name="LevelMin" value="ERROR" />
+			<param name="LevelMax" value="FATAL" />
+		</filter>
+	</appender>
+	
+	<appender name="SADISPLAY_ROLLING_FILE"
+		class="org.apache.log4j.RollingFileAppender">
+		<param name="Threshold" value="INFO"/>
+		<param name="File" value="${catalina.base}/logs/nics.log" />
+		<param name="Append" value="true" />
+		<param name="MaxFileSize" value="500KB" />
+		<param name="MaxBackupIndex" value="5" />
+		<layout class="org.apache.log4j.PatternLayout">
+			<param name="ConversionPattern"
+				value="[%d{ISO8601}] %-5p %m%n" />
+		</layout>
+	</appender>
+
+	<!--                          -->
+	<!-- Declare the SMTPAppender -->
+	<!--                          -->
+	<!-- 
+	<appender name="EMAIL" class="org.apache.log4j.net.SMTPAppender">
+		<param name="BufferSize" value="512" />
+		<param name="SMTPHost" value="smtp.mail.yahoo.com" />
+		<param name="From" value="whoever@wherever.com" />
+		<param name="To" value="whoever@wherever.com" />
+		<param name="Subject"
+			value="[SMTPAppender] Application message" />
+		<layout class="org.apache.log4j.PatternLayout">
+			<param name="ConversionPattern"
+				value="[%d{ISO8601}]%n%n%-5p%n%n%c%n%n%m%n%n" />
+		</layout>
+		<filter class="org.apache.log4j.varia.LevelRangeFilter">
+			<param name="LevelMin" value="FATAL" />
+			<param name="LevelMax" value="FATAL" />
+		</filter>
+	</appender>
+	 -->
+
+	<logger name="ALL" additivity="false">
+		<level value="INFO" />
+		<appender-ref ref="SADISPLAY_ROLLING_FILE" />
+		<appender-ref ref="STDOUT" />
+	</logger>
+		
+	<!-- ** -->
+	
+	<root>
+		<level value="INFO" />
+		<appender-ref ref="STDERR" />
+		<appender-ref ref="SADISPLAY_ROLLING_FILE" />
+	</root>
+
+
+</log4j:configuration>
