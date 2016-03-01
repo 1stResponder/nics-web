@@ -28,79 +28,87 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 require([
-    "iweb/CoreModule", "iweb/modules/MapModule", 
-    "iweb/modules/core-view/View", "iweb/modules/DrawMenuModule",
+    "iweb/CoreModule", "iweb/modules/MapModule",
+    "iweb/modules/core-view/View", "iweb/modules/DrawMenuModule", "iweb/modules/GeocodeModule",
     "nics/modules/CollabRoomModule", "nics/modules/IncidentModule",
     "nics/modules/LoginModule", "nics/modules/WhiteboardModule", "nics/modules/ReportModule",
-	"nics/modules/DatalayerModule", "nics/modules/ActiveUsersModule", 
+	"nics/modules/DatalayerModule", "nics/modules/ActiveUsersModule",
 	"nics/modules/FeaturePersistence", "nics/modules/AdministrationModule",
-	"nics/modules/UserProfileModule", "nics/modules/PhotosModule", "nics/modules/PrintModule" , 
-	"nics/modules/AccountInfoModule"
+	"nics/modules/UserProfileModule", "nics/modules/PhotosModule", "nics/modules/PrintModule" ,
+	"nics/modules/AccountInfoModule", "nics/modules/MultiIncidentViewModule",
+    "nics/modules/FeedbackReportModule"
     ],
 
-    function(Core, MapModule, View, DrawMenuModule,
+    function(Core, MapModule, View, DrawMenuModule, GeocodeModule,
         CollabRoomModule, IncidentModule,
         LoginModule, WhiteboardModule, ReportModule, DatalayerModule,
         ActiveUsersModule, FeaturePersistence, AdminModule, UserProfile,
-        PhotosModule, PrintModule, AccountModule) {
-	
+        PhotosModule, PrintModule, AccountModule, MultiIncidentModule,
+        FeedbackReportModule) {
+
         "use strict";
 
         Ext.onReady(function(){
-	        
+
 	        Ext.QuickTips.init();
-	
+
 	        //Instantiate the View
 	        var view = new View();
 	        view.init();
 	        Core.init(view);
 	        Core.View.showDisconnect(true);
-	
+
 	        //Add Title
 	        Core.View.addToTitleBar([{xtype: 'tbspacer', width: 5},{xtype: "label", html: "<b>Next-Generation Incident Command System</b>"}]);
-	
+
 	        //Show the Toolbar - Required for drawing menu
 	        Core.View.showToolbar(true);
-	
+
 	        Core.EventManager.addListener("iweb.config.loaded", loadModules);
-	        
+
 	        //Load each module
 	        function loadModules() {
-	
+	        	
+	        	Core.Mediator.getInstance().setCookies(
+	        			Core.Config.getProperty("endpoint.rest"), ["openam", "iplanet"]);
+
 	            var MapController = MapModule.load();
-	            
+
 	            //Load Modules
 				WhiteboardModule.load();
 	            IncidentModule.load();
 				ReportModule.load();
 	            CollabRoomModule.load(CollabRoomModule.getDefaultRoomPresets());
 	            DrawMenuModule.load();
+	            GeocodeModule.load();
 	            AccountModule.load();
 	            DatalayerModule.load();
-	            
+
 	            //Add Tools Menu after Datalayer Module
 	            var button = Core.UIBuilder.buildDropdownMenu("Tools");
 	            //Add View to Core
 				Core.View.addButtonPanel(button);
-				
+
 				//Set the Tools Menu on the Core for others to add to
 				Core.Ext.ToolsMenu = button.menu;
-				
+
 				PrintModule.load();
-				
+
 				//Add Export to Tools Menu
 				DatalayerModule.addExport();
-	            
+
 	            FeaturePersistence.load();
 	            AdminModule.load();
-	            
+
 	            LoginModule.load();
 	            ActiveUsersModule.load();
 	            PhotosModule.load();
-	           
-	            
+	            MultiIncidentModule.load();
+
+                // Add email report to Tools Menu
+                FeedbackReportModule.load();
 	        }
-	        
+
 	        //Mediator
 	        /** default topics
 	         ** callback

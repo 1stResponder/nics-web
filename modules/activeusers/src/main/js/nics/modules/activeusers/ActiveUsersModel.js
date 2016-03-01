@@ -50,6 +50,9 @@ define(['ext'], function(Ext) {
 				name : 'lastname',
 				mapping : 'lastname'
 			}, {
+				name : 'currentusersessionid',
+				mapping : 'currentusersessions[0].currentusersessionid'
+			}, {
 				name : 'loggedin',
 				mapping : 'currentusersessions[0].loggedin',
 				type : 'date',

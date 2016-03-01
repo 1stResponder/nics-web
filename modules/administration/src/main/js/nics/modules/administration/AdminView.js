@@ -27,8 +27,8 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-define(['./UserView', './AdminController'],
-		function(UserView) {
+define(['iweb/CoreModule','./OrganizationView', './AdminController'],
+		function(Core, OrganizationView) {
 
 	return Ext.define('modules.administration.AdminView', {
 	 
@@ -39,23 +39,45 @@ define(['./UserView', './AdminController'],
 	 	controller: 'admincontroller',
 	 	
 	 	closeAction: 'hide',
-	 
+	 	
+	 	autoScroll: true,
+	 	
+	 	layout: 'fit',
+	 	
+	 	referenceHolder: true,
+	 	
+	 	listeners: {
+	 		close: 'onClose'
+	 	},
+	 	
 	 	initComponent: function(){
+	 		var main = Core.View.getMainContentComponent();
+			var height = 300;
+			var width = 300;
+			
+			if(main){
+				height = main.getHeight() * .75;
+				width = main.getWidth() *.5;
+			}
+			
+			this.setHeight(height);
+			this.setWidth(width);
+	 		
 			this.callParent();
 			
-			this.lookupReference('adminTabPanel').add(new UserView());
+			this.lookupReference('adminTabPanel').add(new OrganizationView({ gridHeight: height *.33 }));
+	 	},
+	 	
+	 	load: function(){
+	 		this.lookupReference('orgView').getController().load();
 	 	},
 	 	
 	 	items: [
 	 	        {
 	 	        	xtype: 'tabpanel',
-	 	        	reference: 'adminTabPanel'
+	 	        	reference: 'adminTabPanel',
+	 	        	layout: 'fit'
 	 	        }
-	 	],
-	 	
-	 	config: {
-	 		width: 500,
-	 		height: 550
-	 	}
+	 	]
 	 });
 });

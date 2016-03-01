@@ -37,7 +37,7 @@
   <artifactId>nics-web</artifactId>
   <packaging>pom</packaging>
   <name>NICS Web Pom</name>
-  <version>6.1</version>
+  <version>6.1.1</version>
 
   <modules>
     <module>modules</module>
@@ -49,6 +49,7 @@
     <module>modules/report-general</module>
     <module>modules/report-explosives</module>
     <module>modules/report-mitam</module>
+    <module>modules/report-roc</module>
     <module>modules/datalayer</module>
     <module>modules/whiteboard</module>
     <module>modules/feature</module>
@@ -57,7 +58,9 @@
     <module>modules/userprofile</module>
     <module>modules/photos</module>
     <module>modules/print</module>
+    <module>modules/feedback-report</module>
     <module>modules/accountinfo</module>
+    <module>modules/multiincidentview</module>
     <module>webapp</module>
   </modules>
 
@@ -92,7 +95,7 @@
         <version>${iweb.version}</version>
       </dependency>
 
-      <dependency>
+        <dependency>
         <groupId>edu.mit.ll.nics.tools</groupId>
         <artifactId>sso-tools</artifactId>
         <version>${project.version}</version>
@@ -193,37 +196,12 @@
                             <xslt>XML_STYLE</xslt>
                         </mapping>
 
-                        <excludes>
-                            <!-- Some default excludes -->
-                            <exclude>**/*~</exclude>
-                            <exclude>**/*.jar</exclude>
-                            <exclude>**/*.zip</exclude>
-                            <exclude>**/*.tar*</exclude>
-                            <exclude>**/*.pdf</exclude>
-                            <exclude>**/*.jpg</exclude>
-                            <exclude>**/*.png</exclude>
-                            <exclude>**/*.gif</exclude>
-                            <exclude>**/*.ico</exclude>
-                            <exclude>**/*.bmp</exclude>
-                            <exclude>**/*.tif*</exclude>
-                            <exclude>**/*.cr2</exclude>
-                            <exclude>**/MANIFEST.MF</exclude>
-                            <exclude>**/.classpath</exclude>
-                            <exclude>**/.project</exclude>
-                            <exclude>**/.settings/**</exclude>
-                            <exclude>**/target/**</exclude>
-                            <exclude>**/test-output/**</exclude>
-						    <exclude>**/META-INF/services/**</exclude>
-                            <exclude>**/.git</exclude>
-                            <exclude>**/.gitignore</exclude>
-                            <exclude>**/.git/**</exclude>
-                            <exclude>**/*.log</exclude>
-                            <exclude>**/*.txt</exclude>		
-
-                            <!-- Project-specific excludes -->
-							<exclude>**/webapp/node/**</exclude>
-							<exclude>**/webapp/node_modules/**</exclude>
-                        </excludes>
+                        <includes>
+                            <includes>**/src/**/*.java</includes>
+                            <includes>**/src/**/*.js</includes>
+                            <includes>**/src/**/*.css</includes>
+                            <includes>**/src/**/*.xml</includes>
+                        </includes>
                     </configuration>
                     <inherited>false</inherited>
                     <executions>

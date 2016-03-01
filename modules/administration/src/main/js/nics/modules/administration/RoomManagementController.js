@@ -37,7 +37,7 @@ define(['ext', 'iweb/CoreModule','nics/modules/UserProfileModule'],
 		
 		adminRooms: [],
 		
-		collabRoomId: null,
+		collabRoomId: "myMap",
 		
 		incidentId: null,
 		
@@ -47,8 +47,93 @@ define(['ext', 'iweb/CoreModule','nics/modules/UserProfileModule'],
 			this.mediator = Core.Mediator.getInstance();
 			Core.EventManager.addListener('nics.administration.collabroom.permission', this.setAdminRooms.bind(this));
 			Core.EventManager.addListener('nics.administration.collabroom.admin', this.addAdminRoom.bind(this));
+			Core.EventManager.addListener('nics.administration.collabroom.admin.remove', this.removeAdminRoom.bind(this));
 			Core.EventManager.addListener('nics.collabroom.activate', this.onActivateRoom.bind(this));
 			Core.EventManager.addListener("nics.incident.join", this.onJoinIncident.bind(this));
+		},
+		
+		load: function(){
+			var secureController = this.view.lookupReference('managePermissions').controller;
+			
+			if(this.view.isManager){//User is an admin for this secured room
+				secureController.loadUnsecureUsers(this.incidentId, this.collabRoomId);
+				secureController.loadSecureUsers(this.incidentId, this.collabRoomId);
+				this.view.show();
+			}else if(UserProfile.getSystemRoleId() == 0 //user is a system admin or super user
+					|| UserProfile.getSystemRoleId() == 4){
+				if(this.collabRoomId != "myMap"){
+					this.resetGrids();
+					this.view.show(); //allow user to secure the room
+				}else{
+					Ext.MessageBox.alert("Permissions", "Please join a collaboration room.");
+				}
+			}else{
+				Ext.MessageBox.alert("Permissions", "You do not have permissions to modify this room.");
+			}
+		},
+		
+		resetGrids: function(){
+			var secureController = this.view.lookupReference('managePermissions').controller;
+			secureController.clearAdminUsers();
+			secureController.clearReadWriteUsers();
+			secureController.loadUnsecureUsers(this.incidentId);
+		},
+		
+		updateCollabRoom: function(){
+			var checkbox = this.view.lookupReference('secureRoomCB');
+			if(checkbox.checked){
+				this.unsecureRoom(checkbox);
+				return;
+				
+			}
+			
+			var secureRoomController = this.view.lookupReference('managePermissions').controller;
+			var response = { data: [{
+				admin: secureRoomController.getAdminUsers(),
+				readWrite: secureRoomController.getReadWriteUsers()
+			}]};
+			
+			var topic = Core.Util.generateUUID();
+			Core.EventManager.createCallbackHandler(topic, this, 
+					function(evt, response){
+						var failed = false;
+						var failureNotice = "The following users were not successfully added : ";
+						if(response.failedReadWrite 
+								&& response.failedReadWrite.length > 0){
+							failed = true;
+							var readWriteGrid = this.view.lookupReference('managePermissions').getSecondGrid();
+							for(var i=0; i<response.failedReadWrite.length; i++){
+								failureNotice += readWriteGrid.store.getAt(readWriteGrid.store.find("userid", 
+										response.failedReadWrite[i])).data.username + " ";
+							}
+						}
+						if(response.failedAdmin 
+								&& response.failedAdmin.length > 0){
+							failed = true;
+							var adminGrid = this.view.lookupReference('managePermissions').getThirdGrid();
+							for(var i=0; i<response.failedAdmin.length; i++){
+								failureNotice += adminGrid.store.getAt(adminGrid.store.find("userid", 
+										response.failedAdmin[i])).data.username + " ";
+							}
+						}
+						if(failed){
+							Ext.MessageBox.alert("Permissions", failureNotice);
+						}else{
+							Ext.MessageBox.alert("Permissions", "All permissions were successfully updated.");
+							this.view.close();
+						}
+			});
+			
+			var url = Ext.String.format("{0}/collabroom/{1}/secure/{2}?userId={3}&orgId={4}&workspaceId={5}",
+					Core.Config.getProperty(UserProfile.REST_ENDPOINT),
+					this.incidentId, this.collabRoomId, UserProfile.getUserId(),
+					UserProfile.getOrgId(), UserProfile.getWorkspaceId());
+			
+			this.mediator.sendPostMessage(url, topic, response);
+		},
+		
+		closeManager: function(){
+			this.view.close();
 		},
 
 		setAdminRooms: function(evt, rooms){
@@ -56,15 +141,32 @@ define(['ext', 'iweb/CoreModule','nics/modules/UserProfileModule'],
 		},
 		
 		addAdminRoom: function(evt, collabRoomId){
-			this.adminRooms.push(collabRoomId);
+			if($.inArray(collabRoomId, this.adminRooms) == -1){
+				this.adminRooms.push(collabRoomId);
+				//Currently in the room and now have permission to alter perms
+				if(this.collabRoomId == collabRoomId){
+					this.getView().showManager();
+				}
+			}
+		},
+		
+		removeAdminRoom: function(evt, collabRoomId){
+			var index = $.inArray(collabRoomId, this.adminRooms);
+			if(index > -1){
+				this.adminRooms.splice(index, 1);
+			}
 		},
 		
 		onActivateRoom: function(evt, collabRoomId){
+			if(this.view && this.view.isVisible()){
+				this.closeManager();
+			}
+			
 			this.collabRoomId = collabRoomId;
 			if($.inArray(collabRoomId, this.adminRooms) != -1){
-				this.getView().addUnsecure();
+				this.getView().showManager();
 			}else{
-				this.getView().removeUnsecure();
+				this.getView().hideManager();
 			}
 		},
 		
@@ -72,30 +174,28 @@ define(['ext', 'iweb/CoreModule','nics/modules/UserProfileModule'],
 			this.incidentId = incident.id;
 		},
 		
-		onUnsecureRoomClick: function(checkbox) {
-			if(checkbox.checked){
-				//Remove the session from the database
-				var topic = Core.Util.generateUUID();
-				
-				Core.EventManager.createCallbackHandler(topic, this, 
-						function(evt, response){
-							if(response.message != "OK"){
-								Ext.MessageBox.alert("NICS", response.message);
-							}else{
-								this.getView().removeUnsecure();
-								var pos = $.inArray(this.collabRoomId, this.adminRooms);
-								this.adminRooms.splice(pos, 1);
-							}
-							this.getView().uncheck();
-							this.getView().close();
-				});
-				
-				var url = Ext.String.format("{0}/collabroom/{1}/unsecure/{2}?userId={3}",
-						Core.Config.getProperty(UserProfile.REST_ENDPOINT),
-						this.incidentId, this.collabRoomId, UserProfile.getUserId());
-				
-				this.mediator.sendDeleteMessage(url, topic);
-			}
+		unsecureRoom: function(checkbox) {
+			//Remove the session from the database
+			var topic = Core.Util.generateUUID();
+			
+			Core.EventManager.createCallbackHandler(topic, this, 
+					function(evt, response){
+						if(response.message != "OK"){
+							Ext.MessageBox.alert("NICS", response.message);
+						}else{
+							var pos = $.inArray(this.collabRoomId, this.adminRooms);
+							this.adminRooms.splice(pos, 1);
+							this.resetGrids();
+							checkbox.setValue(false);
+							checkbox.disable();
+						}
+			});
+			
+			var url = Ext.String.format("{0}/collabroom/{1}/unsecure/{2}?userId={3}",
+					Core.Config.getProperty(UserProfile.REST_ENDPOINT),
+					this.incidentId, this.collabRoomId, UserProfile.getUserId());
+			
+			this.mediator.sendDeleteMessage(url, topic);
 		}
 	});
 });

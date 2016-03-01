@@ -30,7 +30,7 @@
 define([
     "iweb/CoreModule", "./administration/AdminView", "./administration/RoomManagementView"], 
 	
-	function(Core, AdminView, RoomManagementView) {
+	function(Core, AdminView, RoomManagementView, OrgView) {
 	
 		var AdminModule = function(){};
 		
@@ -42,7 +42,7 @@ define([
 			Core.Ext.ToolsMenu.add({
 					text: 'Room Management',
 					handler: function(){
-						 view.show();
+						view.controller.load();
 					}
 				}
 			);

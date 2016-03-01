@@ -65,7 +65,7 @@ define([], function(){
 	};
 	
 	WFSCapabilities.prototype.getElementValue = function(node) {
-		return node.firstChild.nodeValue;
+		return node.firstChild ? node.firstChild.nodeValue : null;
 	};
 	
 	return WFSCapabilities;

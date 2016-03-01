@@ -68,7 +68,7 @@ define(['iweb/CoreModule','./DamageReportController',
 				listeners: {
 					beforeedit: 'onBeforeCellEdit',
 					edit: 'onCellEdit',
-					rowclick: 'onRowClick',
+					selectionchange: 'onSelectionChange',
 					rowdblclick: 'onRowDblClick'
 		        },
 		        

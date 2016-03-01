@@ -154,7 +154,16 @@
 				listeners: {
 					'validitychange': 'onFormValidityChange'
 				}
-			},{
+			}, {
+				xtype: 'textfield',
+				fieldLabel: 'Legend',
+				reference: 'legendInput',
+				
+				allowBlank: true,
+				disabled: true
+				
+				
+			}, {
 				xtype: 'button',
 				text: 'Import Data Layer',
 				reference: 'importButton',
@@ -182,6 +191,10 @@
 		
 		getImportButton: function() {
 			return	this.lookupReference('importButton');
+		},
+		
+		getLegendInput: function() {
+			return	this.lookupReference('legendInput');
 		}
 	});
 });

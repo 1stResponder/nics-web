@@ -38,8 +38,6 @@ define(['iweb/CoreModule',
 			
 			alias: 'controller.accountinfocontroller',
 			
-			sysrole: ['Super User', 'NICS User', 'Read Only User', 'GIS User', 'Administrator'],
-			
 			init: function(){
 				this.model = new AccountInfoModel();
 				
@@ -51,22 +49,51 @@ define(['iweb/CoreModule',
 			bindEvents: function(){
 				
 				this.getView().accountInfoButton.on("click", this.showAccountInfo, this);
+				
+				var submitButton = this.view.userAccountTab.lookupReference('submitButton');
+				if(submitButton){
+					submitButton.on('click', this.submitAccountInfo, this);
+				}
 
-				Core.EventManager.addListener("nics.user.profile.loaded", this.setButtonLabel.bind(this));
-				Core.EventManager.addListener("nics.accountInfo.submit", this.submitAccountInfo.bind(this));	
+				Core.EventManager.addListener("nics.user.profile.loaded", this.onProfileLoaded.bind(this));
 				Core.EventManager.addListener("nics.accountInfo.response",this.accountInfoResponse.bind(this));	
 			},
 			
-			showAccountInfo: function(){
+			showAccountInfo: function(profile){
+				if(profile == "Forbidden"){
+					Ext.MessageBox.alert("NICS", "You do not have permission to view this profile");
+					return;
+				}
+				
+				//show
 				this.getView().accountWindow.show();
-				this.setAccountInfo();
+				
+				if(profile.username){
+					this.username = profile.username;
+					this.userid = profile.userId;
+					this.userorgid = profile.userOrgId;
+					
+					this.setAccountInfo(profile);
+				}else{
+					this.username = UserProfile.getUsername();
+					this.userid = UserProfile.getUserId();
+					this.userorgid = UserProfile.getUserOrgId();
+
+					this.setAccountInfo({
+						username: UserProfile.getUsername(),
+						orgName: UserProfile.getOrgName(),
+						userFirstname: UserProfile.getFirstName(),
+						userLastname: UserProfile.getLastName(),
+						rank: UserProfile.getRank(),
+						desc: UserProfile.getDesc(),
+						job: UserProfile.getJobTitle(),
+						sysRoleId: UserProfile.getSystemRoleId()
+					});
+				}
 			},
 			
 			submitAccountInfo: function(e){
 				
-				var userid = UserProfile.getUserId();
-				var username = UserProfile.getUsername();
-				var userorgid = UserProfile.getUserOrgId();
 				var workspaceid = UserProfile.getWorkspaceId();
 				var firstname = this.getView().userAccountTab.getForm().findField('firstname').getValue();
 				var lastname = this.getView().userAccountTab.getForm().findField('lastname').getValue();
@@ -76,6 +103,7 @@ define(['iweb/CoreModule',
 				var oldpw = this.getView().userAccountTab.getForm().findField('oldpw').getValue();
 				var newpw = this.getView().userAccountTab.getForm().findField('newpw').getValue();
 				var confirmpw = this.getView().userAccountTab.getForm().findField('confirmpw').getValue();
+				var sysRoleId = this.getView().userAccountTab.getForm().findField('sysrole').getValue();
 
 				
 				if(oldpw || newpw || confirmpw){
@@ -108,20 +136,25 @@ define(['iweb/CoreModule',
 					
 				}
 			
-				var url = Ext.String.format("{0}/users/{1}/updateprofile",
+				var url = Ext.String.format("{0}/users/{1}/updateprofile?requestingUserOrgId={2}",
 					Core.Config.getProperty(UserProfile.REST_ENDPOINT),
-					workspaceid);
+					workspaceid, UserProfile.getUserOrgId());
 				
 				
 				
-				var body = { 'userName': username, 'userId': userid, 'userOrgId': userorgid, 'firstName': firstname, 'lastName': lastname, 'oldPw': oldpw, 'newPw': newpw, 
-					'jobTitle': job, 'rank': rank, 'jobDesc': desc};
+				var body = { 'userName': this.username, 'userId': this.userid, 'userOrgId': this.userorgid, 'firstName': firstname, 'lastName': lastname, 'oldPw': oldpw, 'newPw': newpw, 
+					'jobTitle': job, 'rank': rank, 'jobDesc': desc, 'sysRoleId' : sysRoleId};
 				
 				this.mediator.sendPostMessage(url,"nics.accountInfo.response",body);
 				
 			},
 			
 			accountInfoResponse: function(event, response){
+				if(response == "Forbidden"){
+					Ext.MessageBox.alert("NICS", "You do not have permission to edit this profile");
+					return;
+				}
+				
 				  	
 				if(response.message == "ok"){
 					
@@ -133,11 +166,14 @@ define(['iweb/CoreModule',
 					UserProfile.setJobTitle(response.jobTitle);
 					UserProfile.setRank(response.rank);
 	
-					this.getView().setButtonLabel(UserProfile.getNickName());
+					if(response.userId == UserProfile.getUserId()){
+						this.getView().setButtonLabel(UserProfile.getNickName());
+					}
 					
 					Ext.MessageBox.alert("NICS","User info has been updated.");
 				}	  
 				else{
+
 					Ext.MessageBox.alert("NICS","Failed: " + response.message);
 				}
 				
@@ -147,26 +183,78 @@ define(['iweb/CoreModule',
 				
 			},
 			
-			setAccountInfo: function(){
+			setAccountInfo: function(profile){
+				this.getView().setFormField('username', profile.username);
+				this.getView().setFormField('org', profile.orgName);
+				this.getView().setFormField('firstname',profile.userFirstname);
+				this.getView().setFormField('lastname', profile.userLastname);
+				this.getView().setFormField('rank', profile.rank);
+				this.getView().setFormField('desc',profile.description);
+				this.getView().setFormField('job',profile.jobTitle);
 				
-				this.getView().setButtonLabel(UserProfile.getNickName());
-				this.getView().setFormField('username',UserProfile.getUsername());
-				this.getView().setFormField('org',UserProfile.getOrgName());
-				this.getView().setFormField('firstname',UserProfile.getFirstName());
-				this.getView().setFormField('lastname',UserProfile.getLastName());
-				this.getView().setFormField('rank',UserProfile.getRank());
-				this.getView().setFormField('desc',UserProfile.getDesc());
-				this.getView().setFormField('job',UserProfile.getJobTitle());
-				this.getView().setFormField('sysrole',this.sysrole[UserProfile.getSystemRoleId()]);
-				this.getView().setFormField('oldpw','');
-				this.getView().setFormField('newpw','');
-				this.getView().setFormField('confirmpw','');
+				var currentUser = (profile.username == UserProfile.getUsername());
+				
+				this.getView().userAccountTab.getForm().findField('oldpw').setDisabled(!currentUser);
+				this.getView().userAccountTab.getForm().findField('newpw').setDisabled(!currentUser);
+				this.getView().userAccountTab.getForm().findField('confirmpw').setDisabled(!currentUser);
+				
+				if(currentUser){
+					this.getView().setFormField('oldpw','');
+					this.getView().setFormField('newpw','');
+					this.getView().setFormField('confirmpw','');
+				}
+				
+				this.getView().userAccountTab.getForm().findField('sysrole').setValue(profile.sysRoleId);
+				//Only a super user can modify a super user
+				if(profile.sysRoleId == 0 && !UserProfile.isSuperUser()){
+					this.getView().userAccountTab.getForm().findField('sysrole').disable();
+				}else if(UserProfile.isAdminUser() || UserProfile.isSuperUser()){
+					this.getView().userAccountTab.getForm().findField('sysrole').enable();
+				}else{
+					this.getView().userAccountTab.getForm().findField('sysrole').disable();
+				}
+			},
 			
+			onProfileLoaded: function(){
+				this.setButtonLabel();
+				//load the user roles
+				var topic = Core.Util.generateUUID();
+				//populate the system roles
+				Core.EventManager.createCallbackHandler(topic, this, 
+					function(UserProfile, evt, response){
+						var roles = [];
+						for(var i=0; i<response.length; i++){
+							if(response[i].systemroleid == 0){
+								if(UserProfile.getSystemRoleId() == 0){
+									roles.push([response[i].systemroleid, response[i].rolename]);
+								}
+							}else{
+								roles.push([response[i].systemroleid, response[i].rolename]);
+							}
+						}
+						this.view.userAccountTab.add({
+							xtype: 'combobox',
+							width: '75%',
+							store : roles,
+							forceSelection: true,
+							queryMode: 'local',
+							fieldLabel: 'System Role',
+							valueField: 'name',
+							name: 'sysrole'
+						});
+					}, [UserProfile]
+				);
+				
+				var url = Ext.String.format('{0}/users/{1}/systemroles', 
+						Core.Config.getProperty(UserProfile.REST_ENDPOINT),
+						UserProfile.getWorkspaceId());
+				
+				this.mediator.sendRequestMessage(url, topic);
 			},
 			
 			setButtonLabel: function(e){
 				this.getView().setButtonLabel(UserProfile.getNickName());
-			},
+			}
 			
 	});
 });

@@ -42,20 +42,8 @@ define(['ext', 'iweb/CoreModule', 'nics/modules/UserProfileModule'],
 		},
 		
 		loadUserProfile: function(evt){
-			//Check if user is an admin
-			var topic = Core.Util.generateUUID();
-			
-			//populate the workspace dropdown
-			Core.EventManager.createCallbackHandler(topic, this, this.addAdminView);
-			
-			var url = Ext.String.format('{0}/users/{1}/admin/{2}', 
-					Core.Config.getProperty(UserProfile.REST_ENDPOINT),
-					UserProfile.getWorkspaceId(), UserProfile.getUserOrgId());
-			this.mediator.sendRequestMessage(url, topic);
-		},
-		
-		addAdminView: function(evt, data){
-			if(data.count == 1){ //Found Admin user
+			if(UserProfile.isSuperUser() ||
+					UserProfile.isAdminUser()){
 				var view = this.getView();
 				view.setTitle("Manage Settings - " + UserProfile.getOrgName());
 				
@@ -63,11 +51,16 @@ define(['ext', 'iweb/CoreModule', 'nics/modules/UserProfileModule'],
 				Core.Ext.ToolsMenu.add({
 						text: 'Administration',
 						handler: function(){
-							 view.show();
+							view.load();
+							view.show();
 						}
 					}
 				);
 			}
+		},
+		
+		onClose: function(){
+			Core.EventManager.fireEvent('nics.admin.close');
 		}
 	});
 });

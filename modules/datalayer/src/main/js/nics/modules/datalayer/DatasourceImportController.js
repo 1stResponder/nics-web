@@ -117,7 +117,8 @@ define(['ext', 'ol', "iweb/CoreModule", "nics/modules/UserProfileModule"],
 			storeDatasource: function(record) {
 				var values = {
 					displayname: record.get('displayname'),
-					internalurl: record.get('internalurl')
+					internalurl: record.get('internalurl'),
+					legend: record.get('legend')
 				};
 				
 				var url = Ext.String.format('{0}/datalayer/{1}/sources/{2}', 
@@ -146,34 +147,55 @@ define(['ext', 'ol', "iweb/CoreModule", "nics/modules/UserProfileModule"],
 			},
 			
 			getCapabilities: function(record, success, failure) {
-				var url = Ext.String.format('{0}?service={1}&request=GetCapabilities',
-						record.get('internalurl'), this.dataSourceType)
-
+			
+				var url = "";
+				
+				if(this.dataSourceType == 'arcgisrest'){
+					url = Ext.String.format('{0}?f=json', record.get('internalurl'));
+				}
+				else{
+					url = Ext.String.format('{0}?service={1}&request=GetCapabilities',
+						record.get('internalurl'), this.dataSourceType);
+				}
+				
+				var dataSourceType = this.dataSourceType;
+				
 				Ext.Ajax.request({
-					url: 'proxy',
+					url: window.location.protocol + '//' + window.location.host + '/nics/proxy' ,
 					method: 'GET',
-					
+					dataSourceType: dataSourceType,
 					params : {
 						url: url
 					},
 					
 					success: function(response) {
 						//can't use responseXML becaue the proxy doesn't return the correct content type
-						var xmlDoc = new DOMParser().parseFromString(response.responseText, 'application/xml');
-						var layers = this.capabilitiesFormat.read(xmlDoc);
+						var layers = null;
+						if(dataSourceType != 'arcgisrest') {
+							var xmlDoc = new DOMParser().parseFromString(response.responseText, 'application/xml');
+							layers = this.capabilitiesFormat.read(xmlDoc);
+						} else {
+							layers = this.capabilitiesFormat.read(response.responseText);
+						}
+						
 						if (!layers) {
 							throw new Error("Failed to parse capabilities");
 						}
 						//ensure every layer has a title to display
 						layers.forEach(function(layer){
-							if (!layer.Title) {
+							if (!layer.Title && layer.Name) {
 								layer.Title = layer.Name;
 							}
+							if(dataSourceType == 'arcgisrest') {
+								layer.Title = layer.name;
+								layer.Name = layer.id;
+							}
+							
 						});
 						record.set('layers', layers, {silent:true});
 						success && success.call(this);
 					},
-					failure: function() {
+					failure: function(fp, o) {
 						record.set('layers', [], {silent:true});
 						Ext.Msg.show({
 							title: 'Data Source',
@@ -228,7 +250,8 @@ define(['ext', 'ol', "iweb/CoreModule", "nics/modules/UserProfileModule"],
 			onImportClick: function(){
 				var grid = this.getView().getGrid(),
 					combo = this.getView().getLayerCombo(),
-					input = this.getView().getLabelInput();
+					input = this.getView().getLabelInput(),
+					legend = this.getView().getLegendInput();
 				
 				var record = grid.getSelectionModel().getSelection()[0];
 				var datasourceid = record.getId();
@@ -241,7 +264,8 @@ define(['ext', 'ol', "iweb/CoreModule", "nics/modules/UserProfileModule"],
 					datalayersource: {
 						layername: combo.getValue(),
 						usersessionid: userSessionId
-					}
+					},
+					legend: legend.getValue()
 				};
 				
 				var url = Ext.String.format('{0}/datalayer/{1}/sources/{2}/layer', 
@@ -274,6 +298,7 @@ define(['ext', 'ol', "iweb/CoreModule", "nics/modules/UserProfileModule"],
 				this.getView().getLabelInput().setValue('');
 				this.getView().getLayerCombo().reset();
 				this.getView().getImportButton().disable();
+				this.getView().getLegendInput().reset();
 			},
 			
 			/**
@@ -285,6 +310,7 @@ define(['ext', 'ol', "iweb/CoreModule", "nics/modules/UserProfileModule"],
 				this.getView().getLabelInput().setDisabled(disabled);
 				this.getView().getLayerCombo().setDisabled(disabled);
 				this.getView().getImportButton().setDisabled(disabled);
+				this.getView().getLegendInput().setDisabled(disabled);
 			}
 			
 		});

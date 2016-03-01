@@ -40,8 +40,6 @@ define([
 			
 			init: function() {
 				this.mediator = Core.Mediator.getInstance();
-				
-				this.setCookies();
 			
 			    this.bindEvents();
 			    
@@ -56,7 +54,6 @@ define([
 			},
 			
 			bindEvents: function(){
-				Core.EventManager.addListener(Core.Config.CONFIG_LOADED, this.setCookies.bind(this));
 				Core.EventManager.addListener(UserProfile.PROPERTIES_LOADED, this.requestUserOrgs(this));
 				Core.EventManager.addListener(UserProfile.PROFILE_LOADED, this.setReinitUrl.bind(this));
 				
@@ -92,8 +89,8 @@ define([
 						Ext.String.format("{0}/login/{1}", endpoint, UserProfile.getUsername()), topic);
 			},
 			
-			logoutFromMessage: function(){
-				if(!LOGOUT){
+			logoutFromMessage: function(evt, currentUserSessionId){
+				if(!LOGOUT && currentUserSessionId === UserProfile.getCurrentUserSessionId()){
 					LOGOUT = true;
 					
 					Core.EventManager.fireEvent('logout'); //Give everyone a chance to clean up
@@ -118,15 +115,10 @@ define([
 				this.mediator.setReinitalizeUrl('mediator?reinit=' + userProfile.userId + "&sessionId=" + UserProfile.getSessionId());
 			},
 			
-			setCookies: function(e){
-				var endpoint = Core.Config.getProperty(UserProfile.REST_ENDPOINT);
-				this.mediator.setCookies(endpoint, ["openam", "iplanet"]);
-			},
-			
 			requestUserOrgs: function(){
 				var endpoint = Core.Config.getProperty(UserProfile.REST_ENDPOINT);
-				var url = Ext.String.format("{0}/users/1/userOrgs?workspaceId={1}&userName={2}",
-						endpoint, UserProfile.getWorkspaceId(),UserProfile.getUsername());
+				var url = Ext.String.format("{0}/users/{1}/userOrgs?userName={2}",
+						endpoint, UserProfile.getWorkspaceId(), UserProfile.getUsername());
 				
 				this.mediator.sendRequestMessage(url, "nics.userorg.load");
 			},
@@ -201,7 +193,7 @@ define([
 					userOrg.currentUsersessionId = response.userSession.currentusersessionid;
 					userOrg.userId = response.userSession.userid;
 					
-					var logoutListener = Ext.String.format("iweb.NICS.logout.{0}", userOrg.currentUsersessionId);
+					var logoutListener = Ext.String.format("iweb.NICS.{0}.logout", UserProfile.getWorkspaceId());
 					this.mediator.subscribe(logoutListener);
 					
 					//NOTE: Tries to remove the current usersession but it has already been removed in the endpoint

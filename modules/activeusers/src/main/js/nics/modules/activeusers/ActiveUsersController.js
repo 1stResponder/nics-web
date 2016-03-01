@@ -49,11 +49,31 @@ define(['ext', 'iweb/CoreModule', "./ActiveUsersModel", 'nics/modules/UserProfil
 					UserProfile.getWorkspaceId());
 			this.mediator.sendRequestMessage(url, "NICS.activeUsers");
 			
-			//TODO: listen to topic for users coming/going? doesn't exist yet
+			var loginTopic = Ext.String.format("iweb.NICS.{0}.login", UserProfile.getWorkspaceId());
+			this.mediator.subscribe(loginTopic);
+			Core.EventManager.addListener(loginTopic, this.onUserLogin.bind(this));
+			
+			var logoutTopic = Ext.String.format("iweb.NICS.{0}.logout", UserProfile.getWorkspaceId());
+			this.mediator.subscribe(logoutTopic);
+			Core.EventManager.addListener(logoutTopic, this.onUserLogout.bind(this));
 		},
 		
 		onLoadActiveUsers: function(e, response) {
+			//load store with all active users
 			this.view.store.loadRawData(response.users);
+		},
+		
+		onUserLogin: function(evt, user) {
+			//append new data to store
+			this.view.store.loadRawData(user, true);
+		},
+		
+		onUserLogout: function(evt, userSessionId) {
+			var store = this.view.store;
+			var results = store.query('currentusersessionid', userSessionId);
+			if (results && results.length) {
+				store.remove(results.getRange());
+			}
 		},
 		
 		onSelectionChange: function(grid, selected, eOpts) {

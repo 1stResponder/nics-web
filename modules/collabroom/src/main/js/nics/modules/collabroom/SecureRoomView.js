@@ -40,6 +40,20 @@ define(['./SecureRoomController', 'nics/modules/administration/UserModel', 'nics
 	 	extend: 'Ext.Panel',
 
 	 	controller: 'secureroomcontroller',
+	 	
+	 	 dockedItems: [{
+            xtype: 'toolbar',
+            dock: 'top',
+            layout: {
+            	pack: 'start'
+            },
+            items: [{
+            	xtype: 'button',
+            	text: 'Lookup Users',
+                handler: 'onLookupUsersButtonClick'
+            }]
+        }],
+	        
 	 
 	 	initComponent: function(){
 			this.callParent();
@@ -55,18 +69,18 @@ define(['./SecureRoomController', 'nics/modules/administration/UserModel', 'nics
 				  {
 					  title:'All Users',
 					  ref: FIRST_GRID_REF,
-					  dragGroup: 'firstGridDDGroup',
-					  dropGroup: 'usersDDGroup'
+					  dragGroup: 'dragDropGroup',
+					  dropGroup: 'dragDropGroup'
 				   },{
 					  title:'Read/Write Users',
 					  ref: SECOND_GRID_REF,
-					  dragGroup: 'usersDDGroup',
-					  dropGroup: 'firstGridDDGroup'
+					  dragGroup: 'dragDropGroup',
+					  dropGroup: 'dragDropGroup'
 				   },{
 					  title:'Admin Users',
 					  ref: THIRD_GRID_REF,
-					  dragGroup: 'usersDDGroup',
-					  dropGroup: 'firstGridDDGroup'
+					  dragGroup: 'dragDropGroup',
+					  dropGroup: 'dragDropGroup'
 				   }
 				],
 				height: 400

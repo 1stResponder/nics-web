@@ -89,6 +89,10 @@
                     <span style="font-size: small">
                     	Don't have an account? <a href="./register">Register</a>.
                     </span>
+                    <br/><br/>
+                    <span style="font-size: small">
+                    	Forgotten Password? <a href="./forgotpassword">Click here</a>.
+                    </span>
                 </div>
             </div>
             

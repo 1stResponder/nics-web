@@ -27,16 +27,16 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-define(['ext', "iweb/CoreModule", "./WindowController",
-        './ImportWindow', './DatasourceImportPanel',
-        './FileImportPanel', 'nics/modules/UserProfileModule',
-        './WFSCapabilities', './WMSCapabilities',
-        './KMLCapabilities', './KMZCapabilities'], 
+define(['ext', 'iweb/CoreModule', 'nics/modules/UserProfileModule',
+				'./WindowController', './ImportWindow', './DatasourceImportPanel',
+				'./FileImportPanel', './ShapeFileImportPanel',
+				'./WFSCapabilities', './WMSCapabilities',
+				'./ArcGISCapabilities'],
 
-	function(Ext, Core, WindowController, ImportWindow,
-			DatasourceImportPanel, FileImportPanel, UserProfile, 
-			WFSCapabilities, WMSCapabilities,
-			KMLCapabilities, KMZCapabilities){
+	function(Ext, Core, UserProfile,
+			WindowController, ImportWindow, DatasourceImportPanel,
+			FileImportPanel, ShapeFileImportPanel,
+			WFSCapabilities, WMSCapabilities, ArcGISCapabilities){
 	
 		return Ext.define('modules.datalayer.DataWindowController', {
 			extend : 'modules.datalayer.WindowController',
@@ -56,12 +56,22 @@ define(['ext', "iweb/CoreModule", "./WindowController",
 				
 				var kmlUrl = Ext.String.format("/em-api/v1/datalayer/{0}/sources/{1}/document/{2}",
 						UserProfile.getWorkspaceId(),
-						'A0EEBC99-9C0B-4EF8-BB6D-6BB9BD380A11',
+						'kml',
 						UserProfile.getUserOrgId());
 				
 				var kmzUrl = Ext.String.format("/em-api/v1/datalayer/{0}/sources/{1}/document/{2}",
 						UserProfile.getWorkspaceId(),
-						'79AB03BA-063C-A30B-AD2C-66A6E1CFAEA0',
+						'kmz',
+						UserProfile.getUserOrgId());
+						
+				var gpxUrl = Ext.String.format("/em-api/v1/datalayer/{0}/sources/{1}/document/{2}",
+						UserProfile.getWorkspaceId(),
+						'gpx',
+						UserProfile.getUserOrgId());
+						
+				var jsonUrl = Ext.String.format("/em-api/v1/datalayer/{0}/sources/{1}/document/{2}",
+						UserProfile.getWorkspaceId(),
+						'geojson',
 						UserProfile.getUserOrgId());
 				
 				tabPanel.add([
@@ -77,20 +87,39 @@ define(['ext', "iweb/CoreModule", "./WindowController",
 						capabilitiesFormat: new WMSCapabilities(),
 						workspaceId: this.workspaceId
 					}),
+					new DatasourceImportPanel({
+						title: 'ArcGISRest',
+						dataSourceType: 'arcgisrest',
+						capabilitiesFormat: new ArcGISCapabilities(),
+						workspaceId: this.workspaceId
+					}),
 					new FileImportPanel({
 						title: 'KMZ',
 						dataSourceType: 'kmz',
-						capabilitiesFormat: new KMLCapabilities(),
 						workspaceId: this.workspaceId,
 						url: kmzUrl
-						
 					}),
 					new FileImportPanel({
 						title: 'KML',
 						dataSourceType: 'kml',
-						capabilitiesFormat: new KMZCapabilities(),
 						workspaceId: this.workspaceId,
 						url: kmlUrl
+					}),
+					new FileImportPanel({
+						title: 'GPX',
+						dataSourceType: 'gpx',
+						workspaceId: this.workspaceId,
+						url: gpxUrl
+					}),
+					new FileImportPanel({
+						title: 'GeoJSON',
+						dataSourceType: 'geojson',
+						workspaceId: this.workspaceId,
+						url: jsonUrl
+					}),
+					new ShapeFileImportPanel({
+						title: 'Shape File',
+						workspaceId: this.workspaceId
 					})
 				]);
 				tabPanel.setActiveTab(0);

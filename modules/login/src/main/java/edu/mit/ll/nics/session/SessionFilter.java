@@ -53,6 +53,7 @@ public class SessionFilter implements Filter {
 	
 	private static String LOGIN_PAGE = "/nics/login";
 	private static String REGISTER_PAGE = "/nics/register";
+	private static String FORGOTPASSWORD_PAGE = "/nics/forgotpassword";
 	private static String REINIT_PARAM = "reinit";
 	private static String HOME_PAGE = "home.html";
 	private static String USERNAME = "username";
@@ -100,6 +101,11 @@ public class SessionFilter implements Filter {
 			
 			chain.doFilter(req,resp);
 		}
+		// Allow everyone to resetpassword
+		else if (requestURI.startsWith(FORGOTPASSWORD_PAGE)){
+			req.getSession();
+			chain.doFilter(req,resp);
+		}
 		//Validate Request
 		else if(isValidRequest(req)){
 			req.getSession();
@@ -112,7 +118,6 @@ public class SessionFilter implements Filter {
 	}
 	
 	private boolean isValidRequest(HttpServletRequest req){
-		
 		if(SessionHolder.hasSession(req.getSession().getId())){
 			return true;
 		}else if(req.getQueryString() != null && 

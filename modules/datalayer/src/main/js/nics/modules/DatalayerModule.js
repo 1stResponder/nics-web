@@ -30,9 +30,12 @@
 define(["iweb/CoreModule",
         "./datalayer/Button", "./datalayer/Window",
         "./datalayer/DataWindow", "./datalayer/MapsController",
-        "./datalayer/ExportView", "nics/modules/UserProfileModule"], 
+        "./datalayer/ExportView", "./datalayer/DatalayerPanelView", 
+        "nics/modules/UserProfileModule", "./datalayer/TrackingWindow",
+		"./datalayer/TrackingLocatorWindow"],
 	
-	function(Core, Button, Window, DataWindow, MapsController, ExportView, UserProfile) {
+	function(Core, Button, Window, DataWindow, MapsController, ExportView,
+			 DatalayerPanelView, UserProfile, TrackingWindow, TrackingLocatorWindow) {
 	
 		var DatalayerModule = function(){};
 		
@@ -65,7 +68,7 @@ define(["iweb/CoreModule",
 
 			var trackingButton = new Button({
 				text: 'Tracking',
-				window: new Window({
+				window: new TrackingWindow({
 					rootName: 'Tracking'
 				})
 			});
@@ -80,6 +83,15 @@ define(["iweb/CoreModule",
 				Core.EventManager.removeListener("iweb.config.loaded", setGeoserverCookies);
 			};
 			Core.EventManager.addListener("iweb.config.loaded", setGeoserverCookies);
+
+			Core.EventManager.addListener("nics.data.legend.show", this.showLegend);
+			Core.EventManager.addListener("nics.data.legend.update", this.updateLegend);
+			Core.EventManager.addListener("nics.data.legend.ajax", this.getHtml);
+	
+			var datalayerPanelViewer = Ext.create('modules.datalayer.DatalayerPanelView');
+			
+			Core.View.addToSidePanel(datalayerPanelViewer);
+
 		};
 		
 		DatalayerModule.prototype.addExport = function(){
@@ -96,7 +108,101 @@ define(["iweb/CoreModule",
 						}
 					}
 				}
-			);
+			); 	
+		};
+		
+		DatalayerModule.prototype.showLegend = function(event, datalayer){
+						
+			var id = datalayer.data.datalayerid.replace(/-/g,'');
+			
+			if(!Ext.getCmp("legend" + id)){
+		
+				var fileExt = datalayer.data.legend.substr(datalayer.data.legend.length - 5);
+		
+				this.legendId = "legend" + id;
+		
+				if(fileExt.indexOf('.') != -1){
+		
+					var legendCmp = Ext.create('Ext.Window',{
+						title: datalayer.data.text + ' - Legend',
+						items:[{
+							xtype: 'image',
+							src: datalayer.data.legend, 
+							id: "legend" + id,
+							listeners : {
+					            load : {
+					               element : 'el',
+					               fn : function(el){
+				               			Core.EventManager.fireEvent('nics.data.legend.update' ,[this.id, el.target.clientWidth, el.target.clientHeight]);
+				               		}
+					            }
+				        	}
+				        }]
+					});
+					
+					legendCmp.show();
+				}
+				else{
+				
+					var requestUrl = window.location.protocol + '//' + window.location.host + '/nics/proxy?url=' + datalayer.data.legend;
+					
+					$.ajax({
+						url: requestUrl,
+						headers: {'Content-Type':'text/html'},
+						legendId: "legend" + id,
+						legendName: datalayer.data.text,
+						success: function(data, status, response){
+							Core.EventManager.fireEvent('nics.data.legend.ajax',[this.legendId,this.legendName,data]);
+						},
+						error: function(param1, status, error) {
+							console.log('Failed to get legend for window');
+						}
+					});
+				
+				}
+				
+			}
+			
+		};
+		
+		DatalayerModule.prototype.updateLegend = function(event, info){
+			
+			var image = Ext.getCmp(info[0]);
+			if(image){
+				image.setSize(info[1],info[2]);
+			}
+			
+		};
+		
+		DatalayerModule.prototype.getHtml = function(event, info){
+		
+			if(info){
+				var regex = /<img.*?src=['"](.*?)['"]/;
+				
+				var htmlSrc = regex.exec(info[2])[1];
+	
+				var legendCmp = Ext.create('Ext.Window',{
+					title: info[1] + ' - Legend',
+					items:[{
+						xtype: 'image',
+						src: htmlSrc, 
+						id: info[0],
+						listeners : {
+				            load : {
+				               element : 'el',
+				               fn : function(el){
+			               			Core.EventManager.fireEvent('nics.data.legend.update' ,[this.id, el.target.clientWidth, el.target.clientHeight]);
+			               		}
+				            }
+			        	}
+			        }]
+				});
+					
+				legendCmp.show();
+	
+	
+			}
+	
 		};
 		
 		return new DatalayerModule();

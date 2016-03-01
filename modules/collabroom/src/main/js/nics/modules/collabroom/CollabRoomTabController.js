@@ -42,6 +42,7 @@ define(["iweb/CoreModule", 'nics/modules/UserProfileModule'],
 				
 				Core.EventManager.addListener("nics.collabroom.open", this.addTab.bind(this));
 				Core.EventManager.addListener("nics.incident.close", this.removeAllTabs.bind(this));
+				Core.EventManager.addListener("nics.incident.close.tab", this.removeTab.bind(this));
 			},
 		 
 			addTab: function(evt, collabRoom){
@@ -59,6 +60,14 @@ define(["iweb/CoreModule", 'nics/modules/UserProfileModule'],
 				while(tabs.length > 1){
 					//this.getView().remove(tabs[tabs.length-1]);
 					tabs[tabs.length-1].close(); //Fire event
+				}
+			},
+			
+			removeTab: function(evt, collabRoomId){
+				var tab = this.getView().getTab(collabRoomId);
+				if(tab){
+					this.getView().removeTab(tab);
+					this.onTabClose(tab);
 				}
 			},
 			

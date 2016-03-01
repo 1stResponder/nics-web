@@ -27,8 +27,8 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-define(["iweb/CoreModule"], 
-	function(Core){
+define(["iweb/CoreModule", 'ol', 'iweb/modules/MapModule'], 
+	function(Core, ol, MapModule){
 	
 		return function() {
 			
@@ -51,6 +51,8 @@ define(["iweb/CoreModule"],
 			var rank;
 			var jobTitle;
 			var description;
+			var isSuperUser;
+			var isAdminUser;
 			
 			var propertiesLoadedEvt = "nics.user.properties.loaded";
 			var profileLoadedEvt = "nics.user.profile.loaded";
@@ -60,6 +62,7 @@ define(["iweb/CoreModule"],
 				
 				Core.EventManager.addListener("nics.userorg.change", requestUserProfile.bind(this));
 				Core.EventManager.addListener("nics.user.profile.set", setUserProfile.bind(this));
+				Core.EventManager.addListener("nics.user.map.org", setOrgLocation.bind(this));
 			};
 			
 			function loadUserProperties(){
@@ -95,12 +98,12 @@ define(["iweb/CoreModule"],
 				currentUserSessionId = userOrg.currentUsersessionId;
 				
 				var endpoint = Core.Config.getProperty("endpoint").rest;
-				var url = Ext.String.format("{0}/users/{1}/username/{2}/userOrgId/{3}/orgName/{4}",
+				var url = Ext.String.format("{0}/users/{1}/username/{2}/userOrgId/{3}/orgId/{4}",
 					endpoint,
 					workspaceId,
 					username,
 					userOrgId,
-					orgName.replace(/ /g, '%20'));
+					orgId);
 				
 				Core.Mediator.getInstance().sendRequestMessage(url, "nics.user.profile.set");
 			};
@@ -113,8 +116,30 @@ define(["iweb/CoreModule"],
 				rank = data.rank;
 				description = data.description;
 				jobTitle = data.jobTitle
+				isSuperUser = data.isSuperUser;
+				isAdminUser = data.isAdminUser;
 				
+				var endpoint = Core.Config.getProperty("endpoint").rest;
+				var url = Ext.String.format("{0}/orgs/{1}?userId={2}",
+					endpoint,
+					data.workspaceId,
+					data.userId);
+				
+				Core.Mediator.getInstance().sendRequestMessage(url, "nics.user.map.org");
 				Core.EventManager.fireEvent(profileLoadedEvt, data);
+			};
+			
+			function setOrgLocation(e, org){
+				if(org && org.organizations){
+					org.organizations.forEach(function(organization){
+						if(organization.orgId == orgId){
+							var latAndLonValues = [organization.defaultlongitude,organization.defaultlatitude];
+							var center = ol.proj.transform(latAndLonValues,'EPSG:4326','EPSG:3857');
+							MapModule.getMap().getView().setCenter(center);
+						}
+					});
+				}
+				
 			};
 			
 			function _isReadOnly(){
@@ -237,7 +262,15 @@ define(["iweb/CoreModule"],
 				
 				setJobTitle: function(jobtitle){
 					jobTitle = jobtitle;
-				},			
+				},
+				
+				isSuperUser: function(){
+					return isSuperUser;
+				},
+				
+				isAdminUser: function(){
+					return isAdminUser;
+				},
 
 				init: function(){
 					_init();

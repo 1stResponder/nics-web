@@ -27,41 +27,26 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-define([ 'iweb/CoreModule', './report/ReportViewer', './GeneralReportModule',
-		'./DamageReportModule', './ExplosivesReportModule',
-		'./MitamReportModule', 'iweb/modules/MapModule' ],
+requirejs.config({
+	paths: {
+		'd3': 'lib/d3.v3'
+	}
+});
+
+define(['iweb/CoreModule', './report/ReportViewer', './GeneralReportModule',
+		'./DamageReportModule', './RocReportModule', 'iweb/modules/MapModule' ],
 
 function(Core, ReportViewer, GeneralReportModule, DamageReportModule,
-		ExplosivesReportModule, MitamReportModule, MapModule) {
+		RocReportModule, MapModule) {
 
 	var ReportModule = function() {};
 
 	ReportModule.prototype.load = function() {
 		var reportViewer = Ext.create('modules.report.ReportViewer');
 
-		// Report Layer marker style
-		MapModule.getMapStyle().addStyleFunction(
-			function(feature, resolution, selected) {
-				if (feature.get('type') != 'report') {
-					return;
-				}
-				return [ new ol.style.Style({
-					image : new ol.style.Circle({
-						radius : 8,
-						fill : new ol.style.Fill({
-							color : feature.get('fillColor')
-						}),
-						stroke : new ol.style.Stroke({
-							color : feature.get('strokeColor')
-						})
-					})
-				}) ];
-			});
-
 		GeneralReportModule.load();
 		DamageReportModule.load();
-		ExplosivesReportModule.load();
-		MitamReportModule.load();
+		RocReportModule.load();
 
 		reportViewer.setDisabled(true); // Enables when user joins an incident
 		Core.View.addToSidePanel(reportViewer);

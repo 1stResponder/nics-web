@@ -29,9 +29,9 @@
  */
 define([
     "iweb/CoreModule", "./feature/FeatureController",
-    "iweb/modules/DrawMenuModule", "./feature/ShareWorkspaceButton", 
+    "iweb/modules/DrawMenuModule", "iweb/modules/MapModule","./feature/FeatureDetailRenderer" , "./feature/ShareWorkspaceButton", 
     "./feature/ShareWorkspaceController", "nics/modules/UserProfileModule"],
-	function(Core, FeatureController, DrawMenuModule, ShareWorkspaceButton, 
+	function(Core, FeatureController, DrawMenuModule, MapModule, FeatureDetailRenderer, ShareWorkspaceButton, 
 			ShareWorkspaceController, UserProfile) {
 	
 		var FeaturePersistenceModule = function(){};
@@ -45,6 +45,8 @@ define([
 					disabled: UserProfile.isReadOnly()
 				}));
 			});
+			var clickListener = MapModule.getClickListener();
+			clickListener.addRenderer(new FeatureDetailRenderer());
 		};
 		
 		return new FeaturePersistenceModule();

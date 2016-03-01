@@ -75,6 +75,15 @@ define(['iweb/CoreModule', './CollabRoomTabController'], function(Core) {
 				}
 			}
 			return false;
+		},
+		
+		getTab: function(collabRoomId){
+			for(var i=0; i<this.items.length; i++){
+				if(this.items.get(i).collabRoom.collabRoomId == collabRoomId){
+					return this.items.get(i);
+				}
+			}
+			return null;
 		}
 	 });
 });

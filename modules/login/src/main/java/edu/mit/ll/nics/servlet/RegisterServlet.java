@@ -458,7 +458,10 @@ public class RegisterServlet extends HttpServlet implements Servlet {
 			Object messageObj = null;
 			InputStream is = null;
 			try {
-				messageObj = response.getEntity();
+				
+				message = response.readEntity(String.class);
+				
+				/*messageObj = response.getEntity();
 				
 				if(messageObj instanceof InputStream) {
 					is = (InputStream) messageObj;
@@ -469,7 +472,7 @@ public class RegisterServlet extends HttpServlet implements Servlet {
 										
 				} else if(messageObj instanceof String) {
 					message = (String) messageObj;
-				}				
+				}*/				
 				
 			} catch(Exception e) {
 				System.out.println("Unhandled exception reading entity: " + e.getMessage());

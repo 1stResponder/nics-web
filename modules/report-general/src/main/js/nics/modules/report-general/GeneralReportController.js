@@ -52,9 +52,14 @@ define(['ol',
 				acknowledged: "Acknowledged"
 			},
 			
-			onRowClick: function(grid, record, tr, rowIndex, e, eOpts ){
+			onSelectionChange: function(grid, selected, eOpts){
+				var formId = null;
+				if (selected && selected.length) {
+					formId = selected[0].get("formId");
+				}
+
 				var store = this.lookupReference(this.view.imageRef).store;
-        		store.filter('formId', record.data.formId);
+				store.filter('formId', formId);
 			},
 			
 			onRowDblClick: function(grid, record, tr, rowIndex, e, eOpts){
@@ -81,7 +86,8 @@ define(['ol',
 				
 				this.updateForm({
 					formId: context.record.data.formId,
-					message: JSON.stringify(message)
+					message: JSON.stringify(message),
+					seqtime: context.record.data.seqtime
 				});
 			},
 			
@@ -93,7 +99,8 @@ define(['ol',
 				
 				this.updateForm({
 					formId: record.data.formId,
-					message: JSON.stringify(message)
+					message: JSON.stringify(message),
+					seqtime: record.data.seqtime
 				});
 			},
 			
@@ -101,7 +108,7 @@ define(['ol',
 				var message = JSON.parse(report.message);
 				
 				if(message.lon && message.lat){
-					this.addFeature(message.lon, message.lat);
+					this.addFeature(message.lon, message.lat, report.formId);
 				}
 				
 				return {
@@ -112,7 +119,8 @@ define(['ol',
 			        status: message.status ? message.status : 'Unacknowledged',
 			        acknowledged: message.acknowledged ? message.acknowledged : '',
 			        assigned: message.assigned ? message.assigned : "Assign...",
-			        message: report.message
+			        message: report.message,
+			        seqtime: report.seqtime
 				};
 			}
 		});

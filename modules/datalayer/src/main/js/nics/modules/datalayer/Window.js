@@ -45,7 +45,7 @@
 			button: null,
 			minButtonWidth: 0,
 			buttonAlign: 'center',
-			width: 275, 
+			width: 275,
 			height: 475,
 			bodyCls: 'data-tree-body'
 		},
@@ -57,10 +57,20 @@
 			autoHeight: true,
 			autoWidth: true,
 			rootVisible: false,
+			useArrows: true,
+			listeners: {
+				itemcontextmenu: "onItemContextMenu"
+			},
 			root: {
 				text: 'Root',
 				expanded: true
+			},
+			
+			store: {
+				//sort leaf nodes first, then by folderindex
+				sorters: [{property: 'leaf', direction: 'DESC'}, 'folderindex']
 			}
+			
 		}],
 
 		getTree: function() {
@@ -81,13 +91,7 @@
 			if(root.id == folderid){
 				folder = root;
 			} else {
-				folder = root.findChildBy(
-					function(node){ 
-						if(node.data.folderid==folderid){ 
-							return true; 
-						} return false; 
-					}, 
-					null, true);
+				folder = root.findChild("folderid", folderid, true);
 			}
 			
 			if(folder){

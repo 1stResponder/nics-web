@@ -44,14 +44,18 @@ define(['iweb/CoreModule', 'ol'], function(Core, ol){
 				return this.buildKMLLayer(config.url, config.layername);
 			}else if(type == "kmz"){
 				return this.buildKMLLayer(config.url, config.layername);
-			} else if(type == "bing"){
-				return this.buildBingLayer(config.url, config.layername, config.attributes);
-			} else if(type == "osm"){
+			}else if(type == "bing"){
+				return this.buildBingLayer(config.url, config.layername, config);
+			}else if(type == "osm"){
 				return this.buildOSMLayer(config.url, config.layername);
-			} else if(type == "xyz"){
-				return this.buildXYZLayer(config.url, config.layername, config.attributes);
-			} else if(type == "arcgisrest"){
+			}else if(type == "xyz"){
+				return this.buildXYZLayer(config.url, config.layername, config);
+			}else if(type == "arcgisrest"){
 				return this.buildArcGisLayer(config.url, config.layername);
+			}else if(type == "geojson"){
+				return this.buildGeoJsonLayer(config.url, config.layername);
+			}else if(type == "gpx"){
+				return this.buildGpxLayer(config.url, config.layername);
 			}
 		},
 		
@@ -85,8 +89,7 @@ define(['iweb/CoreModule', 'ol'], function(Core, ol){
 				      '&srsname=EPSG:3857&bbox=' + extent.join(',') + ',EPSG:3857';
 				  
 				  var loadFeatures = function(data, status){
-				  //var loadFeatures = function(evt, status){
-					  this.addFeatures(wfsFormat.readFeatures(data))
+					  this.addFeatures(wfsFormat.readFeatures(data));
 				  };
 				  
 				  var handler = loadFeatures.bind(this);
@@ -105,7 +108,7 @@ define(['iweb/CoreModule', 'ol'], function(Core, ol){
 				 _mediator.sendRequestMessage(requestUrl, topic, true, "application/xml");*/
 			    
 			  },
-			  strategy: ol.loadingstrategy.tile(new ol.tilegrid.XYZ({
+			  strategy: ol.loadingstrategy.tile(ol.tilegrid.createXYZ({
 			    maxZoom: 19
 			  })),
 			  projection: 'EPSG:3857'
@@ -144,7 +147,8 @@ define(['iweb/CoreModule', 'ol'], function(Core, ol){
 			}
 			
 			var format = new ol.format.KML({
-				extractStyles: true
+				extractStyles: true,
+				showPointNames: false
 			});
 			
 			var vectorSource = new ol.source.Vector({
@@ -158,12 +162,11 @@ define(['iweb/CoreModule', 'ol'], function(Core, ol){
 			});
 		},
 		
-		buildBingLayer: function(url, layername, attributes) {
-			var attrs = JSON.parse(attributes) || {};
+		buildBingLayer: function(url, layername, config) {
+			var attrs = (config.attributes) ? JSON.parse(config.attributes) : {};
 			return new ol.layer.Tile({
 				source: new ol.source.BingMaps({
-					//TODO: make this configurable
-					key: 'Ak-dzM4wZjSqTlzveKz5u0d4IQ4bRzVI309GxmkgSVr1ewS6iPSrOvOKhA-CJlm3',
+					key: Core.Config.getProperty("maps.bing.apikey"),
 					imagerySet: attrs.type,
 					maxZoom: 19
 				})
@@ -176,9 +179,10 @@ define(['iweb/CoreModule', 'ol'], function(Core, ol){
 			});
 		},
 		
-		buildXYZLayer: function(url, layername, attributes) {
-			var attrs = JSON.parse(attributes) || {};
+		buildXYZLayer: function(url, layername, config) {
+			var attrs = (config.attributes) ? JSON.parse(config.attributes) : {};
 			return new ol.layer.Tile({
+				opacity: config.opacity,
 				source: new ol.source.XYZ({
 					url: url,
 					maxZoom: attrs.maxZoom
@@ -186,10 +190,45 @@ define(['iweb/CoreModule', 'ol'], function(Core, ol){
 			});
 		},
 		
+		buildGeoJsonLayer: function(url, layername){
+			if(layername){
+				url = url + layername;
+			}
+			
+			var vectorSource = new ol.source.Vector({
+			  url: url,
+			  format: new ol.format.GeoJSON()
+	        });
+			
+			return new ol.layer.Vector({
+			  source: vectorSource
+			});
+			
+		},
+		
+		buildGpxLayer: function(url, layername){
+			if(layername){
+				url = url + layername;
+			}
+			
+			var vectorSource = new ol.source.Vector({
+			  url: "proxy?url=" + url,
+			  format: new ol.format.GPX(),
+			  projection: 'EPSG:3857'
+	        });
+			
+			return new ol.layer.Vector({
+			  source: vectorSource
+			});
+			
+		},
+		
 		buildArcGisLayer: function(url, layername) {
+			
 			return new ol.layer.Tile({
 				source: new ol.source.TileArcGISRest({
-					url: url
+					url: url,
+					params: {'LAYERS': 'show:' + layername }
 				})
 			});
 		}

@@ -27,7 +27,7 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-define(['ext', 'ol', "iweb/CoreModule", "nics/modules/UserProfileModule"], 
+define(['ext', 'ol', "iweb/CoreModule", "nics/modules/UserProfileModule"],
 	function(Ext, ol, Core, UserProfile){
 	
 		return Ext.define('modules.datalayer.FileImportController', {
@@ -37,7 +37,6 @@ define(['ext', 'ol', "iweb/CoreModule", "nics/modules/UserProfileModule"],
 			
 			init: function() {
 				this.dataSourceType = this.getView().dataSourceType;
-				this.capabilitiesFormat = this.getView().capabilitiesFormat;
 				this.workspaceId = this.getView().workspaceId;
 				this.allowUrl = this.getView().allowUrl;
 				this.url = this.getView().url;
@@ -94,6 +93,29 @@ define(['ext', 'ol', "iweb/CoreModule", "nics/modules/UserProfileModule"],
 					}
 				
 				}
+				else if(fileType == 'gpx'){
+				
+					if(!fileName || !fileName.endsWith('.gpx')){
+						return Ext.Msg.show({
+							title: 'File Import',
+							message: 'Please include a GPX file.',
+							buttons: Ext.Msg.OK
+						});
+					}
+				
+				}
+				else if(fileType == 'json'){
+				
+					if(!fileName || !fileName.endsWith('.json')){
+						return Ext.Msg.show({
+							title: 'File Import',
+							message: 'Please include a JSON file.',
+							buttons: Ext.Msg.OK
+						});
+					}
+				
+				}
+				
 				
 				if(!displayname){
 					return Ext.Msg.show({
@@ -123,7 +145,7 @@ define(['ext', 'ol', "iweb/CoreModule", "nics/modules/UserProfileModule"],
 							buttons: Ext.Msg.OK,
 							icon: Ext.Msg.ERROR
 						});
-					} 
+					}
 				});
 				
 			},

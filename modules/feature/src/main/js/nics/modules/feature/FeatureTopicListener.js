@@ -27,7 +27,8 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-define(['ext', 'iweb/CoreModule', "ol", "nics/modules/UserProfileModule"], function(Ext, Core, ol, UserProfile){
+define(['ext', 'iweb/CoreModule', "ol", "iweb/modules/MapModule", "nics/modules/UserProfileModule"], 
+	function(Ext, Core, ol, MapModule, UserProfile){
 	
 	var format = new ol.format.WKT();
 	var USER_TYPE = "user";
@@ -121,6 +122,13 @@ define(['ext', 'iweb/CoreModule', "ol", "nics/modules/UserProfileModule"], funct
 				for(var i=0; i<response.features.length; i++){
 					this.createFeature(response.features[i]);
 				}
+				
+				if(e.indexOf('collabroom') != -1){
+					var extent = this.layer.getSource().getExtent();
+					if(extent.length > 0 && isFinite(extent[0])) {
+						MapModule.mapController.zoomToExtent(extent);
+					}
+				}
 			}
 		},
 		
@@ -134,12 +142,26 @@ define(['ext', 'iweb/CoreModule', "ol", "nics/modules/UserProfileModule"], funct
 		
 		/** Create a local instance of the feature**/
 		createFeature: function(data){
-			try{
-				var feature = new ol.Feature({
-				  geometry: format.readGeometry(data.geometry)
-				});
-			}catch(e){
-				return;
+			var feature = new ol.Feature();
+			
+			feature.setId(data.featureId);
+			this.populateFeature(feature, data);
+			
+			//Add feature to the layer
+			feature.persistChange = false;
+			this.layer.getSource().addFeature(feature);
+			feature.persistChange = true;
+		},
+		
+		
+		populateFeature: function(feature, data){
+			
+			if (data.geometry) {
+				try {
+					feature.setGeometry(format.readGeometry(data.geometry));
+				} catch (e) {
+					return false;
+				}
 			}
 			
 			var properties = {};
@@ -156,14 +178,8 @@ define(['ext', 'iweb/CoreModule', "ol", "nics/modules/UserProfileModule"], funct
 				properties.attributes = JSON.parse(properties.attributes);
 			}
 			
-			feature.persistChange = false;
 			feature.setProperties(properties);
-			feature.setId(data.featureId);
 			
-			
-			//Add feature to the layer
-			this.layer.getSource().addFeature(feature);
-			feature.persistChange = true;
 		},
 		
 		/** Persist if the feature is newly drawn **/
@@ -173,6 +189,7 @@ define(['ext', 'iweb/CoreModule', "ol", "nics/modules/UserProfileModule"], funct
 					!event.feature.getId()){ //If the feature is a new drawing it will not have an id assigned yet
 				
 				var feature = this.getFeature(event.feature);
+				feature.seqtime = Math.round((new Date()).getTime() / 1000);
 				
 				var url = Ext.String.format('{0}/features/{1}/{2}', 
 						Core.Config.getProperty(UserProfile.REST_ENDPOINT),
@@ -248,7 +265,8 @@ define(['ext', 'iweb/CoreModule', "ol", "nics/modules/UserProfileModule"], funct
 					if(event.feature.getGeometry()){
 						var feature = this.getFeature(event.feature);
 						feature.featureId = event.feature.getId();
-						
+						feature.seqtime = Math.round((new Date()).getTime() / 1000);
+
 						var url = Ext.String.format('{0}/features/update/{1}', 
 								Core.Config.getProperty(UserProfile.REST_ENDPOINT),
 								this.featureType);
@@ -302,17 +320,8 @@ define(['ext', 'iweb/CoreModule', "ol", "nics/modules/UserProfileModule"], funct
 						//change since this user did not make the change
 						feature.persistChange = false;
 						
-						//update the feature
-						for(var prop in data){
-							if(prop != GEOMETRY_FIELD && data[prop] != null){ //unset if the new value is null?
-								feature.set(prop, data[prop]);
-							}
-						}
-						
-						if(data.geometry){
-							feature.setGeometry(format.readGeometry(data.geometry));
-						}
-						
+						this.populateFeature(feature, data);
+
 						feature.persistChange = true; //Set back to true after we're finished
 					}else {
 						this.createFeature(data);
@@ -337,7 +346,9 @@ define(['ext', 'iweb/CoreModule', "ol", "nics/modules/UserProfileModule"], funct
 		getNewDrawingLayer: function(){
 			var topicListener = this;
 			
-			var source = new ol.source.Vector();
+			var source = new ol.source.Vector({
+				wrapX: false
+			});
 			source.on('addfeature', this.onNewFeature.bind(this));
 			source.on('removefeature', this.onDeleteFeature.bind(this));
 			source.on('changefeature', this.onChangeFeature.bind(this));

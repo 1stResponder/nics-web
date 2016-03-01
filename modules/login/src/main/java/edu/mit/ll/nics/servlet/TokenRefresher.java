@@ -52,10 +52,11 @@ import edu.mit.ll.iweb.session.SessionHolder;
 import edu.mit.ll.iweb.websocket.Config;
 import edu.mit.ll.nics.sso.util.SSOUtil;
 import edu.mit.ll.nics.util.CookieTokenUtil;
+import org.apache.log4j.Logger;
 
 @WebServlet("/refresh")
 public class TokenRefresher extends HttpServlet implements Servlet {
-	
+	private static Logger logger = Logger.getLogger(TokenRefresher.class);
 	private static String CURRENT_USER_SESSION_ID = "currentUserSessionId";
 	private static String restEndpoint;
 	public static String WORKSPACE_ID = "workspaceId";
@@ -86,9 +87,11 @@ public class TokenRefresher extends HttpServlet implements Servlet {
 	}
 
 	public boolean refreshToken(String sessionId, String currentUserSessionId){
+		logger.info("Trying to refresh token");
 		String token = (String) SessionHolder.getData(sessionId, SessionHolder.TOKEN);
 		SSOUtil ssoUtil = new SSOUtil();
 		if(!ssoUtil.refreshSessionToken(token)){
+			logger.info("removing token from database");
 			//remove from database
 			CookieTokenUtil tokenUtil = new CookieTokenUtil();
 			Client jerseyClient = ClientBuilder.newClient();
@@ -111,6 +114,8 @@ public class TokenRefresher extends HttpServlet implements Servlet {
 			
 			return false;
 		}
+
+		logger.info("Refreshed token");
 		return true;
 	}
 

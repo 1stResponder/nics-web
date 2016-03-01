@@ -51,6 +51,11 @@
 			this.stateDropdown = Core.UIBuilder.buildComboBox(
 				"state", "State", 135, ['country', 'state'], {valueField: 'state', forceSelection: true, typeAhead: true, emptyText: 'None'});
 				
+			this.latitudeInput = Ext.create('Ext.form.field.Number', { name: 'lat', fieldLabel: 'Latitutde', width: 100,
+				hideTrigger: true, keyNavEnabled: false, mouseWheelEnabled: false, decimalPrecision: 14 });
+			this.longitudeInput = Ext.create('Ext.form.field.Number', { name: 'lon', fieldLabel: 'Longitude', width: 100,
+				hideTrigger: true, keyNavEnabled: false, mouseWheelEnabled: false, decimalPrecision: 14 });
+				
 			this.nameInput = Ext.create('Ext.form.field.Text', { name: 'incidentName', fieldLabel: 'Name', width: 100, maxLength: 40, enforceMaxLength: true });
 			this.prefixValue = Ext.create('Ext.form.field.Display',{ name: 'prefix', fieldLabel: 'Prefix'});
 			
@@ -64,6 +69,7 @@
 	
 			this.createButton = Ext.create('Ext.Button', { text: 'Create' });
 			this.cancelButton = Ext.create('Ext.Button', { text: 'Cancel', handler: function(){ this.createWindow.hide(); }, scope: this});
+			this.locateButton = Ext.create('Ext.Button', { text: 'Locate', enableToggle: true });
 			
 			this.incidentTypeSet = Ext.create('Ext.form.FieldSet',{
 				autoScroll: true,
@@ -117,11 +123,13 @@
 				        defaultType: 'textfield',
 				        defaults: {
 				            anchor: '-10',
-				            stripCharsRe: /[^a-zA-Z0-9_\-\s]/
+				            stripCharsRe: /[^a-zA-Z0-9_\-\s.]/
 				        },
 				        items:[
 				        	this.countryDropdown,
 				        	this.stateDropdown,
+				        	this.latitudeInput,
+				        	this.longitudeInput,
 				        	this.prefixValue,
 				        	this.parentDropdown,
 				        	this.nameInput,
@@ -132,7 +140,8 @@
 			    ],
 			    buttons: [
 			    	this.createButton,
-			    	this.cancelButton
+			    	this.cancelButton,
+			    	this.locateButton
 			    ]
 			});
 			
@@ -180,6 +189,7 @@
 		resetCreateWindow: function(){
 			this.setDescription("");
 			this.setName("");
+			this.setCountry("");
 			this.resetIncidentTypes();
 			this.resetParentIncident();
 		},
@@ -217,7 +227,7 @@
 				parentIncidents.push(p);
 				
 				this.addMenuItem(incidents[i].incidentName,incidents[i].incidentId,
-					null, null, null, -1, false, model.getIncidentCallBack());
+					incidents[i].lat, incidents[i].lon, null, -1, false, model.getIncidentCallBack());
 			}
 			this.setParentIncidents(parentIncidents);
 		},
@@ -228,8 +238,8 @@
 			var config = {
 				text: Ext.String.htmlEncode(text),
 				folder : false,
-				lat: 0,
-				lon: 0,
+				lat: lat,
+				lon: lon,
 				incidentTypes: [],
 				incidentId: incidentid
 			};
@@ -294,7 +304,7 @@
 
 		setIncidentTypes: function(incidentTypes){
 			var displayIncidentTypes = [];
-			if(incidentTypes.length > 0){
+			if(incidentTypes && incidentTypes.length > 0){
 				for(var i=0; i<incidentTypes.length; i++){
 					displayIncidentTypes.push(
 					    Ext.create('Ext.form.Checkbox',{
@@ -306,6 +316,16 @@
 				}
 		
 				this.incidentTypeSet.add(displayIncidentTypes);
+			}
+		},
+		
+		checkIncidentTypes: function(incidentName){
+			if(this.incidentTypeSet.items.length > 0){
+				for(var i=0; i < this.incidentTypeSet.items.length; i++){
+					if(incidentName == this.incidentTypeSet.items.get(i).boxLabel){
+						this.incidentTypeSet.items.get(i).setValue(true);
+					}
+				}
 			}
 		},
 
@@ -351,6 +371,14 @@
 			store.loadData(jQuery.merge([["None Selected", null]], incidents));
 			this.parentDropdown.setValue(store.getAt(0).data.incidentname);
 		},
+		
+		addParentIncident: function(incident){
+			this.parentDropdown.getStore().insert(1,incident);
+		},
+		
+		setParentIncidentBox: function(incidentId){
+			this.parentDropdown.setValue(incidentId);
+		},
 
 		getParentIncident: function(){
 			return this.parentDropdown.getValue();
@@ -368,13 +396,29 @@
 		getName: function(){
 			return this.nameInput.getValue();
 		},
+		
+		getLat: function(){
+			return this.latitudeInput.getValue();
+		},
+		
+		getLon: function(){
+			return this.longitudeInput.getValue();
+		},
 
 		setDescription: function(description){
 			this.description.setValue(description);
 		},
 
 		setName: function(name){
-			this.nameInput.setValue(name); //setText?
+			this.nameInput.setValue(name); 
+		},
+		
+		setLat: function(name){
+			this.latitudeInput.setValue(name); 
+		},
+		
+		setLon: function(name){
+			this.longitudeInput.setValue(name); 
 		},
 
 		getIncidentName: function(){

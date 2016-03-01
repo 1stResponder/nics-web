@@ -56,7 +56,8 @@ module.exports = function(grunt) {
             "ext": "empty:",
             "ext-charts": "empty:",
             "atmosphere": "empty:",
-            "d3": "empty:"
+            "d3": "empty:",
+            "async": "lib/require/async"
           },
 
           optimize: "uglify2",

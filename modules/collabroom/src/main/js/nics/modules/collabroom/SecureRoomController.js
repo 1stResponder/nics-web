@@ -27,8 +27,9 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-define(['ext', 'iweb/CoreModule','nics/modules/UserProfileModule'],
-         function(Ext, Core, UserProfile){
+define(['ext', 'iweb/CoreModule','nics/modules/UserProfileModule',
+        'nics/modules/administration/UserLookupView'],
+         function(Ext, Core, UserProfile, UserLookupView){
 	
 	return Ext.define('modules.administration.SecureRoomController', {
 		extend : 'Ext.app.ViewController',
@@ -39,9 +40,27 @@ define(['ext', 'iweb/CoreModule','nics/modules/UserProfileModule'],
 		
 		init: function(){
 			this.mediator = Core.Mediator.getInstance();
+			this.lookupWindow = new UserLookupView({
+	            	callback: { fnc: this.addUsers, scope: this}
+			});
 		},
 		
-		loadUsers: function(){
+		onLookupUsersButtonClick: function(){
+			this.lookupWindow.show();
+		},
+		
+		addUsers: function(selected){
+			var grid = this.getView().getFirstGrid();
+			var data = [];
+			for(var i=0; i<selected.length; i++){
+				data.push([selected[i].data.username,
+				           selected[i].data.userId,
+				           "",""]);
+			}
+			grid.getStore().loadData(data, true);
+		},
+		
+		loadUnsecureUsers: function(incidentId, collabRoomId){
 			var grid = this.getView().getFirstGrid();
 			
 			var topic = Core.Util.generateUUID();
@@ -49,37 +68,98 @@ define(['ext', 'iweb/CoreModule','nics/modules/UserProfileModule'],
 			//populate the user grids
 			Core.EventManager.createCallbackHandler(topic, this, 
 					function(evt, response){
-						if(response.users){
+						if(response.data && response.data.length > 0){
 							var data = [];
-							for(var i=0; i<response.users.length;i++){
-								data.push([response.users[i].username, 
-								           	response.users[i].userId,
-								           	"", ""]);
+							for(var i=0; i<response.data.length;i++){
+								var user = response.data[i];
+								data.push([user.username, user.userid,	"", ""]);
 							}
 							grid.getStore().loadData(data);
 						}
 					}
 			);
 			
-			var url = Ext.String.format('{0}/users/{1}', 
+			if(!collabRoomId){
+				collabRoomId = -1;
+			}
+			
+			var url = Ext.String.format('{0}/collabroom/{1}/users/{2}/unsecure/{3}?orgId={4}', 
 					Core.Config.getProperty(UserProfile.REST_ENDPOINT),
-					this.workspaceId);
+					incidentId, UserProfile.getWorkspaceId(), collabRoomId, UserProfile.getOrgId(),
+					UserProfile.getUserOrgId());
+			
+			this.mediator.sendRequestMessage(url, topic);
+		},
+		
+		loadSecureUsers: function(incidentId, collabroomId){
+			var grid = this.getView().getFirstGrid();
+			var readWriteGrid = this.getView().getSecondGrid();
+			var adminGrid = this.getView().getThirdGrid();
+			
+			var topic = Core.Util.generateUUID();
+			
+			//populate the user grids
+			Core.EventManager.createCallbackHandler(topic, this, 
+					function(evt, response){
+						var adminUsers = [];
+						var readWriteUsers = [];
+						if(response.data && response.data.length > 0){
+							for(var i=0; i<response.data.length;i++){
+								var user = response.data[i];
+								var userData = [user.username, user.userid,	"", ""];
+								if(user.systemroleid == 4){
+									adminUsers.push(userData);
+								}else{
+									readWriteUsers.push(userData);
+								}
+							}
+							if(adminUsers.length > 0){
+								adminGrid.getStore().loadData(adminUsers);
+							}
+							if(readWriteUsers.length > 0){
+								readWriteGrid.getStore().loadData(readWriteUsers);
+							}
+						}
+					}
+			);
+			
+			var url = Ext.String.format('{0}/collabroom/{1}/users/{2}', 
+					Core.Config.getProperty(UserProfile.REST_ENDPOINT),
+					incidentId, collabroomId);
 			
 			this.mediator.sendRequestMessage(url, topic);
 		},
 		
 		getAdminUsers: function(){
+			
 			var users = this.getUsers(this.getView().getThirdGrid());
 			
-			//Add the current user as an admin
-			if($.inArray(this.userId, users) == -1){
-				users.push(this.userId);
+			//If current user is not an admin
+			if($.inArray(UserProfile.getUserId(), users) == -1){
+				var rwUsers = this.getUsers(this.getView().getSecondGrid());
+				var index = $.inArray(UserProfile.getUserId(), rwUsers);
+				
+				if(index == -1){ //User did not indicate ReadWrite user, make them an admin
+					users.push(UserProfile.getUserId());
+				}else{
+					if(users.length == 0){ //If user indicated ReadWrite but no other admins, make user an admin
+						users.push(UserProfile.getUserId());
+					}
+				}
 			}
 			return users;
 		},
 		
 		getReadWriteUsers: function(){
-			return this.getUsers(this.getView().getSecondGrid());
+			return this.getUsers(this.getView().getSecondGrid()); 
+		},
+		
+		clearAdminUsers: function(){
+			this.getView().getThirdGrid().store.removeAll();
+		},
+		
+		clearReadWriteUsers: function(){
+			this.getView().getSecondGrid().store.removeAll();
 		},
 		
 		getUsers: function(grid){
@@ -89,14 +169,6 @@ define(['ext', 'iweb/CoreModule','nics/modules/UserProfileModule'],
 				ids.push(store.getAt(i).data.userid);
 			}
 			return ids;
-		},
-		
-		setWorkspaceId: function(workspaceId){
-			this.workspaceId = workspaceId;
-		},
-		
-		setUserId: function(userId){
-			this.userId = userId;
 		}
 	});
 });

@@ -27,8 +27,8 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-define(['./RoomManagementController'],
-		function(RoomManagementController) {
+define(['./RoomManagementController', 'nics/modules/collabroom/SecureRoomView','nics/modules/UserProfileModule'],
+		function(RoomManagementController, SecureRoomView, UserProfile) {
 	
 	return Ext.define('modules.administration.RoomManagementView', {
 	 
@@ -40,31 +40,25 @@ define(['./RoomManagementController'],
 	 
 	 	initComponent: function(){
 			this.callParent();
-			this.add({
-	        	xtype: 'panel',
-	        	html: 'You do not have permissions to modify this room.', 
-	        	bodyStyle: 'padding:5px;font-size:12px',
-	        	reference: 'defaultPanel'
-			});
+			
+			var secureRoomView = new SecureRoomView();
+			secureRoomView.setReference('managePermissions');
+			
+			this.add(secureRoomView);
 			
 			this.add({ 
 				xtype: 'checkbox',
 				boxLabel: 'Unsecure Room',
 				name: 'secureRoom',
 				reference: 'secureRoomCB',
-				width: '100%',
-				margin: '10 20',
-				hidden: true,
-				listeners: {
-					change: "onUnsecureRoomClick"
-				},
-				hidden: true
+				disabled: true,
+				margins: '10 20 0 0'
 			});
 	 	},
 	 	
 	 	config: {
-	 		width: 200,
-	 		height: 75,
+	 		width: 500,
+	 		height: 600,
 	 		layout: {
 	            type: 'vbox',
 	            align: 'stretch'
@@ -72,14 +66,26 @@ define(['./RoomManagementController'],
 	        title: 'Room Management'
 	 	},
 	 	
-	 	addUnsecure: function(){
-	 		this.lookupReference('defaultPanel').hide();
-	 		this.lookupReference('secureRoomCB').setVisible(true);
+	 	buttons: [ { 
+        	  xtype: 'button', 
+        	  text: 'Apply',
+        	  reference: 'applyButton',
+        	  handler: 'updateCollabRoom'
+          },
+          { 
+        	  xtype: 'button', 
+        	  text: 'Cancel',
+        	  handler: 'closeManager'
+        }],
+	 	
+	 	showManager: function(){
+	 		this.isManager = true;
+	 		this.lookupReference('secureRoomCB').enable();
 	 	},
 	 	
-	 	removeUnsecure: function(){
-	 		this.lookupReference('defaultPanel').setVisible(true);
-	 		this.lookupReference('secureRoomCB').hide();
+	 	hideManager: function(){
+	 		this.isManager = false;
+	 		this.lookupReference('secureRoomCB').disable();
 	 	},
 	 	
 	 	uncheck: function(){

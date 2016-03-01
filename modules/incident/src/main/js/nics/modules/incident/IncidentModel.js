@@ -43,6 +43,8 @@ define([], function() {
 	IncidentModel.prototype.workspaceId = -1;
 	IncidentModel.prototype.description = "";
 	IncidentModel.prototype.incidentName = "";
+	IncidentModel.prototype.lat = -1;
+	IncidentModel.prototype.lon = -1;
 	IncidentModel.prototype.incidentTypeIds = [];
 	IncidentModel.prototype.incidentCallBack = null;
 	IncidentModel.prototype.username = null;
@@ -67,6 +69,22 @@ define([], function() {
 
 	IncidentModel.prototype.getCurrentIncident = function(){
 		return this.currentIncident;
+	};
+	
+	IncidentModel.prototype.setLon = function(lon){
+		this.lon = lon;
+	};
+	
+	IncidentModel.prototype.getLon = function(){
+		return this.lon;
+	};
+	
+	IncidentModel.prototype.setLat = function(lat){
+		this.lat = lat;
+	};
+	
+	IncidentModel.prototype.getLat = function(){
+		return this.lat;
 	};
 	
 	IncidentModel.prototype.getCurrentIncidentId = function(){

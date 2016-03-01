@@ -27,10 +27,10 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-define([ 'ol', 'iweb/CoreModule', 'nics/modules/UserProfileModule',
-		'./UserPickerView' ],
+define([ 'ol', 'iweb/CoreModule', 'iweb/modules/MapModule',
+			'nics/modules/UserProfileModule', './UserPickerView' ],
 
-function(ol, Core, UserProfile, UserPicker) {
+function(ol, Core, MapModule, UserProfile, UserPicker) {
 	
 	Ext.define('modules.report.ReportTableController', {
 		extend : 'Ext.app.ViewController',
@@ -68,6 +68,12 @@ function(ol, Core, UserProfile, UserPicker) {
 				title : this.reportTitle,
 				component : this.getView()
 			});
+
+			Core.EventManager.addListener("map-selection-change", this.onMapSelectionChange.bind(this));
+
+			this.getGrid().on("selectionchange", this.onGridSelectionChange.bind(this));
+
+			MapModule.getMapStyle().addStyleFunction(this.styleReportFeature.bind(this));
 		},
 		
 		onJoinIncident : function(e, incident) {
@@ -163,7 +169,7 @@ function(ol, Core, UserProfile, UserPicker) {
 					feature.set('strokeColor', (color ? color : this.strokeColor));
 
 					if (formId) {
-						feature.set('formId', formId);
+						feature.setId(formId);
 						// Replace old feature with new feature
 						this.removeExistingFeature(formId);
 					}
@@ -177,16 +183,49 @@ function(ol, Core, UserProfile, UserPicker) {
 			return null;
 		},
 
+		styleReportFeature: function(feature, resolution, selected) {
+			if (feature.get('type') != 'report') {
+				return;
+			}
+			var styles = [ new ol.style.Style({
+				image : new ol.style.Circle({
+					radius : 8,
+					fill : new ol.style.Fill({
+						color : feature.get('fillColor')
+					}),
+					stroke : new ol.style.Stroke({
+						color : feature.get('strokeColor')
+					})
+				})
+			})];
+
+			if (selected) {
+				styles.unshift(new ol.style.Style({
+					image: new ol.style.Circle({
+						radius: 16,
+						fill: new ol.style.Fill({
+							color: 'rgba(0, 255, 255, 0.4)'
+						}),
+						stroke: new ol.style.Stroke({
+							color: 'rgb(0, 255, 255)'
+						})
+					})
+				}));
+			}
+
+			return styles;
+		},
+
 		removeExistingFeature : function(formId) {
-			Ext.Array
-					.each(this.vectorLayer.getSource().getFeatures(),
-							function(feature) {
-								if (feature.get('formId') == formId) {
-									this.vectorLayer.getSource()
-										.removeFeature(feature);
-									return;
-								}
-							}, this);
+			var layerSrc = this.vectorLayer.getSource();
+			var feature = layerSrc.getFeatureById(formId);
+			if (feature) {
+				layerSrc.removeFeature(feature);
+				
+				//unselect the element being removed
+				var selectedCollection = Core.Ext.Map.getSelection();
+				selectedCollection.remove(feature);
+			}
 		},
 
 		onPlotButtonClick : function(button, pressed, eOpts) {
@@ -228,7 +267,7 @@ function(ol, Core, UserProfile, UserPicker) {
 		},
 		
 		showReport : function(report) {
-			var items = []
+			var items = [];
 
 			for (var prop in this.reportView) {
 				// Only show the data with values
@@ -271,7 +310,7 @@ function(ol, Core, UserProfile, UserPicker) {
 			        	text: 'Cancel',
 			        	handler: function(){
 			        		this.findParentByType('window').close();
-			        	} 
+			        	}
 			          }
 					]
 				});
@@ -280,8 +319,94 @@ function(ol, Core, UserProfile, UserPicker) {
 			}
 		},
 
+		onMapSelectionChange: function(e, features) {
+			//prevent reentrance
+			if (this.syncingSelection) {
+				return;
+			}
+			this.syncingSelection = true;
+			
+			var grid = this.getGrid(),
+					store = grid.getStore();
+
+			var records = features.map(function(feature){
+				return store.getById( feature.getId() );
+			}).filter(function(n){ return n !== null; });
+
+			var selectionModel = grid.getSelectionModel();
+			if (records.length) {
+				//select our records, clearing previous selection
+				selectionModel.select(records, /* keepExisting */ false);
+			} else {
+				selectionModel.deselectAll();
+			}
+			
+			this.syncingSelection = false;
+		},
+
+		onGridSelectionChange: function(grid, selection, eOpts) {
+			//don't select when layer is hidden
+			if (!this.vectorLayer.getVisible()) {
+				return;
+			}
+			
+			//prevent reentrance
+			if (this.syncingSelection) {
+				return;
+			}
+			this.syncingSelection = true;
+
+			var layerSrc = this.vectorLayer.getSource();
+
+			//find each record's matching feature
+			var features = selection.map(function(model){
+				return layerSrc.getFeatureById( model.getId() );
+			}).filter(function(n){ return n !== null; });
+
+			//add them all to selected collection
+			var selectedCollection = Core.Ext.Map.getSelection();
+			selectedCollection.clear();
+			if (features.length) {
+				selectedCollection.extend(features);
+				this.centerOnFeatures(features);
+			}
+			
+			this.syncingSelection = false;
+		},
+
+		centerOnFeatures : function(features) {
+			//build an extent from our features
+			var featuresExtent = ol.extent.createEmpty();
+			features.forEach(function(feature){
+				ol.extent.extend(featuresExtent, feature.getGeometry().getExtent());
+			});
+			var featuresCenter = ol.extent.getCenter(featuresExtent);
+			
+			var map = MapModule.getMap(),
+					view = map.getView();
+			view.setCenter(featuresCenter);
+		},
+
+		zoomOnFeatures : function(features) {
+			//build an extent from our features
+			var featuresExtent = ol.extent.createEmpty();
+			features.forEach(function(feature){
+				ol.extent.extend(featuresExtent, feature.getGeometry().getExtent());
+			});
+
+			var map = MapModule.getMap(),
+					view = map.getView();
+			view.fit(featuresExtent, map.getSize(), {
+				maxZoom: 12 //don't zoom in too far
+			});
+		},
+
+		getGrid : function () {
+			return this.lookupReference(this.view.gridRef);
+		},
+
 		clearGridStore : function() {
-			var store = this.lookupReference(this.view.gridRef).store;
+			var store = this.getGrid().store;
 			if (store) {
 				store.removeAll();
 				store.clearFilter();
@@ -290,11 +415,13 @@ function(ol, Core, UserProfile, UserPicker) {
 
 		clearImageStore : function() {
 			var imagePanel = this.lookupReference(this.view.imageRef);
-			var store = imagePanel.store;
-			if (store) {
-				store.removeAll();
+			if(imagePanel){
+				var store = imagePanel.store;
+				if (store) {
+					store.removeAll();
+				}
+				imagePanel.refresh();
 			}
-			imagePanel.refresh();
 		},
 
 		clearLayer : function() {
@@ -345,6 +472,8 @@ function(ol, Core, UserProfile, UserPicker) {
 				//Handle single report
 				else if(response.formId){
 					newReports.push(this.getFormData(response));
+					this.addImage(response);
+					
 				}
 				//Add to grid
 				gridStore.loadRawData(newReports, true);

@@ -33,12 +33,14 @@ define(['ext'], function(Ext) {
 	 
 	 	extend: 'Ext.panel.Panel',
 
+	 	autoHeight: true,
+	 	
+	 	autoWidth: true,
+	 	
+	 	border: false,
+	 	
 	 	initComponent: function(){
 	 		this.callParent();
-	 		
-	 		if(this.height){
-	 	    	this.setHeight(this.height);
-	 	    }
 	 		
 	 		this.loadGrids();
 	 	},

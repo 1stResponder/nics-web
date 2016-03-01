@@ -39,3 +39,10 @@
     left: 65px;
     top: 29px;
 }
+
+.multi-incident-tree .x-tree-icon {
+
+	display: none !important;
+	align: left;
+
+}

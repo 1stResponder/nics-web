@@ -36,7 +36,7 @@
 	<parent>
 		<groupId>edu.mit.ll.nics</groupId>
 		<artifactId>nics-web</artifactId>
-		<version>6.1</version>
+		<version>6.1.1</version>
 		<relativePath>..</relativePath>
 	</parent>
 
@@ -60,6 +60,11 @@
 		<dependency>
 			<groupId>edu.mit.ll.iweb</groupId>
 			<artifactId>draw-menu-module</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>edu.mit.ll.iweb</groupId>
+			<artifactId>geocode-module</artifactId>
 			<version>${project.version}</version>
 		</dependency>
 		<dependency>
@@ -100,13 +105,8 @@
     	    <version>${project.version}</version>
 	    </dependency>
 		<dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>explosives-report-module</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-		<dependency>
 		    <groupId>${project.groupId}</groupId>
-		    <artifactId>mitam-report-module</artifactId>
+		    <artifactId>roc-report-module</artifactId>
 		    <version>${project.version}</version>
 		</dependency>
 		<dependency>
@@ -159,6 +159,16 @@
 			<artifactId>account-info-module</artifactId>
 			<version>${project.version}</version>
 		</dependency>
+		<dependency>
+			<groupId>${project.groupId}</groupId>
+			<artifactId>multi-incident-view-module</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>feedback-report-module</artifactId>
+            <version>${project.version}</version>
+        </dependency>
 
 		<!-- test dependencies -->
 		<dependency>
@@ -279,5 +289,5 @@
 
 		</profile>
 	</profiles>
-	
+
 </project>

@@ -39,6 +39,15 @@ define(['./DDGridView', './UserController', './UserModel'],
 	 	extend: 'Ext.Panel',
 
 	 	controller: 'usercontroller',
+	 	
+	 	reference: 'userView',
+	 	
+	 	title: 'Users',
+	    
+	    collapsible: true,
+	    
+	    autoWidth: true,
+ 		autoHeight: true,
 	 
 	 	initComponent: function(){
 			this.callParent();
@@ -71,19 +80,12 @@ define(['./DDGridView', './UserController', './UserModel'],
 	        	html: 'Drag and drop a username to enable/disable. <br/>To multi-select rows, hold down the control key while selecting.', 
 	        	bodyStyle: 'padding:5px;font-size:12px'
 			});
-	 	},
+
+			this.lookupReference(FIRST_GRID_REF).addListener("rowdblclick", this.controller.onUserClick, this.controller);
+			this.lookupReference(SECOND_GRID_REF).addListener("rowdblclick", this.controller.onUserClick, this.controller);
+		},
 	 	
-	 	config: {
-	 		autoWidth: true,
-	 		autoHeight: true,
-	 		layout: {
-	            type: 'vbox',
-	            align: 'stretch'
-	        },
-	        title: 'Users'
-	 	},
-	 	
-	 	items:[{
+	 	/*items:[{
 			xtype: 'combobox',
 			width: '100%',
 			forceSelection: true,
@@ -105,7 +107,7 @@ define(['./DDGridView', './UserController', './UserModel'],
 			listeners:{
 				select: 'setWorkspaceId'
 			}
-		}],
+		}],*/
 		
 		getUsersPanel: function(){
 			return this.lookupReference('adminUserGrid');

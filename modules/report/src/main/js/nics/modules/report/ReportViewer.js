@@ -47,15 +47,7 @@
 		config: {
 			title: 'Reports',
 			text : 'Reports',
-			style: 'nontb_style',
-			items: [
-				{
-					id: 'reportSummaryPanel',
-				    title: 'Summary',
-				    bodyPadding: 10,
-				    html: '<p>Reports will populate the tabs above</p>'
-				}
-			 ]
+			style: 'nontb_style'
 		},		
 		
 		/**

@@ -36,6 +36,8 @@
 			controller: 'accountinfocontroller',
 
 			requires: [ 'Ext.Panel', 'Ext.Button', 'Ext.form.TextField', 'Ext.Container' ],
+			
+			referenceHolder: true,
 
 			initComponent: function(){
 
@@ -48,6 +50,7 @@
 				    title: 'User Account Info',
 					layout: 'anchor',
 					bodyPadding: 10,
+					referenceHolder: true,
 				    defaults: {
 				        anchor: '100%'
 				    },
@@ -96,17 +99,10 @@
 				    {
 				        fieldLabel: 'Job Description',
 				        name: 'desc'
-				    },
-				    {
-				    	xtype: 'displayfield',
-				    	fieldLabel: 'Role',
-				    	name: 'sysrole'
 				    }],
 				    buttons: [{
 				    	 text: 'Submit',
-				    	 handler: function() {
-				            Core.EventManager.fireEvent('nics.accountInfo.submit')
-				        }
+				    	 reference: 'submitButton'
 				    }]
 				});
 				

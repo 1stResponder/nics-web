@@ -27,7 +27,7 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-define(['ext', "iweb/CoreModule", "./DatalayerBuilder", 'nics/modules/UserProfileModule'], 
+define(['ext', "iweb/CoreModule", "./DatalayerBuilder", 'nics/modules/UserProfileModule'],
 
 	function(Ext, Core, DatalayerBuilder, UserProfile){
 	
@@ -43,25 +43,62 @@ define(['ext', "iweb/CoreModule", "./DatalayerBuilder", 'nics/modules/UserProfil
 			    this.mediator = Core.Mediator.getInstance();
 			    
 			    this.datalayerBuilder = Ext.create('modules.datalayer.builder');
-			    
+					
 			    this.bindEvents();
 			},
 	 
 			bindEvents: function(){
-				//Bind UI Elements
+				var treeview = this.getView().getTree().getView();
+				treeview.on("beforedrop", this.onBeforeTreeNodeDrop, this);
+				treeview.on("nodedragover", this.onTreeNodeDragOver, this);
+				treeview.on('afteritemexpand', this.lazyLoadFolder, this);
 				
+				//Bind UI Elements
 				Core.EventManager.addListener(UserProfile.PROFILE_LOADED, this.onLoadUserProfile.bind(this));
 				
-				Core.EventManager.addListener("nics.data.newfolder." + this.rootName, this.onNewFolder.bind(this));
-				this.mediator.subscribe("iweb.nics.data.newdatalayer." + this.rootName);
-				Core.EventManager.addListener("iweb.nics.data.newdatalayer." + this.rootName, this.onNewDatalayer.bind(this));
+				
+				this.listenAndSubscribe(
+					Ext.String.format('iweb.NICS.{0}.datalayer.new', UserProfile.getWorkspaceId()),
+					this.onNewDatalayer);
+					
+				this.listenAndSubscribe(
+					Ext.String.format('iweb.NICS.{0}.datalayer.update', UserProfile.getWorkspaceId()),
+					this.onUpdateDatalayer);
+					
+				this.listenAndSubscribe(
+					Ext.String.format('iweb.NICS.{0}.folder.new', UserProfile.getWorkspaceId()),
+					this.onNewFolder);
+					
+				this.listenAndSubscribe(
+					Ext.String.format('iweb.NICS.{0}.folder.update', UserProfile.getWorkspaceId()),
+					this.onUpdateFolder);
+					
+				this.listenAndSubscribe(
+					Ext.String.format('iweb.NICS.{0}.folder.delete', UserProfile.getWorkspaceId()),
+					this.onDeleteFolder);
+				
+				//local callback topics
 				Core.EventManager.addListener("nics.data.loadfolder." + this.rootName, this.onLoadFolder.bind(this));
 				Core.EventManager.addListener("nics.data.createtree." + this.rootName, this.onCreateTree.bind(this));
 			},
 			
+			listenAndSubscribe: function(topic, callback) {
+				this.mediator.subscribe(topic);
+				Core.EventManager.addListener(topic, callback.bind(this));
+			},
+			
 			onLoadUserProfile: function(e){
+				if(UserProfile.isSuperUser() || UserProfile.isAdminUser()){
+					//add drag and drop support
+					var treeview = this.getView().getTree().getView();
+					treeview.addPlugin({
+						ptype: 'treeviewdragdrop',
+						containerScroll: true
+					});
+		    	}
+				
 				//Request Root Folder Data
-				var url = Ext.String.format('{0}/folder/{1}/name/{2}', 
+				var url = Ext.String.format('{0}/folder/{1}/name/{2}',
 						Core.Config.getProperty(UserProfile.REST_ENDPOINT),
 						UserProfile.getWorkspaceId(), this.rootName);
 				this.mediator.sendRequestMessage(url , 'nics.data.createtree.' + this.rootName);
@@ -76,29 +113,45 @@ define(['ext', "iweb/CoreModule", "./DatalayerBuilder", 'nics/modules/UserProfil
 			},
 			
 			onLoadFolder: function(evt, data){
-				//load the datalayers
-				for(var i=0; i<data.datalayers.length; i++){
-					var datalayer = data.datalayers[i];
-					this.addDatalayer(data.rootId, datalayer);
+				var store = this.getView().getTree().getStore();
+				
+				var folder = store.getNodeById(data.rootId);
+				if (folder) {
+					folder.lazyLoaded = true;
+					folder.set("loading", false);
 				}
 				
+				//load the datalayers
+				data.datalayerfolders.forEach(function(layer){
+					this.addDatalayerFolder(data.rootId, layer);
+				}, this);
+				
 				//load folders
-				for(var j=0; j<data.folders.length; j++){
-					var folder = data.folders[j];
-					var props = {
-							folderid: folder.folderid
-					};
-					var node = this.getView().addChildNode(data.rootId, folder.foldername, false, props);
-					node.on("expand", this.lazyLoadFolder, this);
-				}
+				data.folders.forEach(function(folder){
+					var props = this.buildFolderModel(folder);
+					this.getView().addChildNode(
+						data.rootId, folder.foldername, false, props);
+				}, this);
+			},
+			
+			buildFolderModel: function(folder) {
+				return {
+					id: folder.folderid,
+					folderid: folder.folderid,
+					folderindex: folder.index,
+					
+					text: folder.foldername
+				};
 			},
 			
 			lazyLoadFolder: function(folder, opts){
 				if(!folder.lazyLoaded){
-					var url = Ext.String.format('{0}/folder/{1}/id/{2}', 
+					var url = Ext.String.format('{0}/folder/{1}/id/{2}',
 							Core.Config.getProperty(UserProfile.REST_ENDPOINT),
 							UserProfile.getWorkspaceId(), folder.data.folderid);
 					this.mediator.sendRequestMessage(url, 'nics.data.loadfolder.' + this.rootName);
+					
+					folder.set("loading", true);
 					folder.lazyLoaded = true;
 				}
 			},
@@ -108,50 +161,441 @@ define(['ext', "iweb/CoreModule", "./DatalayerBuilder", 'nics/modules/UserProfil
 				if(checked){
 					if(!node.data.layer){
 						node.data.layer = this.datalayerBuilder.buildLayer(
-								node.data.layerType,{
-									url: node.data.url, 
-									layername: node.data.layername
-								});
+								node.data.layerType, node.data);
 						if(node.data.layer){
+							if (this.isTrackingWindow())
+							{
+								Core.EventManager.fireEvent("nics.datalayer.tracking.click", node.data);
+							}
+							Core.EventManager.fireEvent("nics.datalayer.legend.click", node.data);
 							Core.Ext.Map.addLayer(node.data.layer);
 						}
 					}else{
 						node.data.layer.setVisible(true);
 						Core.EventManager.fireEvent("layerVisible", node.data.layer);
+						Core.EventManager.fireEvent("nics.datalayer.legend.click", node.data);
+						if (this.isTrackingWindow())
+						{
+							Core.EventManager.fireEvent("nics.datalayer.tracking.click", node.data);
+						}
 					}
 				}else{
 					if(node.data.layer){
 						node.data.layer.setVisible(false);
 						Core.EventManager.fireEvent("layerInvisible", node.data.layer);
+						Core.EventManager.fireEvent("nics.datalayer.legend.unclick", node.data);
+						if (this.isTrackingWindow())
+						{
+							Core.EventManager.fireEvent("nics.datalayer.tracking.unclick", node.data);
+						}
 					}//throw exception - no layer found on the node
 				}
 			},
+
+			/**
+			 * Use this method to test whether the event was from the tracking window or not.
+			 * PLI Locator will only use WFS layers from Tracking
+			 * @returns {boolean}
+			 */
+			isTrackingWindow: function()
+			{
+				if (this.rootName && this.rootName == 'Tracking')
+					return true;
+				return false;
+			},
 			
-			onNewDatalayer: function(evt, data){
-				if (data.datalayerfolders && data.datalayerfolders.length) {
-					var parentFolder = data.datalayerfolders[0];
-					this.addDatalayer(parentFolder.folderid, data);
+			addDatalayerFolder: function(rootId, datalayerfolder) {
+				var props = this.buildDataLayerFolderModel(datalayerfolder);
+				return this.getView().addChildNode(rootId,
+					datalayerfolder.datalayer.displayname, true, props);
+			},
+			
+			buildDataLayerFolderModel: function(datalayerfolder) {
+				var datalayer = datalayerfolder.datalayer;
+				return {
+					id: datalayerfolder.datalayerfolderid,
+					text: datalayer.displayname,
+					
+					datalayerfolderid: datalayerfolder.datalayerfolderid,
+					folderindex: datalayerfolder.index,
+					
+					datalayerid: datalayer.datalayerid,
+					layerType: datalayer.datalayersource.datasource.datasourcetype.typename,
+					url: datalayer.datalayersource.datasource.internalurl,
+					layername: datalayer.datalayersource.layername,
+					attributes: datalayer.datalayersource.attributes,
+					opacity: datalayer.datalayersource.opacity,
+					legend: datalayer.legend
+				};
+			},
+			
+			onNewDatalayer: function(evt, datalayerfolderData){
+				var store = this.getView().getTree().getStore();
+				var parentNode = store.getNodeById(datalayerfolderData.folderid);
+				if (parentNode) {
+					this.addDatalayerFolder(datalayerfolderData.folderid,
+						datalayerfolderData);
+					parentNode.sort();
+				}
+			},
+
+			onUpdateDatalayer: function(evt, datalayerfolderData){
+				var store = this.getView().getTree().getStore();
+				var layerNode = store.getNodeById(datalayerfolderData.datalayerfolderid);
+				if (layerNode) {
+					this.handleMove(layerNode, datalayerfolderData);
+					layerNode.set(this.buildDataLayerFolderModel(datalayerfolderData));
 				} else {
-					var root = this.getView().getTree().getRootNode();
-					this.addDatalayer(root.id, data);
+					//we didn't have the original node, but we might have its new parent
+					var parentNode = store.getNodeById(datalayerfolderData.folderid);
+					if (parentNode && parentNode.lazyLoaded) {
+						var newNode = this.addDatalayerFolder(
+							datalayerfolderData.folderid, datalayerfolderData);
+						newNode.remove();
+						this.handleMove(newNode, datalayerfolderData);
+					}
+				}
+			},
+			
+			onNewFolder: function(evt, folderData){
+				var store = this.getView().getTree().getStore();
+				var parentNode = store.getNodeById(folderData.parentfolderid);
+				if (parentNode) {
+					var props = this.buildFolderModel(folderData);
+					var node = this.getView().addChildNode(
+						folderData.parentfolderid, folderData.foldername, false, props);
+				}
+			},
+			
+			onUpdateFolder: function(evt, folderData){
+				var store = this.getView().getTree().getStore();
+				var folderNode = store.getNodeById(folderData.folderid);
+				if (folderNode) {
+					this.handleMove(folderNode, folderData);
+					folderNode.set(this.buildFolderModel(folderData));
+				} else {
+					//we didn't have the original node, but we might have its new parent
+					var parentNode = store.getNodeById(folderData.parentfolderid);
+					if (parentNode && parentNode.lazyLoaded) {
+						var props = this.buildFolderModel(folderData);
+						var newNode = this.getView().addChildNode(
+							folderData.parentfolderid, folderData.foldername, false, props);
+						newNode.remove();
+						this.handleMove(newNode, folderData);
+					}
+				}
+			},
+			
+			onDeleteFolder: function(evt, folderId){
+				var store = this.getView().getTree().getStore();
+				var folderNode = store.getNodeById(folderId);
+				if (folderNode) {
+					folderNode.remove();
+				}
+			},
+			
+			onItemContextMenu: function(view, record, item, index, event) {
+				event.stopEvent();
+				//ensure the right clicked item is selectedItem
+				view.setSelection(record);
+				
+				var menuItems = [{
+					text: 'Show Legend',
+					handler: function() {
+						Core.EventManager.fireEvent("nics.data.legend.show", record);
+					},
+					disabled: !record.get('legend')
+				}];
+				
+				if(UserProfile.isSuperUser() || UserProfile.isAdminUser()){
+					var isFolder = record.get("folderid") !== undefined;
+					var isRootChild = record.parentNode && record.parentNode.isRoot();
+					menuItems.push({
+						text: 'Folder Management',
+						menu: {
+							items: [{
+								text: 'New',
+								handler: 'newFolder',
+								scope: this,
+								//allow 'New' on root non-folders
+								disabled: !(isFolder || isRootChild)
+							},{
+								text: 'Rename',
+								handler: 'renameFolder',
+								scope: this,
+								disabled: !isFolder
+							},{
+								text: 'Delete',
+								handler: 'deleteFolder',
+								scope: this,
+								disabled: !isFolder
+							}]
+						}
+					});
+				}
+					
+				var menu = new Ext.menu.Menu({
+							selectedItem : record,
+							items: menuItems
+					});
+			
+				menu.showAt(event.getXY());
+			},
+			
+			onCallbackHandler: function(evt, response){
+				if(response && response.message != "OK"){
+					Ext.MessageBox.alert("NICS", response.message);
+				}
+			},
+
+			newFolder: function() {
+				var tree = this.getView().getTree(),
+						record = tree.getSelection()[0];
+				
+				//add on non-folder adds to the parent
+				if (record.get('folderid') === undefined) {
+					record = record.parentNode;
+				}
+						
+				Ext.Msg.prompt('New Folder', 'Please enter a new folder name:',
+					function(btn, name){
+						if (btn !== 'ok' || name.trim().length < 0) {
+							return;
+						}
+						var url = Ext.String.format("{0}/folder/{1}/create",
+								Core.Config.getProperty(UserProfile.REST_ENDPOINT),
+								UserProfile.getWorkspaceId()
+							);
+						
+						var topic = 'nics.data.newfolder.' + this.rootName;
+						Core.EventManager.createCallbackHandler(topic, this, this.onCallbackHandler);
+						
+						this.mediator.sendPostMessage(
+							url, topic, {
+								foldername: name,
+								parentfolderid: record.get('id')
+							}
+						);
+					}, this);
+			},
+
+			renameFolder: function() {
+				var tree = this.getView().getTree(),
+						selection = tree.getSelection()[0];
+						
+				Ext.Msg.prompt('Rename Folder', 'Please enter a new folder name:',
+					function(btn, name){
+						if (btn !== 'ok' || name.trim().length < 0) {
+							return;
+						}
+						var url = Ext.String.format("{0}/folder/{1}/update",
+								Core.Config.getProperty(UserProfile.REST_ENDPOINT),
+								UserProfile.getWorkspaceId()
+							);
+						
+						var topic = 'nics.data.renamefolder.' + this.rootName;
+						Core.EventManager.createCallbackHandler(topic, this, this.onCallbackHandler);
+						
+						this.mediator.sendPostMessage(
+							url, topic, {
+								foldername: name,
+								folderid: selection.get('id'),
+								parentfolderid: selection.parentNode.get('id'),
+								index: selection.get('folderindex'),
+							}
+						);
+					}, this);
+			},
+
+			deleteFolder: function() {
+				var tree = this.getView().getTree(),
+						selection = tree.getSelection()[0];
+						
+				Ext.MessageBox.confirm(
+					'Delete Folder?',
+					'Deleting this folder will delete all child folders and datalayers. Do you want to continue?',
+					function(btn){
+						if (btn !== 'yes') {
+							return;
+						}
+						var url = Ext.String.format("{0}/folder/{1}/{2}",
+								Core.Config.getProperty(UserProfile.REST_ENDPOINT),
+								UserProfile.getWorkspaceId(),
+								selection.get('id')
+							);
+						
+						var topic = 'nics.data.deletefolder.' + this.rootName;
+						Core.EventManager.createCallbackHandler(topic, this, this.onCallbackHandler);
+						
+						this.mediator.sendDeleteMessage(
+							url, topic);
+					}, this);
+			},
+			
+			
+			onTreeNodeDragOver: function (targetNode, position, dragData, e, eOpts) {
+				var dragNode = dragData.records[0];
+				//disallow dragging datalayer to folder, unless append
+				if ( position !== "append" && targetNode.get("folderid") !== undefined &&
+								dragNode.get("datalayerfolderid") !== undefined) {
+					return false;
+					
+				//disallow dragging folder to datalayer
+				} else if (targetNode.get("datalayerfolderid") !== undefined && dragNode.get("folderid") !== undefined) {
+					return false;
+				}
+				return true;
+			},
+			
+			getLikeFolderItems: function(item, items) {
+				var attr = item.get("folderid") !== undefined ? "folderid" : "datalayerfolderid";
+				
+				return (items || []).filter(function(node){
+					return node.get(attr) !== undefined && node !== item;
+				});
+			},
+			
+			onBeforeTreeNodeDrop: function (node, data, overModel, dropPosition, dropHandlers, eOpts) {
+				var nodeModel = data.records[0],
+						newParent, index;
+				
+				switch(dropPosition) {
+					case "before":
+						newParent = overModel.parentNode;
+						index = overModel.get("folderindex");
+						break;
+					case "after":
+						newParent = overModel.parentNode;
+						index = overModel.get("folderindex") + 1;
+						break;
+					case "append":
+						newParent = overModel;
+						index = 1;
+						var kids = this.getLikeFolderItems(nodeModel, overModel.childNodes);
+						if (kids.length) {
+							var lastKid = kids[kids.length -1];
+							index = lastKid.get("folderindex") + 1;
+						}
+						break;
 				}
 				
+				//if moving node down in same folder, account for its current index
+				if (nodeModel.parentNode === newParent &&
+						nodeModel.get("folderindex") < index) {
+					index -= 1;
+				}
 				
+				var parentFolderId = newParent.get("id"),
+						queryParams = {
+							index : index
+						};
+				
+				var folderid = nodeModel.get("folderid");
+				if (folderid) {
+					queryParams.folderId = folderid;
+				}
+				
+				var datalayerfolderid = nodeModel.get("datalayerfolderid");
+				if (datalayerfolderid) {
+					queryParams.datalayerfolderId = datalayerfolderid;
+				}
+				
+				var url = Ext.String.format("{0}/folder/{1}/move/{2}?{3}",
+						Core.Config.getProperty(UserProfile.REST_ENDPOINT),
+						UserProfile.getWorkspaceId(),
+						parentFolderId,
+						Ext.Object.toQueryString(queryParams)
+					);
+				
+				var topic = 'nics.data.movefolder.' + this.rootName + Core.Util.generateUUID();
+				Core.EventManager.createCallbackHandler(topic, this, this.onMoveCallback,
+					[nodeModel, newParent, dropHandlers]);
+				this.mediator.sendPostMessage(url, topic);
+				dropHandlers.wait = true;
+				data.view.setLoading("Saving");
 			},
 			
-			onNewFolder: function(evt, data){
-				
+			onMoveCallback: function(movedNode, newParent, dropHandlers, evt, data){
+				var oldParent = movedNode.parentNode,
+						treeView = this.getView().getTree().getView();
+				treeView.setLoading(false);
+				//everything is in the right place, just update folder indexes
+				if (data && data.count) {
+					dropHandlers.processDrop();
+
+					var oldIndex = movedNode.get("folderindex"),
+							folderItems = [].concat(data.folders, data.datalayerfolders);
+					
+					if (folderItems.length) {
+						folderItem = folderItems[0];
+						
+						//decrement folder indexes in old folder
+						var oldSiblings = this.getLikeFolderItems(movedNode, oldParent.childNodes);
+						this.adjustSiblingFolderIndexes(oldIndex, oldSiblings, -1);
+					
+						//increment folder indexes in new folder
+						var newIndex = folderItem.index;
+						var newSiblings = this.getLikeFolderItems(movedNode, newParent.childNodes);
+						this.adjustSiblingFolderIndexes(newIndex, newSiblings, 1);
+						
+						//set new folder index
+						movedNode.set({folderindex: newIndex});
+						
+						//sort to maintain node ordering
+						newParent.sort();
+					}
+					
+				} else {
+					dropHandlers.cancelDrop();
+				}
 			},
 			
-			addDatalayer: function(rootId, datalayer) {
-				var props = {
-						datalayerid: datalayer.datalayerid,
-						layerType: datalayer.datalayersource.datasource.datasourcetype.typename,
-						url: datalayer.datalayersource.datasource.internalurl,
-						layername: datalayer.datalayersource.layername,
-						attributes: datalayer.datalayersource.attributes
-					};
-				this.getView().addChildNode(rootId, datalayer.displayname, true, props);
+			adjustSiblingFolderIndexes: function(index, siblings, offset){
+				siblings.forEach(function(node){
+					var layerIndex = node.get("folderindex");
+					if (layerIndex >= index) {
+						node.set("folderindex", layerIndex + offset);
+					}
+				});
+			},
+			
+			handleMove: function(folderItemNode, folderItemData) {
+				var store = this.getView().getTree().getStore(),
+						oldIndex = folderItemNode.get("folderindex"),
+						oldParent = folderItemNode.parentNode,
+						newIndex = folderItemData.index,
+						newParentId = folderItemData.parentfolderid || folderItemData.folderid,
+						newParent = store.getNodeById(newParentId);
+				
+				//if the parent and index are correct, no move necessary
+				var sameParent = oldParent && oldParent.get("id") === newParentId;
+				if (sameParent && oldIndex === newIndex) {
+					return;
+				}
+				
+				if (oldParent && oldParent.lazyLoaded) {
+					//decrement folder indexes in old folder
+					var oldSiblings = this.getLikeFolderItems(folderItemNode, oldParent.childNodes);
+					this.adjustSiblingFolderIndexes(oldIndex, oldSiblings, -1);
+				}
+				
+				if (newParent && newParent.lazyLoaded) {
+					//increment folder indexes in new folder
+					var newSiblings = this.getLikeFolderItems(folderItemNode, newParent.childNodes);
+					this.adjustSiblingFolderIndexes(newIndex, newSiblings, 1);
+					
+					//set new folder index
+					folderItemNode.set({folderindex: newIndex});
+					
+					//append our node to its new parent
+					newParent.appendChild(folderItemNode);
+					
+					//sort to maintain node ordering
+					newParent.sort();
+				} else {
+					//if we don't have the new parent to move to, just remove
+					folderItemNode.remove();
+				}
 			}
 		});
 });

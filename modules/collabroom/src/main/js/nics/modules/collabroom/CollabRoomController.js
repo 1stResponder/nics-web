@@ -155,9 +155,7 @@ define(['ext', 'iweb/CoreModule', './CreateCollabroomWindow', './SecureRoomView'
 			 		height: 550
 				});
 				
-				this.secureRoomController.setWorkspaceId(UserProfile.getWorkspaceId());
-				this.secureRoomController.setUserId(UserProfile.getUserId());
-				this.secureRoomController.loadUsers();
+				this.secureRoomController.loadUnsecureUsers(this.currentIncidentId);
 				
 				this.secureWindow = window;
 				this.secureWindow.add(secureRoomView);
@@ -188,8 +186,14 @@ define(['ext', 'iweb/CoreModule', './CreateCollabroomWindow', './SecureRoomView'
 			
 			onCreateCollabRoom: function(e, response) {
 				if(response.results.length == 1){
+					var room = response.results[0];
+					room.featureType = "collabroom";
+					
 					this.window.close();
 					this.cancelSecureRoom();
+					this.openCollabRoom({
+						collabRoom: room
+					});
 				}else if(!Ext.isEmpty(response.message)){
 					this.window.setName("");
 					Ext.MessageBox.alert("NICS", response.message);
@@ -251,14 +255,41 @@ define(['ext', 'iweb/CoreModule', './CreateCollabroomWindow', './SecureRoomView'
 			
 			addUpdatedCollabRoom: function(e, collabRoom){
 				var menuItems = this.getView().getMenu().items;
+				var found = -1;
 				for(var i=0; i<menuItems.length; i++){
 					if(menuItems.getAt(i).collabRoom &&
 							menuItems.getAt(i).collabRoom.collabRoomId ==
 								collabRoom.collabRoomId){
-						return;
+						found = i;
 					}
 				}
-				this.addCollabRoom(e, collabRoom);
+				
+				var access = true;
+				if(collabRoom.adminUsers && 
+						collabRoom.adminUsers.length > 0){
+					access = false;
+					if(found != -1){//The room is in the dropdown box
+						if($.inArray(UserProfile.getUserId(), collabRoom.adminUsers) == -1){//User is not an admin
+							Core.EventManager.fireEvent("nics.administration.collabroom.admin.remove", collabRoom.collabRoomId);
+						}else{
+							access = true;
+							Core.EventManager.fireEvent("nics.administration.collabroom.admin", collabRoom.collabRoomId);
+						}
+					}
+					if($.inArray(UserProfile.getUserId(), collabRoom.adminUsers) > -1 ||
+							$.inArray(UserProfile.getUserId(), collabRoom.readWriteUsers) > -1){
+						access = true;
+					}
+				}
+				
+				if(found != -1 && !access){
+					//User no longer has access
+					this.getView().getMenu().remove(menuItems.getAt(found));
+					//Remove tab if active
+					Core.EventManager.fireEvent("nics.incident.close.tab", collabRoom.collabRoomId);
+				}else if(found == -1 && access){
+					this.addCollabRoom(e, collabRoom);
+				}
 			},
 			
 			addCollabRoom: function(e, collabRoom){
@@ -297,9 +328,9 @@ define(['ext', 'iweb/CoreModule', './CreateCollabroomWindow', './SecureRoomView'
 			},
 			
 			getCreateCollabRoomUrl: function(incidentId, userOrgId){
-				return Ext.String.format("{0}/collabroom/{1}?userOrgId={2}", 
+				return Ext.String.format("{0}/collabroom/{1}?userOrgId={2}&orgId={3}&workspaceId={4}", 
 						Core.Config.getProperty(UserProfile.REST_ENDPOINT),
-						incidentId, userOrgId);
+						incidentId, userOrgId, UserProfile.getOrgId(), UserProfile.getWorkspaceId());
 			},
 			
 			toggleEnableNewRoom: function(enabled) {

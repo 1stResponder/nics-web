@@ -27,8 +27,8 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-define(['ext', 'iweb/CoreModule','nics/modules/UserProfileModule'],
-         function(Ext, Core, UserProfile){
+define(['ext', 'iweb/CoreModule','nics/modules/UserProfileModule', 'nics/modules/accountinfo/AccountInfoViewer'],
+         function(Ext, Core, UserProfile, AccountInfoViewer){
 	
 	return Ext.define('modules.administration.UserController', {
 		extend : 'Ext.app.ViewController',
@@ -36,20 +36,22 @@ define(['ext', 'iweb/CoreModule','nics/modules/UserProfileModule'],
 		alias: 'controller.usercontroller',
 
 		init: function(){
+			this.showUserProfileTopic = "nics.user.profile.show";
+			
 			this.mediator = Core.Mediator.getInstance();
 
-			Core.EventManager.addListener(UserProfile.PROFILE_LOADED, this.load.bind(this));
+			Core.EventManager.addListener("nics.admin.org.clear", this.clearGrids.bind(this));
+			Core.EventManager.addListener("nics.admin.org.users.load", this.loadUsers.bind(this));
+			Core.EventManager.addListener(this.showUserProfileTopic, this.showUserProfile.bind(this));
 			
 			this.getView().getFirstGrid().getView().on('drop', this.enableUsers, this);
 			this.getView().getSecondGrid().getView().on('drop', this.disableUsers, this);
+			
+			this.accountInfoViewer = Ext.create('modules.accountinfo.AccountInfoViewer');
 		},
 		
-		load: function(evt){
-			//populate the workspace dropdown
-			this.loadWorkspaces();
-			
-			//Load Users
-			this.loadUsers();
+		clearGrids: function(){
+			this.getView().clearGrids();
 		},
 		
 		loadWorkspaces: function(){
@@ -74,14 +76,28 @@ define(['ext', 'iweb/CoreModule','nics/modules/UserProfileModule'],
 			this.mediator.sendRequestMessage(url, topic);
 		},
 		
-		loadUsers: function(){
-			this.getView().clearGrids();
-			
-			this.loadUserData(this.getView().getFirstGrid(), 'enabled');
-			this.loadUserData(this.getView().getSecondGrid(), 'disabled');
+		onUserClick: function(grid, record, tr, rowIndex, e, eOpts ){
+			var url = Ext.String.format(
+					"{0}/users/{1}/username/{2}/userOrgId/{3}/orgId/{4}?requestingUserOrgId={5}",
+					Core.Config.getProperty(UserProfile.REST_ENDPOINT),
+					UserProfile.getWorkspaceId(),
+					record.data.username,
+					record.data.userorgid,
+					this.currentOrgId,
+					UserProfile.getUserOrgId());
+				
+			Core.Mediator.getInstance().sendRequestMessage(url, this.showUserProfileTopic);
 		},
 		
-		loadUserData: function(grid, type){
+		loadUsers: function(evt, orgId){
+			this.currentOrgId = orgId;
+			this.getView().clearGrids();
+			
+			this.loadUserData(this.getView().getFirstGrid(), 'enabled', orgId);
+			this.loadUserData(this.getView().getSecondGrid(), 'disabled', orgId);
+		},
+		
+		loadUserData: function(grid, type, orgId){
 			var topic = Core.Util.generateUUID();
 			
 			//populate the user grids
@@ -99,7 +115,7 @@ define(['ext', 'iweb/CoreModule','nics/modules/UserProfileModule'],
 			
 			var url = Ext.String.format('{0}/users/{1}/{2}/{3}', 
 					Core.Config.getProperty(UserProfile.REST_ENDPOINT), 
-					UserProfile.getWorkspaceId(), type, UserProfile.getOrgId());
+					UserProfile.getWorkspaceId(), type, orgId);
 			
 			this.mediator.sendRequestMessage(url, topic);
 		},
@@ -133,9 +149,12 @@ define(['ext', 'iweb/CoreModule','nics/modules/UserProfileModule'],
 							if(!response.users || response.users.length != 1){ //we are enabling one at a time atm..
 								Ext.MessageBox.alert("NICS", "There was an issue enabling the user.");
 							}else{
-								//This will enable the user again even if they 
-								//are already enabled
-								_this.updateOpenAM(username, type, userorgworkspaceid);
+								//Update OpenAM if it's the first time the user is enabled or
+								//They are no longer enabled in any other orgs
+								if((type == "enable" && response.orgCount ==1) ||
+										(type == "disable" && response.orgCount == 0)){
+									_this.updateOpenAM(username, type, userorgworkspaceid);
+								}
 							}
 						},
 						[record.data.username]
@@ -166,6 +185,10 @@ define(['ext', 'iweb/CoreModule','nics/modules/UserProfileModule'],
 					enabled, username, userorgworkspaceid);
 			
 			this.mediator.sendPostMessage(url, topic, {});
+		},
+		
+		showUserProfile: function(evt, userProfile){
+			this.accountInfoViewer.controller.showAccountInfo(userProfile);
 		}
 	});
 });
