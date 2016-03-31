@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008-2015, Massachusetts Institute of Technology (MIT)
+ * Copyright (c) 2008-2016, Massachusetts Institute of Technology (MIT)
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -107,15 +107,8 @@ function(Core, UserProfile, RocReportView, RocFormView) {
 			
 			this.newHandler = this.onReportAdded.bind(this)
 			Core.EventManager.addListener(this.newTopic, this.newHandler);
-			//this.lookupReference('createButton').enable();
-			//this.lookupReference('updateButton').disable();
-			//this.lookupReference('finalButton').disable();
-			//this.lookupReference('printButton').disable();
-			//if (this.lookupReference('rocList').getValue() != null){
-			//	this.displayCurrentRecord(true, 'select');	
-			//}
-			//Add iframe for printing
-			this.addPrintFrame();
+			
+			
 		},
 		onCloseIncident: function(e, incidentId) {
 			this.mediator.unsubscribe(this.newTopic);
@@ -129,21 +122,16 @@ function(Core, UserProfile, RocReportView, RocFormView) {
 			
 			var rocReportContainer = this.view.lookupReference('rocReport');
 			rocReportContainer.removeAll();
-			//rocReportContainer.hide();
 			
 			var rocList = this.lookupReference('rocList');
 			rocList.clearValue();
 			rocList.getStore().removeAll()
 			this.getView().disable();
 			
-			//var rocForm = this.view.lookupReference('rocReportForm').
-			//Core.EventManager.removeListener("EmailROCReport", rocForm.controller.emailROC);
 			this.incidentId = null;
 			this.incidentName = null;
 			this.emailList = null;
-			//remove print frame
-			this.destroyPrintFrame();
-        
+			
 		},
 		
 	onAddROC: function(e) {
@@ -158,7 +146,7 @@ function(Core, UserProfile, RocReportView, RocFormView) {
 				
 			
 			});
-			rocReportContainer.show();
+            rocReportContainer.removeAll();
             rocReportContainer.add(rocForm);
         	var initialData= {incidentId: this.incidentId, 
         			incidentName: this.incidentName, //incidentType is not coming back.  Need to figure out how to get it
@@ -169,6 +157,8 @@ function(Core, UserProfile, RocReportView, RocFormView) {
         			reportBy:  username,
         			email:this.emailList};
 			rocForm.viewModel.set(initialData);	
+			this.lookupReference('createButton').disable();
+			
 		},
 		
         onUpdateRoc: function(){
@@ -203,7 +193,7 @@ function(Core, UserProfile, RocReportView, RocFormView) {
 					
 					
 				});
-				 rocReportContainer.show();
+				 //rocReportContainer.show();
 		         rocReportContainer.add(rocForm);				//Pull data from the report, and add in the incidentName and Id
 				var formData = (JSON.parse(record.data.message));
 			    formData.report.incidentId = record.data.incidentId;
@@ -222,6 +212,8 @@ function(Core, UserProfile, RocReportView, RocFormView) {
 					if(status == 'UPDATE' || status == 'FINAL' )
 					//this is an updated or finalized form, change report name to the current status
 					 formData.report.reportType =status;
+					this.lookupReference('finalButton').disable();
+					this.lookupReference('printButton').disable();
 				}
 				rocForm.viewModel.set(formData.report);
 			}
@@ -336,7 +328,7 @@ function(Core, UserProfile, RocReportView, RocFormView) {
 			
 		},
 		onPrintROC: function(){
-			 //Need to actually get the form from the dropdown
+			 //Need to actually get the from from the dropdown
 			this.displayCurrentRecord(true, 'select');	
 			 var printMsg = null;
 			var rocReportForm = this.view.lookupReference('rocReportForm');
@@ -386,30 +378,6 @@ function(Core, UserProfile, RocReportView, RocFormView) {
 		
 			}
 			
-	},
-	
-		addPrintFrame: function() {
-			var iFrameId = "printerFrame";
-			var printFrame = Ext.get(iFrameId);
-			if (printFrame == null) {
-				printFrame = Ext.getBody().appendChild({
-					id: iFrameId,
-					tag: 'iframe',
-					cls: 'x-hidden',  style: {
-						display: "none"
-					}
-				});
-			}
-		},
-		destroyPrintFrame: function() {
-			var iFrameId = "printerFrame";
-			var printFrame = Ext.get(iFrameId);
-			if (printFrame != null) {
-				// destroy the iframe
-				Ext.fly(iFrameId).destroy();
-			 
-			}
-		}
-
+	}
 	});
 });

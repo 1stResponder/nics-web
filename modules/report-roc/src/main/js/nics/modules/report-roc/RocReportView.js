@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008-2015, Massachusetts Institute of Technology (MIT)
+ * Copyright (c) 2008-2016, Massachusetts Institute of Technology (MIT)
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -33,8 +33,7 @@ define(['iweb/CoreModule','./RocReportController', './RocReportModel'],
 	
 	return Ext.define('modules.report-roc.RocReportView', {
 	 	extend: 'Ext.panel.Panel',
-		//extend: 'Ext.grid.Panel',
-	 	controller: 'rocreportcontroller',
+		controller: 'rocreportcontroller',
 	    header: false,
 	 	
         viewConfig: {

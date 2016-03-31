@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008-2015, Massachusetts Institute of Technology (MIT)
+ * Copyright (c) 2008-2016, Massachusetts Institute of Technology (MIT)
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -37,39 +37,44 @@ define(['iweb/CoreModule', 'ol'], function(Core, ol){
 		
 		buildLayer: function(type, config){
 			if(type == "wms"){
-				return this.buildWMSLayer(config.url, config.layername);
+				return this.buildWMSLayer(config.url, config.layername, config);
 			}else if(type == "wfs"){
-				return this.buildWFSLayer(config.url, config.layername);
+				return this.buildWFSLayer(config.url, config.layername, config);
 			}else if(type == "kml"){
-				return this.buildKMLLayer(config.url, config.layername);
+				return this.buildKMLLayer(config.url, config.layername, config);
 			}else if(type == "kmz"){
-				return this.buildKMLLayer(config.url, config.layername);
+				return this.buildKMLLayer(config.url, config.layername, config);
 			}else if(type == "bing"){
 				return this.buildBingLayer(config.url, config.layername, config);
 			}else if(type == "osm"){
-				return this.buildOSMLayer(config.url, config.layername);
+				return this.buildOSMLayer(config.url, config.layername, config);
 			}else if(type == "xyz"){
 				return this.buildXYZLayer(config.url, config.layername, config);
 			}else if(type == "arcgisrest"){
-				return this.buildArcGisLayer(config.url, config.layername);
+				return this.buildArcGisLayer(config.url, config.layername, config);
 			}else if(type == "geojson"){
-				return this.buildGeoJsonLayer(config.url, config.layername);
+				return this.buildGeoJsonLayer(config.url, config.layername, config);
 			}else if(type == "gpx"){
-				return this.buildGpxLayer(config.url, config.layername);
+				return this.buildGpxLayer(config.url, config.layername, config);
 			}
 		},
 		
-		buildWMSLayer: function (url, layername) {
+		buildWMSLayer: function (url, layername, config) {
+			var attrs = (config.attributes) ? JSON.parse(config.attributes) : {};
 			return new ol.layer.Tile({
-			    source: new ol.source.TileWMS(/** @type {olx.source.TileWMSOptions} */ ({
-			      url: url,
-			      params: {'LAYERS': layername , 'TILED': true},
-			      serverType: 'geoserver'
-			    }))
-			  });
+				opacity: config.opacity || 1,
+				source: new ol.source.TileWMS(/** @type {olx.source.TileWMSOptions} */ ({
+					url: url,
+					params: {
+							'LAYERS': layername ,
+							'TILED': true,
+							'VERSION': attrs.version || '1.3.0'
+					}
+				}))
+			});
 		},
 		
-		buildWFSLayer: function (url, layername) {
+		buildWFSLayer: function (url, layername, config) {
 			var _mediator = this.mediator;
 			var _eventManager = Core.EventManager;
 			
@@ -127,6 +132,7 @@ define(['iweb/CoreModule', 'ol'], function(Core, ol){
 			
 			
 			return new ol.layer.Vector({
+		      opacity: config.opacity || 1,
 		      source: vectorSource,
 		      style:  new ol.style.Style({
 	    	     image: new ol.style.Circle({
@@ -141,7 +147,7 @@ define(['iweb/CoreModule', 'ol'], function(Core, ol){
 			
 		},
 		
-		buildKMLLayer: function(url, layername){
+		buildKMLLayer: function(url, layername, config){
 			if(layername){
 				url = url + layername;
 			}
@@ -158,6 +164,7 @@ define(['iweb/CoreModule', 'ol'], function(Core, ol){
 	        });
 			
 			return new ol.layer.Vector({
+			  opacity: config.opacity || 1,
 			  source: vectorSource
 			});
 		},
@@ -165,6 +172,7 @@ define(['iweb/CoreModule', 'ol'], function(Core, ol){
 		buildBingLayer: function(url, layername, config) {
 			var attrs = (config.attributes) ? JSON.parse(config.attributes) : {};
 			return new ol.layer.Tile({
+				opacity: config.opacity || 1,
 				source: new ol.source.BingMaps({
 					key: Core.Config.getProperty("maps.bing.apikey"),
 					imagerySet: attrs.type,
@@ -173,8 +181,9 @@ define(['iweb/CoreModule', 'ol'], function(Core, ol){
 			});
 		},
 		
-		buildOSMLayer: function(url, layername) {
+		buildOSMLayer: function(url, layername, config) {
 			return new ol.layer.Tile({
+				opacity: config.opacity || 1,
 				source: new ol.source.OSM()
 			});
 		},
@@ -182,15 +191,15 @@ define(['iweb/CoreModule', 'ol'], function(Core, ol){
 		buildXYZLayer: function(url, layername, config) {
 			var attrs = (config.attributes) ? JSON.parse(config.attributes) : {};
 			return new ol.layer.Tile({
-				opacity: config.opacity,
+				opacity: config.opacity || 1,
 				source: new ol.source.XYZ({
 					url: url,
-					maxZoom: attrs.maxZoom
+					maxZoom: attrs.maxZoom || 18
 				})
 			});
 		},
 		
-		buildGeoJsonLayer: function(url, layername){
+		buildGeoJsonLayer: function(url, layername, config){
 			if(layername){
 				url = url + layername;
 			}
@@ -201,12 +210,13 @@ define(['iweb/CoreModule', 'ol'], function(Core, ol){
 	        });
 			
 			return new ol.layer.Vector({
+			  opacity: config.opacity || 1,
 			  source: vectorSource
 			});
 			
 		},
 		
-		buildGpxLayer: function(url, layername){
+		buildGpxLayer: function(url, layername, config){
 			if(layername){
 				url = url + layername;
 			}
@@ -218,14 +228,16 @@ define(['iweb/CoreModule', 'ol'], function(Core, ol){
 	        });
 			
 			return new ol.layer.Vector({
+			  opacity: config.opacity || 1,
 			  source: vectorSource
 			});
 			
 		},
 		
-		buildArcGisLayer: function(url, layername) {
+		buildArcGisLayer: function(url, layername, config) {
 			
 			return new ol.layer.Tile({
+				opacity: config.opacity || 1,
 				source: new ol.source.TileArcGISRest({
 					url: url,
 					params: {'LAYERS': 'show:' + layername }

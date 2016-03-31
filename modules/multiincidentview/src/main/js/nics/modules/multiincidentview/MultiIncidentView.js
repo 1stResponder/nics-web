@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008-2015, Massachusetts Institute of Technology (MIT)
+ * Copyright (c) 2008-2016, Massachusetts Institute of Technology (MIT)
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -36,10 +36,15 @@
 			controller: 'multiincidentviewcontroller',
 
 			title: 'Multi Incident View',
+
+			layout: {
+					type: 'vbox'
+			},
 			
 			items:[
 			{
 				xtype: 'panel',
+				width: '100%',
 				layout: {
 						type: 'hbox',
 						pack: 'center'
@@ -73,9 +78,9 @@
 				reference: 'multiincidentsgrid',
 				rootVisible: false,
 				cls: 'multi-incident-tree',
-		        collapsible: true,
 		        layout: 'fit',
-		        height: 600,
+		        flex: 1,
+		        width: '100%',
 		        
 		        listeners: {
 		        	selectionchange: 'onSelectionChange',
@@ -102,10 +107,7 @@
 			        	text: 'Description',
 			        	dataIndex: 'description',
 			        	width: 150
-			        }]		
-			},
-			{
-				xtype: 'box', height: '5px'
+			        }]
 			},
 			{
 				xtype:'form',
@@ -113,6 +115,9 @@
 				reference: 'multiincidentform',
 				collapsible: true,
 				collapsed: true,
+				scrollable: true,
+				maxHeight: 300,
+				width: '100%',
 				items:[{
 					
 					xtype: 'fieldset',

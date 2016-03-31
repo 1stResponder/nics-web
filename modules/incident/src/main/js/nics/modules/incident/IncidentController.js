@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008-2015, Massachusetts Institute of Technology (MIT)
+ * Copyright (c) 2008-2016, Massachusetts Institute of Technology (MIT)
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -74,7 +74,9 @@ define(['iweb/CoreModule',
 				Core.EventManager.addListener("nics.incident.window.update", this.showUpdateWindow.bind(this));
 				Core.EventManager.addListener("nics.miv.join", this.onMIVJoinIncident.bind(this));
 				Core.EventManager.addListener("nics.incident.create.callback", this.onCreateIncident.bind(this));
+				Core.EventManager.addListener("nics.incident.update.menu", this.onMenuUpdate.bind(this));
 				Core.EventManager.addListener(UserProfile.PROFILE_LOADED, this.populateModel.bind(this));
+				
 			},
 
 			populateModel: function(e, userProfile){
@@ -148,7 +150,10 @@ define(['iweb/CoreModule',
 				this.mediator.unsubscribe(this.model.getCurrentIncident().topic);
 				this.model.removeCurrentIncident();
 				this.getView().resetIncidentLabel();
-				MapModule.getMapController().setInteractions(null);
+				
+				var actions = Core.Ext.Map.getDefaultInteractions();
+		    	Core.Ext.Map.setInteractions(actions);
+				
 				this.getView().locateButton.toggle(false);
 			},
 
@@ -299,6 +304,8 @@ define(['iweb/CoreModule',
 							Ext.MessageBox.alert("NICS", "Incident successfully updated.");
 							view.closeCreateWindow();
 							view.resetCreateWindow();
+							Core.EventManager.fireEvent("nics.incident.update.menu",[incident.incidentid,incident.incidentname]);
+							
 						}
 					});
 					
@@ -310,6 +317,10 @@ define(['iweb/CoreModule',
 				
 				}
 				
+			},
+			
+			onMenuUpdate: function(e,array){
+				this.getView().updateIncidentName(array[0],array[1]);
 			},
 
 			createIncident: function(){
@@ -355,7 +366,8 @@ define(['iweb/CoreModule',
 					
 				}
 				else{
-					MapModule.getMapController().setInteractions(null);
+					var actions = Core.Ext.Map.getDefaultInteractions();
+					Core.Ext.Map.setInteractions(actions);
 				}
 			
 			},
@@ -373,8 +385,8 @@ define(['iweb/CoreModule',
 				
 				this.mixins.geoApp.removeLayer();
 				
-				MapModule.getMapController().setInteractions(null);
-
+				var actions = Core.Ext.Map.getDefaultInteractions();
+		    	Core.Ext.Map.setInteractions(actions);
 			},
 			
 			getIncidentTypes: function(){

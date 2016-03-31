@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008-2015, Massachusetts Institute of Technology (MIT)
+ * Copyright (c) 2008-2016, Massachusetts Institute of Technology (MIT)
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -27,7 +27,7 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-define(['iweb/CoreModule', './RocFormController', './RocFormModel'],
+define(['iweb/CoreModule', './RocFormController', './RocFormModel' , 'nics/modules/report/common/FormVTypes'],
        
 function(Core, RocFormController, RocFormModel ) {
 
@@ -40,7 +40,7 @@ function(Core, RocFormController, RocFormModel ) {
 		    },
 	 	buttonAlign: 'center',
 	 	autoHeight: true,
-	 	 defaults: { padding:'5'},
+	 	defaults: { padding:'5'},
 		reference: "rocReportForm",
         title: 'ROC Report',
         defaultType: 'textfield',
@@ -59,7 +59,7 @@ function(Core, RocFormController, RocFormModel ) {
 	    	 	      
 	    	         { xtype: 'fieldcontainer',layout:'hbox',defaultType: 'textfield', defaults: {anchor: '100%'},
 	    	          items:[ {bind: '{incidentName}',vtype:'simplealphanum',fieldLabel: 'Incident Name*', flex:2,allowBlank:false,cls:'roc-required'},
-	    	        	      {bind: '{incidentId}',vtype:'alphanum',fieldLabel: 'Incident Number*',padding:'0 0 0 5',flex:1,allowBlank:false,cls:'roc-required'}
+	    	        	      {bind: '{incidentId}',vtype:'alphanum',fieldLabel: 'Incident Number*',padding:'0 0 0 5', flex:1,labelWidth:125,labelAlign:"left",allowBlank:false,cls:'roc-required'}
 	    	           ]
 	    	         },
 	    	            {xtype: 'hiddenfield',bind:'{formTypeId}' },

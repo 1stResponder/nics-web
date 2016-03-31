@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008-2015, Massachusetts Institute of Technology (MIT)
+ * Copyright (c) 2008-2016, Massachusetts Institute of Technology (MIT)
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -170,17 +170,21 @@ define(['ext', 'ol', "iweb/CoreModule", "nics/modules/UserProfileModule"],
 					
 					success: function(response) {
 						//can't use responseXML becaue the proxy doesn't return the correct content type
-						var layers = null;
+						var caps;
 						if(dataSourceType != 'arcgisrest') {
 							var xmlDoc = new DOMParser().parseFromString(response.responseText, 'application/xml');
-							layers = this.capabilitiesFormat.read(xmlDoc);
+							caps = this.capabilitiesFormat.read(xmlDoc);
 						} else {
-							layers = this.capabilitiesFormat.read(response.responseText);
+							caps = this.capabilitiesFormat.read(response.responseText);
 						}
 						
-						if (!layers) {
+						if (!caps || !caps.layers) {
 							throw new Error("Failed to parse capabilities");
 						}
+						
+						var layers = caps.layers,
+								version = caps.version;
+						
 						//ensure every layer has a title to display
 						layers.forEach(function(layer){
 							if (!layer.Title && layer.Name) {
@@ -193,6 +197,7 @@ define(['ext', 'ol', "iweb/CoreModule", "nics/modules/UserProfileModule"],
 							
 						});
 						record.set('layers', layers, {silent:true});
+						record.set('version', version, {silent:true});
 						success && success.call(this);
 					},
 					failure: function(fp, o) {
@@ -268,7 +273,14 @@ define(['ext', 'ol', "iweb/CoreModule", "nics/modules/UserProfileModule"],
 					legend: legend.getValue()
 				};
 				
-				var url = Ext.String.format('{0}/datalayer/{1}/sources/{2}/layer', 
+				var version = record.get('version');
+				if (version) {
+					values.datalayersource.attributes = JSON.stringify({
+						'version': version
+					});
+				}
+				
+				var url = Ext.String.format('{0}/datalayer/{1}/sources/{2}/layer',
 						Core.Config.getProperty(UserProfile.REST_ENDPOINT),
 						UserProfile.getWorkspaceId(), datasourceid);
 				this.mediator.sendPostMessage(url, 'nics.data.adddatalayer.' + this.dataSourceType, values);

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008-2015, Massachusetts Institute of Technology (MIT)
+ * Copyright (c) 2008-2016, Massachusetts Institute of Technology (MIT)
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -53,6 +53,11 @@ define(['./DDGridView', './UserLookupController', './UserModel'],
 	 		xtype:'form',
             layout: 'vbox',
             reference: 'userLookupForm',
+            listeners: {
+    			
+            	hide:  function() {
+                     alert('Rendered.');}
+    		},
 	 		items: [{
 	            xtype: 'fieldcontainer',
 	            fieldLabel: 'Search Type',
@@ -97,7 +102,7 @@ define(['./DDGridView', './UserLookupController', './UserModel'],
 	 		},{
 	        
 	            xtype: 'grid',
-	            
+	            flex:1,
 	            reference: 'lookupGrid',
 	            
 	            store: {
@@ -107,6 +112,7 @@ define(['./DDGridView', './UserLookupController', './UserModel'],
 		        autoHeight: true,
 		        autoWidth: true,
 		        autoScroll: true,
+		       
 		                
 		        columns: [{
 		            text: 'Username',

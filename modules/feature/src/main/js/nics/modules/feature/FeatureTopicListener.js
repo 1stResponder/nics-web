@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008-2015, Massachusetts Institute of Technology (MIT)
+ * Copyright (c) 2008-2016, Massachusetts Institute of Technology (MIT)
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -56,7 +56,9 @@ define(['ext', 'iweb/CoreModule', "ol", "iweb/modules/MapModule", "nics/modules/
 			
 			//Load features when room is initially open or on reconnect
 			this.loadFeatureTopic = Ext.String.format('NICS.{0}.{1}.loadfeature', featureType, id);
-			Core.EventManager.addListener(this.loadFeatureTopic, this.onLoadFeatures.bind(this));
+			
+			this.onLoadFeaturesCallback = this.onLoadFeatures.bind(this);
+			Core.EventManager.addListener(this.loadFeatureTopic, this.onLoadFeaturesCallback);
 			
 			this.loadFeatureURL = Ext.String.format('{0}/features/{1}/{2}', 
 					Core.Config.getProperty(UserProfile.REST_ENDPOINT),
@@ -338,7 +340,7 @@ define(['ext', 'iweb/CoreModule', "ol", "iweb/modules/MapModule", "nics/modules/
 				Core.EventManager.removeListener(this.changeFeatureTopic, this.changeFeatureCallback);
 			}
 			
-			Core.EventManager.removeListener(this.loadFeatureTopic, this.onLoadFeatures);
+			Core.EventManager.removeListener(this.loadFeatureTopic, this.onLoadFeaturesCallback);
 			Core.Ext.Map.removeLayer(this.layer);
 		},
 		

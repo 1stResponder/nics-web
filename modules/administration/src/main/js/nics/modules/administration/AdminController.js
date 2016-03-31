@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008-2015, Massachusetts Institute of Technology (MIT)
+ * Copyright (c) 2008-2016, Massachusetts Institute of Technology (MIT)
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -46,8 +46,9 @@ define(['ext', 'iweb/CoreModule', 'nics/modules/UserProfileModule'],
 					UserProfile.isAdminUser()){
 				var view = this.getView();
 				view.setTitle("Manage Settings - " + UserProfile.getOrgName());
-				
-				//Add Item to Tools Menu
+				var lastButtonText = Core.Ext.ToolsMenu.items.last().config.text;
+				//Add Item to Tools Menu if it isn't already there
+				if (lastButtonText != 'Administration'){
 				Core.Ext.ToolsMenu.add({
 						text: 'Administration',
 						handler: function(){
@@ -56,6 +57,7 @@ define(['ext', 'iweb/CoreModule', 'nics/modules/UserProfileModule'],
 						}
 					}
 				);
+			}
 			}
 		},
 		

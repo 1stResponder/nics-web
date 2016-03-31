@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008-2015, Massachusetts Institute of Technology (MIT)
+ * Copyright (c) 2008-2016, Massachusetts Institute of Technology (MIT)
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -34,19 +34,24 @@ requirejs.config({
 });
 
 define(['iweb/CoreModule', './report/ReportViewer', './GeneralReportModule',
-		'./DamageReportModule', './RocReportModule', 'iweb/modules/MapModule' ],
+
+		'./DamageReportModule', './RocReportModule','./FmagReportModule','./I215ReportModule', 'iweb/modules/MapModule' ],
 
 function(Core, ReportViewer, GeneralReportModule, DamageReportModule,
-		RocReportModule, MapModule) {
+		RocReportModule, FmagReportModule, I215ReportModule,  MapModule) {
+
 
 	var ReportModule = function() {};
 
 	ReportModule.prototype.load = function() {
 		var reportViewer = Ext.create('modules.report.ReportViewer');
-
+		
 		GeneralReportModule.load();
 		DamageReportModule.load();
 		RocReportModule.load();
+		I215ReportModule.load();
+		FmagReportModule.load();
+
 
 		reportViewer.setDisabled(true); // Enables when user joins an incident
 		Core.View.addToSidePanel(reportViewer);

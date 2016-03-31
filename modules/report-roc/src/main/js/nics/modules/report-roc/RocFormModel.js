@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008-2015, Massachusetts Institute of Technology (MIT)
+ * Copyright (c) 2008-2016, Massachusetts Institute of Technology (MIT)
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,49 +28,6 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 define(['ext','iweb/CoreModule'], function(Ext, Core) {
-	
-	//Custom vtypes
-	// custom Vtype for alphanum only fields, plus dash, dot, hyphen and underscore
-	
-	Ext.apply(Ext.form.field.VTypes, {
-	    simplealphanum:  function(v) {
-	        return /^[a-z0-9_\.' -]*$/i.test(v);
-	    },
-	    simplealphanumText: 'This field should only contain letters, numbers, spaces, apostrophes - . and _',
-	   // simplealphanumMask: /[a-z0-9_\.' -]/i
-	    simplealphanumMask: /[a-z0-9_\.' -]/i
-	});
-
-	// custom Vtype for alphanum only fields, plus apostrophes, and - .  + , ? _ %
-	Ext.apply(Ext.form.field.VTypes, {
-	    extendedalphanum:  function(v) {
-	        return /^[a-z0-9_\.',\?\+%\s-]*$/i.test(v);
-	    },
-	    extendedalphanumText: 'This field should only contain letters, numbers, apostrophes, and - .  + , ? _ %',
-	    extendedalphanumMask: /[a-z0-9_\.',\?\+%\s-]/i
-	});
-	// custom Vtype for num only fields, plus dash, underscore, plus, %, F C and deg
-		Ext.apply(Ext.form.field.VTypes, {
-	    extendednum:  function(v) {
-	        return /^[0-9\.fcdeg, +%-]*$/i.test(v);
-	    },
-	    extendednumText: 'This field should only contain numbers, and . , - %',
-	    extendednumMask: /[0-9\.fcdeg, +%-]/i
-	});
-		// custom Vtype for a field with a list of emails
-		Ext.apply(Ext.form.field.VTypes, {
-	    emaillist:  function(v) {
-	        return /^((([a-zA-Z0-9_\-\.']+)@([a-zA-Z0-9_\-\.]+)\.([a-zA-Z\s?]{2,5}){1,25})*(\s*?,\s*?)*)*$/.test(v);
-	    },
-	    emaillistText: 'This field must contain single or multiple valid email addresses separated by a comma',
-	    emaillistMask: /[a-zA-Z0-9_\.@\s,'\-]/
-	});
-		
-		
-		
-	
-		 
-
 		return Ext.define('modules.report-roc.RocFormModel', {	 
 		 extend: 'Ext.app.ViewModel',
 	 	

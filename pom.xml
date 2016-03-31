@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
 
-    Copyright (c) 2008-2015, Massachusetts Institute of Technology (MIT)
+    Copyright (c) 2008-2016, Massachusetts Institute of Technology (MIT)
     All rights reserved.
 
     Redistribution and use in source and binary forms, with or without
@@ -37,7 +37,7 @@
   <artifactId>nics-web</artifactId>
   <packaging>pom</packaging>
   <name>NICS Web Pom</name>
-  <version>6.1.1</version>
+  <version>6.1.2</version>
 
   <modules>
     <module>modules</module>
@@ -50,6 +50,8 @@
     <module>modules/report-explosives</module>
     <module>modules/report-mitam</module>
     <module>modules/report-roc</module>
+    <module>modules/report-i215</module>
+    <module>modules/report-fmag</module>
     <module>modules/datalayer</module>
     <module>modules/whiteboard</module>
     <module>modules/feature</module>
@@ -61,6 +63,7 @@
     <module>modules/feedback-report</module>
     <module>modules/accountinfo</module>
     <module>modules/multiincidentview</module>
+    <module>modules/map-sync-location</module>
     <module>webapp</module>
   </modules>
 
@@ -187,7 +190,7 @@
                         <header>${basedir}/copyright.txt</header>
                         <strictCheck>true</strictCheck>
                         <properties>
-                            <year>2015</year>
+                            <year>2016</year>
                         </properties>
                         <useDefaultExcludes>false</useDefaultExcludes>
 
@@ -201,6 +204,11 @@
                             <includes>**/src/**/*.js</includes>
                             <includes>**/src/**/*.css</includes>
                             <includes>**/src/**/*.xml</includes>
+                            <includes>**/src/**/*.html</includes>
+                            <includes>**/src/**/*.properties</includes>
+                            <includes>**/src/**/*.jsp</includes>
+                            <includes>**/*.xml</includes>
+                            <includes>**/*.js</includes>
                         </includes>
                     </configuration>
                     <inherited>false</inherited>

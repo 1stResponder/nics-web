@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008-2015, Massachusetts Institute of Technology (MIT)
+ * Copyright (c) 2008-2016, Massachusetts Institute of Technology (MIT)
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -37,14 +37,25 @@ define([
 		
 		AccountInfoModule.prototype.load = function(){
 			
-			var accountinfoViewer = Ext.create('modules.accountinfo.AccountInfoViewer');
+			var accountinfoViewer = Ext.create('modules.accountinfo.AccountInfoViewer',{
+				id: 'accountViewer'
+				});
 			
 			//Add View to Core
 			Core.View.addToTitleBar([ 
 					accountinfoViewer,
 					{xtype: 'tbspacer', width: 15}
 			]);
+			
+			
 		};
+		
+		AccountInfoModule.prototype.showViewer = function(profile){
+			var accountViewer = Ext.getCmp('accountViewer');
+			accountViewer.controller.showAccountInfo(profile);
+			
+		}
+		
 		
 		return new AccountInfoModule();
 	}

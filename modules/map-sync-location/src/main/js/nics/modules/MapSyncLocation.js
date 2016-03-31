@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008-2015, Massachusetts Institute of Technology (MIT)
+ * Copyright (c) 2008-2016, Massachusetts Institute of Technology (MIT)
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -27,9 +27,25 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-define([], function(){
+define(["iweb/CoreModule", "./mapsynclocation/SyncWindow"],
+	function(Core, SyncWindow) {
 	
-	var KMZCapabilities = function() {};
+		var activeWindow = null;
 	
-	return KMZCapabilities;
-});
+		var MapSyncLocation = function(){};
+		
+		MapSyncLocation.prototype.load = function(){
+			var mapComp = Core.View.getMainContentComponent();
+			activeWindow = new SyncWindow({
+				renderTo: mapComp.getEl(),
+				constrain: true
+			});
+			
+			//overwrite alignTo with positoionable version to avoid scrolling oddness
+			activeWindow.alignTo = activeWindow.mixins.positionable.alignTo;
+		};
+		
+		return new MapSyncLocation();
+	}
+);
+	

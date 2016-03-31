@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008-2015, Massachusetts Institute of Technology (MIT)
+ * Copyright (c) 2008-2016, Massachusetts Institute of Technology (MIT)
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -38,8 +38,11 @@ define([], function(){
 	
 	WFSCapabilities.prototype.read = function(doc) {
 		var capabilities = doc.firstChild;
-		if (doc.firstChild.localName == "WFS_Capabilities") {
-			return this.readCapabilities(doc.firstChild) || null;
+		if (capabilities.localName == "WFS_Capabilities") {
+			return {
+				version: capabilities.getAttribute('version'),
+				layers: this.readCapabilities(capabilities)
+			};
 		}
 	};
 	

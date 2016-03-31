@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008-2015, Massachusetts Institute of Technology (MIT)
+ * Copyright (c) 2008-2016, Massachusetts Institute of Technology (MIT)
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -27,8 +27,9 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
- define(['iweb/CoreModule', './AccountInfoController' ], 
- 	function(Core, AccountInfoController) {
+ define(['iweb/CoreModule', './AccountInfoController', './ChangeOrgViewer', 'nics/modules/report/common/FormVTypes' ], 
+
+ 	function(Core, AccountInfoController, ChangeOrgViewer) {
  	
 		Ext.define('modules.accountinfo.AccountInfoViewer', {
 			extend: 'Ext.Button',
@@ -42,9 +43,12 @@
 			initComponent: function(){
 
 				this.accountInfoButton = this.addMenuItem(
-					"Account Information");
+					"Account Information", "accountInfoButton");
 
 				this.menu.add(this.accountInfoButton);
+				this.changeOrgButton= this.addMenuItem(
+				"Change Organization", "changeOrgButton");
+				this.menu.add(this.changeOrgButton);
 
 				this.userAccountTab = Ext.create('Ext.form.Panel', {
 				    title: 'User Account Info',
@@ -62,11 +66,13 @@
 				    },
 				    {
 				        fieldLabel: 'First Name',
-				        name: 'firstname'
+				        name: 'firstname',
+				        vtype:'simplealphanum'
 				    },
 				    {
 				        fieldLabel: 'Last Name',
-				        name: 'lastname'
+				        name: 'lastname',
+				        vtype:'simplealphanum'
 				    },
 				    {
 				        fieldLabel: 'Old Password',
@@ -90,15 +96,18 @@
 				    },
 				    {
 				        fieldLabel: 'Job Title',
-				        name: 'job'
+				        name: 'job',
+				        vtype:'simplealphanum'
 				    },
 				    {
 				        fieldLabel: 'Rank',
-				        name: 'rank'
+				        name: 'rank',
+				        vtype:'simplealphanum'
 				    },
 				    {
 				        fieldLabel: 'Job Description',
-				        name: 'desc'
+				        name: 'desc',
+				        vtype:'simplealphanum'
 				    }],
 				    buttons: [{
 				    	 text: 'Submit',
@@ -106,16 +115,90 @@
 				    }]
 				});
 				
-				this.userContactTab = Ext.create('Ext.form.Panel', {
-				    title: 'User Contact Info'
+				this.userContactTab = Ext.create('Ext.grid.Panel', {
+						title: 'User Contact Info',
+						store:{
+							model:'modules.accountinfo.AccountInfoModel'
+						},
+						referenceHolder: true,
+						selType: 'rowmodel',
+						columns: [
+						 	{
+					            text: 'Contact Type',
+					            dataIndex: 'contacttypeid',
+					            editor:{
+					            	xtype:'combobox',
+					            	allowBlank: false,
+					            	editable: false,
+					            	store: Ext.create('Ext.data.Store', {
+									    fields: ['contacttypeid', 'type'],
+									    data : [
+									        {'contacttypeid':0, 'type':'Email'},
+									        {'contacttypeid':1, 'type':'Home Phone'},
+									        {'contacttypeid':2, 'type':'Cell Phone'},
+									        {'contacttypeid':3, 'type':'Office Phone'},
+									        {'contacttypeid':4, 'type':'Radio Number'},
+									        {'contacttypeid':5, 'type':'Other Phone'}
+									    ]
+									}),
+									valueField: 'contacttypeid',
+									displayField: 'type'
+									
+					            }
+					        },{
+					            text: 'Value',
+					            dataIndex: 'value',
+					            width: 150,
+					            editor:{
+					            	xtype: 'textfield',
+                					allowBlank: false,
+                					vtype:'simplealphanum'
+					            }
+					        }
+					       ],
+				   buttons: [{
+				  				text: 'Add',
+				    	 		reference: 'addButton'
+				  				
+				    		},
+				    		{
+				    			text: 'Delete',
+				    	 		reference: 'deleteButton'
+				   			}],
+				   	plugins:[{
+							ptype: 'rowediting',
+							pluginId: 'rowediting',
+							
+							listeners:{
+								beforeedit: function(editor, context){
+									var record = context.record;
+									return record.phantom;
+								},
+								canceledit: function(editor, context) {
+									var record = context.record;
+									context.store.remove(record);
+								},
+								validateedit: function(editor, context) {
+									Core.EventManager.fireEvent('nics.user.contact.validate',context)
+								}
+							}
+					}]
 				});
+				
 
 				this.accountInfoTabs = Ext.create('Ext.tab.Panel', {
 					height: 475,
 				    bodyBorder: false,
 				    border: false,
-				    items: [this.userAccountTab]
+				    items: [this.userAccountTab, this.userContactTab]
 				});
+				this.organizationInfoTabs = Ext.create('Ext.tab.Panel', {
+					height: 475,
+				    bodyBorder: false,
+				    border: false,
+				    items: [new ChangeOrgViewer()]
+				});
+				 
 
 				this.accountWindow = Ext.create('Ext.window.Window',{
 					title: 'User Account Info',
@@ -133,7 +216,25 @@
 			    	items: [
 				    		this.accountInfoTabs
 				    ]
-				});				
+				});	
+				 	
+				this.organizationWindow = Ext.create('Ext.window.Window',{
+					cls: 'account-info-window',
+					layout : 'form',
+					minimizable : false,
+					closable : true,
+					maximizable : false,
+					resizable : false,
+					draggable : true,
+					height: 515,
+					width: 450,
+					closeAction: 'hide',
+					buttonAlign: 'center',
+			    	items: [
+				    		this.organizationInfoTabs
+				    ]
+				});	
+				 	
 
 				this.callParent();
 			},
@@ -151,10 +252,11 @@
 				baseCls: 'nontb_style'
 			},
 			
-			addMenuItem: function(label){
+			addMenuItem: function(label, id){
 			
 				var config = {
-					text: label
+					text: label,
+					id:id
 				};
 				
 				var newItem = Ext.create('Ext.menu.Item',config);
@@ -168,7 +270,8 @@
 			
 			setFormField: function(field, value){
 				this.userAccountTab.getForm().findField(field).setValue(value);
-			}
+			},
+			
 
 		});
 });

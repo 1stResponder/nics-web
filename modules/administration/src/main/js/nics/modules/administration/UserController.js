@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008-2015, Massachusetts Institute of Technology (MIT)
+ * Copyright (c) 2008-2016, Massachusetts Institute of Technology (MIT)
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -27,8 +27,8 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-define(['ext', 'iweb/CoreModule','nics/modules/UserProfileModule', 'nics/modules/accountinfo/AccountInfoViewer'],
-         function(Ext, Core, UserProfile, AccountInfoViewer){
+define(['ext', 'iweb/CoreModule','nics/modules/UserProfileModule', 'nics/modules/AccountInfoModule'],
+         function(Ext, Core, UserProfile, AccountInfoModule){
 	
 	return Ext.define('modules.administration.UserController', {
 		extend : 'Ext.app.ViewController',
@@ -46,8 +46,6 @@ define(['ext', 'iweb/CoreModule','nics/modules/UserProfileModule', 'nics/modules
 			
 			this.getView().getFirstGrid().getView().on('drop', this.enableUsers, this);
 			this.getView().getSecondGrid().getView().on('drop', this.disableUsers, this);
-			
-			this.accountInfoViewer = Ext.create('modules.accountinfo.AccountInfoViewer');
 		},
 		
 		clearGrids: function(){
@@ -188,7 +186,7 @@ define(['ext', 'iweb/CoreModule','nics/modules/UserProfileModule', 'nics/modules
 		},
 		
 		showUserProfile: function(evt, userProfile){
-			this.accountInfoViewer.controller.showAccountInfo(userProfile);
+			AccountInfoModule.showViewer(userProfile);
 		}
 	});
 });

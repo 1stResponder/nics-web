@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008-2015, Massachusetts Institute of Technology (MIT)
+ * Copyright (c) 2008-2016, Massachusetts Institute of Technology (MIT)
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -44,6 +44,10 @@ define(['iweb/CoreModule', './CollabRoomTabController'], function(Core) {
 			border: false,
 			flex: 1
 	 	},
+		
+		listeners: {
+			tabchange: 'onTabChange'
+		},
 	 	
 	 	addTab: function(collabRoom){
 	 		if(collabRoom && collabRoom.name){
@@ -56,7 +60,6 @@ define(['iweb/CoreModule', './CollabRoomTabController'], function(Core) {
 					collabRoom: collabRoom,
 					height: 0,
 					listeners: {
-						activate: "onTabActivate",
 						close: "onTabClose"
 					}
 				});

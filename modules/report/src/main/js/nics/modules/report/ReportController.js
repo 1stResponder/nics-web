@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008-2015, Massachusetts Institute of Technology (MIT)
+ * Copyright (c) 2008-2016, Massachusetts Institute of Technology (MIT)
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -130,6 +130,8 @@ define(['iweb/CoreModule',
 					dmg.items.items[i].enable();
 				}
 				this.getView().enable();
+				//Add iframe for printing
+				this.addPrintFrame();
 			},
 
 			onCloseIncident: function(e, incidentId) {
@@ -138,6 +140,34 @@ define(['iweb/CoreModule',
 				for(var i = 0; i < dmg.items.items.length; i++){
 					dmg.items.items[i].disable();
 				}
+				//remove print frame
+				this.destroyPrintFrame();
+			},
+			
+			//Add hidden iframe used to print reports
+			addPrintFrame: function() {
+				var iFrameId = "printerFrame";
+				var printFrame = Ext.get(iFrameId);
+				if (printFrame == null) {
+					printFrame = Ext.getBody().appendChild({
+						id: iFrameId,
+						tag: 'iframe',
+						cls: 'x-hidden',  style: {
+							display: "none"
+						}
+					});
+				}
+			},
+			//destroy print iframe
+			destroyPrintFrame: function() {
+				var iFrameId = "printerFrame";
+				var printFrame = Ext.get(iFrameId);
+				if (printFrame != null) {
+					// destroy the iframe
+					Ext.fly(iFrameId).destroy();
+				 
+				}
 			}
+
 	});
 });

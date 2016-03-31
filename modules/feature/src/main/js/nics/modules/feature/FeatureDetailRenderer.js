@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008-2015, Massachusetts Institute of Technology (MIT)
+ * Copyright (c) 2008-2016, Massachusetts Institute of Technology (MIT)
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -42,13 +42,15 @@ define(['ext', 'iweb/CoreModule','nics/modules/UserProfileModule', './FeatureTop
 	return Ext.define('features.FeatureDetailRenderer', {
 		
 		constructor: function() {
-			
-			
+			Core.EventManager.addListener('nics.collabroom.activate', this.onActivateRoom.bind(this));
+		},
+		
+		onActivateRoom: function(evt, collabRoomId, readOnly){
+			this.readOnly = readOnly;
 		},
 		
 		render: function(container, feature) {
 	      if (this.supportsComments(feature)){
-			var readOnly = UserProfile.isReadOnly();
 			var attributes;
 			var user = feature.get('username');
 			if (user) {
@@ -99,7 +101,7 @@ define(['ext', 'iweb/CoreModule','nics/modules/UserProfileModule', './FeatureTop
 			
 			container.add( newComments );
 
-			if (!readOnly) {	
+			if (!this.readOnly) {	
 				
 				var editState = "Edit"
 				var editButton = new Ext.Button({

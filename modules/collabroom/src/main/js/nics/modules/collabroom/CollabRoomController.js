@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008-2015, Massachusetts Institute of Technology (MIT)
+ * Copyright (c) 2008-2016, Massachusetts Institute of Technology (MIT)
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -294,9 +294,18 @@ define(['ext', 'iweb/CoreModule', './CreateCollabroomWindow', './SecureRoomView'
 			
 			addCollabRoom: function(e, collabRoom){
 				if(collabRoom){
+					
+					if(collabRoom.name == "Incident Map"){
+						if($.inArray(UserProfile.getUserId(), collabRoom.readWriteUsers) == -1 &&
+								$.inArray(UserProfile.getUserId(), collabRoom.adminUsers) == -1){
+							collabRoom.readOnly = true;
+						}
+					}
+					
 					if(collabRoom.adminUsers && 
 							collabRoom.adminUsers.length > 0){
 						if($.inArray(UserProfile.getUserId(), collabRoom.adminUsers) != -1){
+							
 							Core.EventManager.fireEvent("nics.administration.collabroom.admin", collabRoom.collabRoomId);
 						}else if($.inArray(UserProfile.getUserId(), collabRoom.readWriteUsers) == -1){
 							return;

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008-2015, Massachusetts Institute of Technology (MIT)
+ * Copyright (c) 2008-2016, Massachusetts Institute of Technology (MIT)
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -39,7 +39,7 @@ define(['ext', 'iweb/CoreModule', 'nics/modules/UserProfileModule'],
 
 		init: function(){
 			this.mediator = Core.Mediator.getInstance();
-			
+			this.lookupReference('lookupGrid').store.removeAll();
 			Core.EventManager.addListener(this.lookupTopic, this.loadUsers.bind(this));
 		},
 		
@@ -73,6 +73,7 @@ define(['ext', 'iweb/CoreModule', 'nics/modules/UserProfileModule'],
 				var user = response.users[i];
 				data.push([user.username, user.firstname, user.lastname, user.userId]);
 			}
+			grid.getStore().removeAll()
 			grid.getStore().loadData(data, true);
 		},
 		
@@ -87,6 +88,10 @@ define(['ext', 'iweb/CoreModule', 'nics/modules/UserProfileModule'],
 		
 		clearGrid: function(){
 			this.lookupReference('lookupGrid').store.removeAll();
-		}
+			this.lookupReference('lookupGrid').view.refresh();
+			
+		},
+		
+	
 	});
 });

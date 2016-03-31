@@ -1,20 +1,15 @@
-## Synopsis
+# nics-web
 
-The Next-Generation Incident Command System (NICS) web application
-
-## Dependencies
-- nics-tools
-- iweb-modules
 
 ## Building
 
 You can build a 'debug' build using:
 
-	mvn install
+    mvn package 
 
 Or a 'production' build using:
 
-	mvn install -Dproduction
+    mvn package -Dproduction
 
 
 Both options will build nics.war to the webapp/target/ directory
@@ -32,4 +27,5 @@ Each 'module' is a maven jar project. It will package any compiled Java code for
 
 ### How do I use these modules?
 
-Just add the module as a dependency of the webapp WAR project and add any code to bootstrap your module. This will likely include adding your module to main.js in the webapp and adding html link tags for your CSS to be included.
+Just add the module as a dependency of the webapp WAR project and add any code to bootstrap your module. This will likely include adding your module to main.js in the webapp and adding html link tags for your CSS to be included. 
+

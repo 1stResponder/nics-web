@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008-2015, Massachusetts Institute of Technology (MIT)
+ * Copyright (c) 2008-2016, Massachusetts Institute of Technology (MIT)
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -27,7 +27,7 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-define(["iweb/CoreModule", 'nics/modules/UserProfileModule'], 
+define(["iweb/CoreModule", 'nics/modules/UserProfileModule'],
 
 	function(Core, UserProfile){
 	
@@ -75,8 +75,9 @@ define(["iweb/CoreModule", 'nics/modules/UserProfileModule'],
 				Core.EventManager.fireEvent("nics.collabroom.close", tab.collabRoom);
 			},
 			
-			onTabActivate: function(tab){
-				Core.EventManager.fireEvent("nics.collabroom.activate", tab.collabRoom.collabRoomId, UserProfile.isReadOnly());
+			onTabChange: function(tabpanel, tab, oldtab, eOpts){
+				Core.EventManager.fireEvent("nics.collabroom.activate", tab.collabRoom.collabRoomId, 
+						(UserProfile.isReadOnly() || tab.collabRoom.readOnly), tab.collabRoom.name);
 			}
 		});
 });

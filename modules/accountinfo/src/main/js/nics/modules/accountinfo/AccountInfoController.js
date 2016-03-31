@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008-2015, Massachusetts Institute of Technology (MIT)
+ * Copyright (c) 2008-2016, Massachusetts Institute of Technology (MIT)
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -27,16 +27,16 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-define(['iweb/CoreModule', 
-         './AccountInfoModel',
-         'nics/modules/UserProfileModule'], 
+define(['iweb/CoreModule',  './AccountInfoModel','nics/modules/UserProfileModule', './ChangeOrgViewer'], 
 
-	function(Core, AccountInfoModel, UserProfile){
+	function(Core, AccountInfoModel, UserProfile, ChangeOrgViewer ){
 	
 		Ext.define('modules.accountinfo.AccountInfoController', {
 			extend : 'Ext.app.ViewController',
 			
 			alias: 'controller.accountinfocontroller',
+			
+			contactList: ['Email', 'Home Phone', 'Cell Phone', 'Office Phone', 'Radio Number', 'Other Phone'],
 			
 			init: function(){
 				this.model = new AccountInfoModel();
@@ -49,14 +49,30 @@ define(['iweb/CoreModule',
 			bindEvents: function(){
 				
 				this.getView().accountInfoButton.on("click", this.showAccountInfo, this);
+				this.getView().changeOrgButton.on("click", this.changeOrgInfo, this);
 				
-				var submitButton = this.view.userAccountTab.lookupReference('submitButton');
+				var submitButton = this.getView().userAccountTab.lookupReference('submitButton');
 				if(submitButton){
 					submitButton.on('click', this.submitAccountInfo, this);
 				}
+				
+				var addButton = this.getView().userContactTab.lookupReference('addButton');
+				if(addButton){
+					addButton.on('click', this.addContactInfo, this);
+				}
+				
+				var deleteButton = this.getView().userContactTab.lookupReference('deleteButton');
+				if(deleteButton){
+					deleteButton.on('click', this.deleteContactInfo, this);
+				}
 
 				Core.EventManager.addListener("nics.user.profile.loaded", this.onProfileLoaded.bind(this));
+				Core.EventManager.addListener("nics.user.contact.loaded", this.setContactInfo.bind(this));
+				Core.EventManager.addListener("nics.user.contact.validate", this.validateContactInfo.bind(this));
+				Core.EventManager.addListener("nics.user.contact.update", this.updateContactInfo.bind(this));
 				Core.EventManager.addListener("nics.accountInfo.response",this.accountInfoResponse.bind(this));	
+				
+				
 			},
 			
 			showAccountInfo: function(profile){
@@ -66,6 +82,7 @@ define(['iweb/CoreModule',
 				}
 				
 				//show
+				this.getView().accountInfoTabs.setActiveTab(0);
 				this.getView().accountWindow.show();
 				
 				if(profile.username){
@@ -85,8 +102,8 @@ define(['iweb/CoreModule',
 						userFirstname: UserProfile.getFirstName(),
 						userLastname: UserProfile.getLastName(),
 						rank: UserProfile.getRank(),
-						desc: UserProfile.getDesc(),
-						job: UserProfile.getJobTitle(),
+						description: UserProfile.getDesc(),
+						jobTitle: UserProfile.getJobTitle(),
 						sysRoleId: UserProfile.getSystemRoleId()
 					});
 				}
@@ -248,13 +265,127 @@ define(['iweb/CoreModule',
 				var url = Ext.String.format('{0}/users/{1}/systemroles', 
 						Core.Config.getProperty(UserProfile.REST_ENDPOINT),
 						UserProfile.getWorkspaceId());
-				
+
 				this.mediator.sendRequestMessage(url, topic);
+				
+				topic = "nics.user.contact.loaded";
+				
+				url = Ext.String.format("{0}/users/{1}/contactinfo?userName={2}",
+					Core.Config.getProperty(UserProfile.REST_ENDPOINT),
+					UserProfile.getWorkspaceId(),
+					UserProfile.getUsername());
+					
+				this.mediator.sendRequestMessage(url,topic);
+				//Now get orgs for org drop down
+				var endpoint = Core.Config.getProperty(UserProfile.REST_ENDPOINT);
+				var url = Ext.String.format("{0}/users/{1}/userOrgs?userName={2}",
+						endpoint, UserProfile.getWorkspaceId(), UserProfile.getUsername());
+				
+				this.mediator.sendRequestMessage(url, "nics.userorg.loads");
+				
 			},
+			
 			
 			setButtonLabel: function(e){
 				this.getView().setButtonLabel(UserProfile.getNickName());
-			}
+			},
+			
+			setContactInfo: function(event, response){
+					if(response.users[0]){
+						this.getView().userContactTab.store.loadRawData(response.users[0].contacts);
+					}
+			},
+			
+			addContactInfo: function(e){
+				
+				var rowEdit = this.getView().userContactTab.getPlugin('rowediting');
+				
+				if(!rowEdit.editing){
+				
+					var record = { 
+						contacttypeid: -1,
+						value: ""
+					
+					};
+					
+					this.getView().userContactTab.store.insert(0,record);
+					
+					rowEdit.startEdit(0,0);
+				
+				}
+			},
+			
+			deleteContactInfo: function(e){
+				
+				var selected = this.getView().userContactTab.getSelectionModel().getSelection()[0];
+				
+				if(selected == null){
+					Ext.MessageBox.alert("NICS","Select contact information to delete.");
+				}
+				else{
+					
+					this.view.userContactTab.store.remove(selected);
+					var contactTypeId = this.contactList.indexOf(selected.get('contacttypeid'));
+					var value = selected.get('value');
+				
+					var topic = "";
+				
+					var url = Ext.String.format("{0}/users/{1}/deletecontactinfo?userName={2}&contactTypeId={3}&value={4}",
+						Core.Config.getProperty(UserProfile.REST_ENDPOINT),
+						UserProfile.getWorkspaceId(),
+						UserProfile.getUsername(),
+						contactTypeId,
+						value
+					);
+					
+					this.mediator.sendDeleteMessage(url,topic);	
+					
+				}
+				
+			},
+			
+			validateContactInfo: function(e, context){
+				
+				if(context.newValues.contacttypeid == 'N/A'){
+					this.getView().userContactTab.store.removeAt(0);
+				}
+				else{
+				
+					var topic = "nics.user.contact.update";
+				
+					var url = Ext.String.format("{0}/users/{1}/updatecontactinfo?userName={2}&contactTypeId={3}&value={4}",
+						Core.Config.getProperty(UserProfile.REST_ENDPOINT),
+						UserProfile.getWorkspaceId(),
+						UserProfile.getUsername(),
+						context.newValues.contacttypeid,
+						context.newValues.value
+					);
+					
+					this.mediator.sendPostMessage(url,topic);
+				
+				}
+			},
+			
+			updateContactInfo: function(event, response){
+				if(response.message = "OK"){
+					this.getView().userContactTab.store.commitChanges();
+				}
+			},
+			changeOrgInfo: function(profile){
+				if(profile == "Forbidden"){
+					Ext.MessageBox.alert("NICS", "You do not have permission to view this profile");
+					return;
+				}
+				
+				//show tab
+				this.getView().organizationWindow.show();
+				
+				
+			},
+			
+			
+	
+		
 			
 	});
 });

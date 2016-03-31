@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008-2015, Massachusetts Institute of Technology (MIT)
+ * Copyright (c) 2008-2016, Massachusetts Institute of Technology (MIT)
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -56,11 +56,15 @@ define(['ext', 'iweb/CoreModule','nics/modules/UserProfileModule'],
 			var secureController = this.view.lookupReference('managePermissions').controller;
 			
 			if(this.view.isManager){//User is an admin for this secured room
+				this.resetGrids();
 				secureController.loadUnsecureUsers(this.incidentId, this.collabRoomId);
 				secureController.loadSecureUsers(this.incidentId, this.collabRoomId);
 				this.view.show();
-			}else if(UserProfile.getSystemRoleId() == 0 //user is a system admin or super user
-					|| UserProfile.getSystemRoleId() == 4){
+
+			}else if((UserProfile.getSystemRoleId() == 4 //user is a system admin 
+					&& !this.collabRoomName == "Incident Map") || //Not the Incident Map
+					UserProfile.isSuperUser()){ 
+
 				if(this.collabRoomId != "myMap"){
 					this.resetGrids();
 					this.view.show(); //allow user to secure the room
@@ -157,12 +161,13 @@ define(['ext', 'iweb/CoreModule','nics/modules/UserProfileModule'],
 			}
 		},
 		
-		onActivateRoom: function(evt, collabRoomId){
+		onActivateRoom: function(evt, collabRoomId, readOnly, name){
 			if(this.view && this.view.isVisible()){
 				this.closeManager();
 			}
 			
 			this.collabRoomId = collabRoomId;
+			this.collabRoomName = name;
 			if($.inArray(collabRoomId, this.adminRooms) != -1){
 				this.getView().showManager();
 			}else{

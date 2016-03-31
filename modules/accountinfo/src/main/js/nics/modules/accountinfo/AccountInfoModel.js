@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008-2015, Massachusetts Institute of Technology (MIT)
+ * Copyright (c) 2008-2016, Massachusetts Institute of Technology (MIT)
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -27,9 +27,44 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-define([], function() {
+define(['ext'], function(Ext) {
 
-	var AccountInfoModel = function(){};
-
-	return AccountInfoModel;
+	return Ext.define('modules.accountinfo.AccountInfoModel', {	 
+	 	extend: 'Ext.data.Model',
+	 	
+	 	idProperty: 'contactId',
+	 	
+		fields : [
+				{
+					name : 'contacttypeid',
+					convert: function (v, rec) {
+					
+						if(v == 0){
+							return "Email";
+						}
+						else if(v == 1){
+							return "Home Phone";
+						}
+						else if(v == 2){
+							return "Cell Phone";
+						}
+						else if(v == 3){
+							return "Office Phone";
+						}
+						else if(v == 4){
+							return "Radio Number";
+						}
+						else if(v == 5){
+							return "Other Phone";
+						}
+						
+						return "N/A"
+					}
+					
+				}, {
+					name : 'value',
+					mapping : 'value'
+				}
+			]
+	 });
 });

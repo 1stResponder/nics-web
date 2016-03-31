@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008-2015, Massachusetts Institute of Technology (MIT)
+ * Copyright (c) 2008-2016, Massachusetts Institute of Technology (MIT)
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -27,9 +27,33 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-define([], function(){
-	
-	var KMLCapabilities = function() {};
-	
-	return KMLCapabilities;
+ define(["iweb/CoreModule", './SyncWindowController'], function(Core) {
+	return Ext.define('modules.mapsynclocation.SyncWindow', {
+		extend: 'Ext.Window',
+		controller: 'mapsynclocation.syncwindowcontroller',
+		
+		title: 'Map Position Sync',
+		closeAction: 'hide',
+		
+		items: [{
+			xtype: 'menu',
+			floating: false,
+			items:[{
+				xtype: 'menucheckitem',
+				text: 'Allow others to move this map',
+				reference: 'syncChk',
+				listeners: {
+					checkchange: 'onSyncToggle'
+				}
+			},{
+				xtype: 'button',
+				text: 'Move others to my current map location',
+				reference: 'syncBtn',
+				indent: false,
+				listeners: {
+					click: 'onSyncClick'
+				}
+			}]
+		}]
+	});
 });
