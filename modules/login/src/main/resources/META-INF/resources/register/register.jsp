@@ -84,7 +84,7 @@
         		Populates IMT select elements based on matching Org Type for each IMT
         	*/
         	function populateIMTs() {
-        		var cdfImtOptions = [], federalImtOptions, otherLocalImtOptions, usarImtOptions = [];
+        		var cdfImtOptions = [], federalImtOptions = [], otherLocalImtOptions = [], usarImtOptions = [];
         		
         		var cdfImt, cdfImtOrgs = [];
         		var federalImt, federalImtOrgs = [];
@@ -321,17 +321,17 @@
 		    			    	
 		    	if(!passwordValue || passwordValue === ""
 		    			|| !confirmPasswordValue || confirmPasswordValue === ""
-		    			|| (passwordValue !== confirmPasswordValue)
-		    			|| passwordValue.length < 8 || passwordValue.length > 20) {
+		    			|| (passwordValue !== confirmPasswordValue) ) {
+		    			//|| passwordValue.length < 8 || passwordValue.length > 20) {
 		    		
-		    		reasons += "- Must provide a password between 8 and 20 characters long, and it must match the confirm password<br/>";
+		    		reasons += "- Must provide a valid password, and it must match the confirm password<br/>";
 		    		valid = false;
 		    	}
 		    	
 		    	// Ensure this regex matches back-end regex on UserInformation validator
-		    	var passRegex = /(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%!_-]).{8,}/;
+		    	var passRegex = /${requestScope.passwordPattern}/;
 		    	if(!passRegex.test(passwordValue)) {
-		    		reasons += "- Password must contain at least one lower case and one upper case letter, a number, and a symbol: @#$%!_-<br/>";
+		    		reasons += "- Password must meet stated requirements<br/>";
 		    	}
 		    	
 		    	if(phoneMobile && phoneMobile !== "") {
@@ -387,7 +387,7 @@
     
         <div class="wrapper" style="background: linear-gradient(#003366, #0066FF)">        	
         
-            <form id="register" action="register" method="post">
+            <form id="register" action="register" method="post" onsubmit="return validateForm();">
         
             <div class="header" >
                 <div class="server-select">
@@ -433,13 +433,17 @@
 			       		Fields marked with a <font style="color:red">*</font> are required
 			       	</p>
 			       	
+			       	<p>
+			       		For assistance with registration please contact: <c:out value="${requestScope.registerhelp}"/>
+			       	</p>
+			       	
 			       	<div id="messages" name="messages" style="color:red;border: 2px solid red;padding: 4px" hidden="true"></div>
                     <br/>
                     <hr/>         
                                 	
 	            	<div class="field">
 	                    <label for="affiliation">Organization Affiliation <font style="color:red">*</font></label>
-	                    <select id="affiliation" name="affiliation" tabindex="1" width="300" autofocus="autofocus" 
+	                    <select id="affiliation" name="affiliation" tabindex="1" width="300" 
 	                    	onChange="filterOrgs(this);">
 	                    <option value="0">Please select an Affiliation</option>
 	                    <c:forEach items="${requestScope.orgtypes}" var="orgtype">
@@ -540,6 +544,13 @@
                     </div>
                     <br/>
                     <div class="field">
+                    	<center>
+                    	<div style="width:65%">
+                    		<b>Password Requirements</b><br/> <c:out value="${requestScope.passwordRequirements}"/>
+                    		<input type="hidden" id="passwordPattern" value="${requestScope.passwordPattern}"/>
+                    	</div>
+                    	<br/>
+                    	
                     	<span>
                         	<label for="password">Password <font style="color:red">*</font></label>
                         	<input type="password" id="password" name="password" maxlength="20" tabindex="10" />
@@ -549,6 +560,7 @@
                         	<label for="confirmPassword">Confirm Password <font style="color:red">*</font></label>
                         	<input type="password" id="confirmPassword" name="confirmPassword" maxlength="20" tabindex="11" />
                         </span>
+                        </center>
                     </div>
                     <hr/>
                     

@@ -37,12 +37,13 @@ define(['./RoomManagementController', 'nics/modules/collabroom/SecureRoomView','
 	 	controller: 'roommanagementcontroller',
 	 	
 	 	closeAction: "hide",
+	 	
+	 	referenceHolder: true,
 	 
 	 	initComponent: function(){
 			this.callParent();
 			
 			var secureRoomView = new SecureRoomView();
-			secureRoomView.setReference('managePermissions');
 			
 			this.add(secureRoomView);
 			

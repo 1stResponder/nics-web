@@ -37,7 +37,6 @@ define(['ext', 'iweb/CoreModule', 'nics/modules/UserProfileModule'],
 
 		init: function(){
 			Core.EventManager.addListener(UserProfile.PROFILE_LOADED, this.loadUserProfile.bind(this));
-			
 			this.mediator = Core.Mediator.getInstance();
 		},
 		

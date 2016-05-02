@@ -107,6 +107,7 @@ define(['ext', 'iweb/CoreModule', 'nics/modules/UserProfileModule'],
 				panel.controller.updateView();
 				
 				this.lookupReference('userView').getController().loadUsers(null, selected[0].data.orgId);
+				this.lookupReference('archiveView').getController().loadIncidents(null, selected[0].data.orgId);
 			}
 		},
 		

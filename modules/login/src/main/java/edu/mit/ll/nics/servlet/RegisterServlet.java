@@ -37,6 +37,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.jar.Manifest;
 
@@ -70,6 +71,9 @@ import edu.mit.ll.iweb.session.SessionHolder;
 import edu.mit.ll.iweb.websocket.Config;
 import edu.mit.ll.nics.sso.util.SSOUtil;
 import edu.mit.ll.nics.util.CookieTokenUtil;
+
+import org.owasp.esapi.ESAPI;
+
 
 @WebServlet("/register")
 public class RegisterServlet extends HttpServlet implements Servlet {
@@ -108,6 +112,10 @@ public class RegisterServlet extends HttpServlet implements Servlet {
 	public static final String EMAIL = "email";
 	public static final String PASSWORD = "password";
 	public static final String CONFIRM_PASSWORD = "confirmPassword";
+	public static final String DEFAULT_PASSWORD_REQUIREMENTS = "Your password must be a minimum 8 characters long "
+			+ "and a maximum of 20 with at least one digit, one upper case letter, one lower case letter and one "
+			+ "special symbol @#$%-_!";
+	public static final String DEFAULT_PASSWORD_PATTERN = "((?=.*\\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%!_-]).{8,20})";
 	
 	public static final String PHONE_MOBILE = "phoneMobile";
 	public static final String PHONE_OFFICE = "phoneOffice";
@@ -129,6 +137,9 @@ public class RegisterServlet extends HttpServlet implements Servlet {
 	private static final String GOOGLE_RECAPTCHA_KEY = "private.google.recaptcha.key";
 	private static final String GOOGLE_RECAPTCHA_SECRET = "private.google.recaptcha.secret";
 	
+	private static final String PASSWORD_REQUIREMENTS_KEY = "password.requirements";
+	private static final String PASSWORD_PATTERN_KEY = "password.pattern";
+	
 	//private CookieTokenUtil tokenUtil;
 	//private static SSOUtil util;
 	private String workspaceUrl;
@@ -137,6 +148,7 @@ public class RegisterServlet extends HttpServlet implements Servlet {
 	private String orgOrgTypeUrl;
 	private String registerUserUrl;
 	private String warVersion;
+	private String registerHelp;
 	
 	public RegisterServlet() {
 	}
@@ -145,6 +157,7 @@ public class RegisterServlet extends HttpServlet implements Servlet {
 	public void init() throws ServletException {
 		Configuration config = Config.getInstance().getConfiguration();
 		String restEndpoint = config.getString("endpoint.rest");
+		registerHelp = config.getString("registration.help.info"," NICS Support - nicssupport@ll.mit.edu");
 		
 		//System.setProperty("ssoToolsPropertyPath", "/opt/data/nics/config"); //CONFIGURE THIS!!
 		//System.setProperty("openamPropertiesPath", "/opt/data/nics/config"); //CONFIGURE THIS!!
@@ -203,6 +216,7 @@ public class RegisterServlet extends HttpServlet implements Servlet {
 				
 				if (workspaces.size() > 0 && orgTypes.size() > 0 && orgs.size() > 0) {
 					
+					req.setAttribute("registerhelp",registerHelp);
 					req.setAttribute("version", warVersion);
 					req.setAttribute("workspaces", workspaces);
 					req.setAttribute("orgtypes", orgTypes);
@@ -210,6 +224,19 @@ public class RegisterServlet extends HttpServlet implements Servlet {
 					req.setAttribute("orgs", orgs);
 					req.setAttribute("dataSiteKey", 
 							Config.getInstance().getConfiguration().getString(GOOGLE_RECAPTCHA_KEY));
+					
+					String passwordPattern = Config.getInstance().getConfiguration()
+							.getString(PASSWORD_PATTERN_KEY, DEFAULT_PASSWORD_PATTERN);					
+					// TODO: canonoicalize?
+					req.setAttribute("passwordPattern", passwordPattern);
+					
+					String safePasswordRequirements = Config.getInstance().getConfiguration()
+							.getString(PASSWORD_REQUIREMENTS_KEY, DEFAULT_PASSWORD_REQUIREMENTS);
+					
+					// Encode the password requirements for proper display on Registration form
+					safePasswordRequirements = ESAPI.encoder().canonicalize(safePasswordRequirements);
+					req.setAttribute("passwordRequirements", safePasswordRequirements);
+					
 					
 					req.getRequestDispatcher(REGISTER_JSP_PATH).forward(req, resp);
 				} else {
@@ -288,6 +315,9 @@ public class RegisterServlet extends HttpServlet implements Servlet {
 		String last = req.getParameter(LAST);
 		
 		String email = req.getParameter(EMAIL);
+		if(email != null) {
+			email = email.toLowerCase(Locale.ENGLISH);
+		}
 		String password = req.getParameter(PASSWORD);
 		String confirmPassword = req.getParameter(CONFIRM_PASSWORD);
 		

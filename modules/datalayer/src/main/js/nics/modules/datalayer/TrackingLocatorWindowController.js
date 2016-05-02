@@ -27,7 +27,7 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-define(['ext', "iweb/CoreModule", "iweb/modules/MapModule",],
+define(['ext', "iweb/CoreModule", "iweb/modules/MapModule"],
     function(Ext, Core, MapModule){
         Ext.define('modules.datalayer.TrackingLocatorWindowController', {
             extend : 'Ext.app.ViewController',
@@ -64,7 +64,26 @@ define(['ext', "iweb/CoreModule", "iweb/modules/MapModule",],
                     if (features[f])
                     {
                         var props = features[f].getProperties();
-                        arr.push([props.name, 'Group', 'Subgroup', props.geom]);
+                        var geom = props.geom;
+                        if(!geom){
+                        	//Find the Geometry
+                        	for(var prop in props){
+                        		if(props[prop] && props[prop].getExtent)
+                                {
+                        			geom = props[prop];
+                        			break;
+                        		}
+                        	}
+                        }
+                        
+                        var name = props.name ? props.name : props.Name;
+                        
+                        //TEMPORARY until all formats are consistent
+                        if(!name){
+                        	name = props["VehicleName"];
+                        }
+                        
+                        arr.push([name, 'Group', 'Subgroup', geom]);
                     }
                 }
 
@@ -82,17 +101,46 @@ define(['ext', "iweb/CoreModule", "iweb/modules/MapModule",],
                 for (f in features)
                 {
                     var props = features[f].getProperties();
-                    var index = this.getView().pliStore.find('vehicle', props.name);
-                    if (index != -1)
+                    var rec = this.getView().pliStore.findRecord('vehicle', props.name);
+                    if (rec)
                     {
-                    	var rec = this.getView().pliStore.getAt(index);
                         arr.push(rec);
                     }
                 }
 
                 this.getView().pliStore.remove(arr);
             },
-            
+
+            /**
+             * Call this function after layer has been selected
+             *
+             * @param data Event data received by onLayerShow
+             */
+            trySelectingSettingsLayer: function(data, count)
+            {
+                if (data && data.text && data.layer)
+                {
+                    //Can not automatically select the layer because the features are not loaded
+                    var rec = this.getView().settingsStore.findRecord('name', data.text);
+                    if (rec)
+                    {
+                        var gridPanel = this.getView().getSettingsGridPanel();
+                        if (gridPanel)
+                        {
+                            var selModel = gridPanel.getSelectionModel();
+                            if (selModel)
+                            {
+                                selModel.select(rec, true);
+                            }
+                        }
+                    }
+                } else
+                {
+                    // do we want to kep trying to call until we succeed?
+                }
+
+            },
+
             onLayerShow: function(evt, data)
             {
                 if (data && data.text && data.layer && data.layerType)
@@ -100,18 +148,8 @@ define(['ext', "iweb/CoreModule", "iweb/modules/MapModule",],
                     if (data.layerType == 'wfs')
                     {
                     	this.getView().settingsStore.loadData([{name: data.text, layer: data.layer}], true);
-                        
-                    	//Can not automatically select the layer because the features are not loaded
-                    	/*var rec = this.getView().settingsStore.find('name', data.text);
-                        var gridPanel = this.getView().getSettingsGridPanel();
-                        if (gridPanel)
-                        {
-                            var selModel = gridPanel.getSelectionModel();
-                            if (selModel && rec)
-                            {
-                                //selModel.select(rec);
-                            }
-                        }*/
+
+                        Ext.Function.defer(this.trySelectingSettingsLayer, 500, this, [data, 0]);
                     } else
                     {
                         console.log("Layer type not WFS");
@@ -130,8 +168,24 @@ define(['ext', "iweb/CoreModule", "iweb/modules/MapModule",],
                 {
                 	// remove records
                 	var rec = this.getView().settingsStore.getAt(index);
-                    this.processFeatureRemoval(rec.data.layer.getSource().getFeatures());
-                	this.getView().settingsStore.remove(rec);
+                    if (rec)
+                    {
+                        this.processFeatureRemoval(rec.data.layer.getSource().getFeatures());
+                        this.getView().settingsStore.remove(rec);
+                    }
+                }
+            },
+
+            tryProcessingFeatures: function(selectedLayer, count)
+            {
+                var features = selectedLayer.layer.getSource().getFeatures();
+                if (features.length == 0)
+                {
+                    if (count < 10)
+                        Ext.Function.defer(this.tryProcessingFeatures, 1000, this, [selectedLayer, count++]);
+                } else
+                {
+                    this.processFeatures(selectedLayer.layer.getSource().getFeatures());
                 }
             },
 
@@ -140,7 +194,7 @@ define(['ext', "iweb/CoreModule", "iweb/modules/MapModule",],
                 // show features
                 if (selected.data.layer)
                 {
-                   this.processFeatures(selected.data.layer.getSource().getFeatures());
+                    Ext.Function.defer(this.tryProcessingFeatures, 1000, this, [selected.data, 0]);
                 }
             },
 
@@ -159,19 +213,48 @@ define(['ext', "iweb/CoreModule", "iweb/modules/MapModule",],
                 //Center map on feature
             	if(selected[0]){
                     this.lastSelected = selected[0];
-            		var extent = selected[0].data.geom.getExtent();
-            		if(extent.length > 0 && isFinite(extent[0])) {
-						MapModule.mapController.zoomToExtent(extent);
-					}
+                    if(selected[0].data.geom){
+	            		var extent = selected[0].data.geom.getExtent();
+	            		if(extent.length > 0 && isFinite(extent[0])) {
+							MapModule.mapController.zoomToExtent(extent);
+						}
+                    }
             	}
+            },
+
+            onChange: function(filterField, newValue, oldValue, eOpts)
+            {
+                console.log("[onChange] newVal: " + newValue);
+
+                // filter by name
+                var filterFn = function(rec, id)
+                {
+                    if (newValue == undefined || newValue == null || newValue == '') return true;
+                    console.log("New")
+                    if (rec.get('vehicle'))
+                    {
+                        if (rec.get('vehicle').indexOf(newValue) > -1)
+                        {
+                            return true;
+                        }
+                    }
+
+                    return false;
+                };
+
+                if (this.getView().pliStore)
+                {
+                    this.getView().pliStore.clearFilter();
+                    this.getView().pliStore.filterBy(filterFn, this);
+                }
             },
 
             onClearListClick: function()
             {
                 if (this.getView().pliStore)
                 {
-                    this.getView().pliStore.clearFilter(false)
-                };
+                    this.getView().pliStore.clearFilter(false);
+                }
             },
 
             filterByPliFilter: function(property, value, rec, id)
@@ -184,7 +267,7 @@ define(['ext', "iweb/CoreModule", "iweb/modules/MapModule",],
                         {
                             return true;
                         }
-                    } else if (rec.data.vehicle == value)
+                    } else if (rec.data.vehicle && rec.data.vehicle == value)
                     {
                         console.log("matched with vehicle anyway, attempted prop: "+ property);
                         return true;

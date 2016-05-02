@@ -64,9 +64,22 @@ define(["iweb/CoreModule", './TrackingLocatorWindowController', './TrackingLocat
                 sorters: 'group'
             });
 
-            var panel = Ext.create('Ext.grid.Panel', {
-                id: 'pliLocatorPanel',
-                title: 'PLI',
+            this.filterField = Ext.create('Ext.form.field.Text', {
+                id: 'pliLocatorFilterField',
+                enableKeyEvents: true,
+                width: '100%',
+                emptyText: 'Enter text here to filter PLI',
+                autoHeight: true,
+                listeners: {
+                    change: 'onChange'
+                },
+                reference: 'pliLocatorFilterField'
+            });
+
+            var gpanel = Ext.create('Ext.grid.Panel', {
+                id: 'pliLocatorGridPanel',
+                height: 300,
+                width: '100%',
                 viewConfig: {
                     emptyText: 'There are no active vehicles'
                 },
@@ -86,16 +99,19 @@ define(["iweb/CoreModule", './TrackingLocatorWindowController', './TrackingLocat
                     text: 'Subgroup',
                     dataIndex: 'subgroup',
                     flex: 1
-                }]/*
-                buttons: [{
-                    text: 'Filter',
-                    id: 'filterListPliPanelBtn',
-                    handler: 'onFilterClick'
-                },{
-                    text: 'Clear list',
-                    id: 'clearListPliPanelBtn',
-                    handler: 'onClearListClick'
-                }]*/
+                }]
+            });
+
+            var panel = Ext.create('Ext.panel.Panel', {
+                id: 'pliLocatorPanel',
+                title: 'PLI',
+                layout: {
+                    type: 'vbox',
+                    pack: 'center',
+                    align: 'middle'
+                },
+                padding: '1',
+                items: [this.filterField, gpanel]
             });
 
             this.tabPanel.add(panel);

@@ -38,7 +38,7 @@ define(['ext', 'iweb/CoreModule', 'ol', './MultiIncidentViewModel', 'nics/module
 		incidentColor : 'rgb(0,0,0)',
 		
 		viewEnabled: false,
-
+		
 		init: function(){
 			this.mediator = Core.Mediator.getInstance();
 			
@@ -54,12 +54,17 @@ define(['ext', 'iweb/CoreModule', 'ol', './MultiIncidentViewModel', 'nics/module
 			
 			Core.EventManager.addListener(UserProfile.PROFILE_LOADED, this.loadAllIncidents.bind(this));
 			Core.EventManager.addListener("nics.miv.onloadallincidents", this.onLoadAllIncidents.bind(this));
+			Core.EventManager.addListener("nics.incident.update.callback", this.onUpdateIncident.bind(this));
+			Core.EventManager.addListener("nics.miv.update.mivpanel", this.loadAllIncidents.bind(this));
+			Core.EventManager.addListener("nics.incident.create.callback", this.loadAllIncidents.bind(this));
+			
+			
 		},
 		
 		loadAllIncidents: function(e) {
 			var grid = this.lookupReference('multiincidentsgrid');
 			
-			if(UserProfile.getSystemRoleId() != 4 && UserProfile.getSystemRoleId() != 0){
+			if(UserProfile.getSystemRoleId() != 4 && !UserProfile.isSuperUser()){
 				this.lookupReference('miveditbutton').hide()
 			}
 			
@@ -68,9 +73,12 @@ define(['ext', 'iweb/CoreModule', 'ol', './MultiIncidentViewModel', 'nics/module
 				this.resetFormPanel();
 			}
 			
+			//TODO: Update instead of reload everytime a change occurs
 			var topic = Ext.String.format("iweb.NICS.ws.{0}.newIncident", UserProfile.getWorkspaceId());
-			this.mediator.subscribe(topic);
 			Core.EventManager.addListener(topic, this.getAllIncidents.bind(this));
+			
+			var removeTopic = Ext.String.format("iweb.NICS.ws.{0}.removeIncident", UserProfile.getWorkspaceId());
+			Core.EventManager.addListener(removeTopic, this.getAllIncidents.bind(this));
 			
 			topic = Ext.String.format("iweb.NICS.ws.{0}.updateIncident", UserProfile.getWorkspaceId());
 			this.mediator.subscribe(topic);
@@ -91,24 +99,22 @@ define(['ext', 'iweb/CoreModule', 'ol', './MultiIncidentViewModel', 'nics/module
 		
 		},
 		
-		onNewIncident: function(e, incident){
-			
-			// Must change to add incident manually to MIV
-			// Not enough time to fix properly for Sprint
-			
-			//console.log('new');
-			//console.log(incident);
-		
+		disableEditButton: function(disabled){
+			this.lookupReference('miveditbutton').setDisabled(disabled);
 		},
 		
-		onUpdateIncident: function(e, incident){
 		
-			// Must change to add incident manually to MIV
-			// Not enough time to fix properly for Sprint
-			
-			//console.log('update');
-			//console.log(incident);
+		//TODO: Add new incident rather than loading the whole grid
+		onNewIncident: function(e, incident){},
 		
+		onUpdateIncident: function(e, response, incident){
+			if(response.message != "OK"){
+					Ext.MessageBox.alert("Status", response.message);
+				}else{
+					Ext.MessageBox.alert("Status", "Incident successfully updated.");
+					var selected = this.lookupReference('multiincidentsgrid').getSelectionModel().getSelection()[0];
+					Core.EventManager.fireEvent("nics.miv.update.mivpanel");
+				}
 		},
 		
 		onLoadAllIncidents: function(e,response) {
@@ -134,6 +140,37 @@ define(['ext', 'iweb/CoreModule', 'ol', './MultiIncidentViewModel', 'nics/module
 			
 			}
 			
+			//Request the org ownership if the user is an admin or a super user
+			if(UserProfile.getSystemRoleId() == 4){
+				this.loadIncidentOrgs();
+			}
+			
+		},
+		
+		loadIncidentOrgs: function(){
+			var topic = Core.Util.generateUUID();
+
+			var orgId = UserProfile.getOrgId();
+			//populate the user grids
+			Core.EventManager.createCallbackHandler(topic, this, 
+					function(orgId, evt, response){
+						this.incidentOrgs = [];
+						if (response && response.data && response.data.length) {
+							for(var i=0; i<response.data.length; i++){
+								if(response.data[i].orgid == orgId){
+									this.incidentOrgs.push(response.data[i].incidentid);
+								}
+							}
+						}
+					},
+					[orgId]
+			);
+			
+			var url = Ext.String.format('{0}/incidents/{1}/incidentorgs', 
+					Core.Config.getProperty(UserProfile.REST_ENDPOINT),
+					UserProfile.getWorkspaceId());
+			
+			this.mediator.sendRequestMessage(url, topic);
 		},
 		
 		createTree: function(incident){
@@ -209,7 +246,7 @@ define(['ext', 'iweb/CoreModule', 'ol', './MultiIncidentViewModel', 'nics/module
 		
 			var selected = this.lookupReference('multiincidentsgrid').getSelectionModel().getSelection()[0];
 			if(selected == null){
-				Ext.MessageBox.alert("NICS","Select an incident to update.");
+				Ext.MessageBox.alert("Multi-Incident-View Error","Select an incident to update.");
 			}
 			else{
 				Core.EventManager.fireEvent('nics.incident.window.update',selected);
@@ -273,6 +310,10 @@ define(['ext', 'iweb/CoreModule', 'ol', './MultiIncidentViewModel', 'nics/module
 			}
 			
 			form.expand();
+			
+			if(UserProfile.getSystemRoleId() == 4){
+				this.disableEditButton(($.inArray(selected[0].data.incidentid, this.incidentOrgs) == -1));
+			}
 			
 		}		
 		

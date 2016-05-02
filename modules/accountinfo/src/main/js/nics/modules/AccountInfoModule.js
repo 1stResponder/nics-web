@@ -53,6 +53,8 @@ define([
 		AccountInfoModule.prototype.showViewer = function(profile){
 			var accountViewer = Ext.getCmp('accountViewer');
 			accountViewer.controller.showAccountInfo(profile);
+			accountViewer.controller.getContactInfo(profile.username);
+			accountViewer.controller.disableButtons();
 			
 		}
 		

@@ -38,7 +38,6 @@ define(['ext', "iweb/CoreModule", 'nics/modules/UserProfileModule'],
             TO_KEY: "feedback.email.to",
             SUBJECT_KEY: "feedback.email.subject",
 
-
             init: function(){
                 this.mediator = Core.Mediator.getInstance();
             },
@@ -49,9 +48,9 @@ define(['ext', "iweb/CoreModule", 'nics/modules/UserProfileModule'],
                 // validate feedback message
                 if (Core.Util.isValidInput(content))
                 {
-                    console.log('Content validated');
+                    
                     var topic = Core.Config.getProperty(this.TOPIC_KEY);
-                    console.log("Retrieved Feedback property value: " + topic);
+                    
                     if (topic)
                     {
                         var subject = Core.Config.getProperty(this.SUBJECT_KEY) + ' ' + location.hostname;
@@ -66,7 +65,6 @@ define(['ext', "iweb/CoreModule", 'nics/modules/UserProfileModule'],
                         };
                         if (this.mediator && this.mediator.publishMessage)
                         {
-                            console.log(JSON.stringify(message));
 
                             this.mediator.publishMessage(topic, message);
 
@@ -76,17 +74,16 @@ define(['ext', "iweb/CoreModule", 'nics/modules/UserProfileModule'],
                             this.getView().hide();
                         } else
                         {
-                            console.error("publishMessage function not defined!");
+                        	Ext.MessageBox.alert("NICS", "Unable to send feedback report");
                         }
 
                     } else{
                         // TODO log error or alert user to notify system administrators topic property not set
-                        console.error("Couldn't retrieve topic from properties");
+                        Ext.MessageBox.alert("NICS", "Unable to send feedback report");
                     }
                 } else
                 {
-                    console.log('Content not valid');
-                    alert('Feedback message content not valid');
+                    Ext.MessageBox.alert("NICS", "Unable to send feedback report: Feedback message content not valid");
                 }
             },
 

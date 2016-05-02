@@ -27,8 +27,8 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-define(['./OrganizationController','./OrganizationModel','./UserView', './OrganizationForm'], 
-		function(OrganizationController, OrganizationModel, UserView, OrganizationForm) {
+define(['./OrganizationController','./OrganizationModel','./UserView', './OrganizationForm', './ArchiveView'], 
+		function(OrganizationController, OrganizationModel, UserView, OrganizationForm, ArchiveView) {
 
 	return Ext.define('modules.administration.OrganizationView', {
 	 	extend: 'Ext.Panel',
@@ -85,6 +85,9 @@ define(['./OrganizationController','./OrganizationModel','./UserView', './Organi
 			
 			//Users
 			this.add(new UserView());
+			
+			//Incidents
+			this.add(new ArchiveView());
 	 	}
     });
 });

@@ -65,6 +65,8 @@ define(['ext', 'iweb/CoreModule', './CreateCollabroomWindow', './SecureRoomView'
 				Core.EventManager.addListener("nics.collabroom.close", this.onCloseCollabRoom.bind(this));
 				Core.EventManager.addListener("nics.collabroom.create.callback", this.onCreateCollabRoom.bind(this));
 				
+				Core.EventManager.addListener("nics.archived.collabroom.load", this.onLoadArchivedCollabRooms.bind(this));
+				
 				Core.EventManager.addListener(UserProfile.PROFILE_LOADED, this.loadUser.bind(this));
 			},
 	
@@ -94,6 +96,22 @@ define(['ext', 'iweb/CoreModule', './CreateCollabroomWindow', './SecureRoomView'
 				if(rooms.length > 0){
 					Ext.iterate(rooms, function(value,index){
 						this.addCollabRoom(e, value);
+					}, this);
+				}
+				
+			},
+			
+			onLoadArchivedCollabRooms: function(e, response){
+				//clear old menu items
+				this.getView().clearMenuItems();
+				
+				this.rooms = [];
+				
+				//add items to dropdown menu
+				var rooms = response.results;
+				if(rooms.length > 0){
+					Ext.iterate(rooms, function(value,index){
+						this.addArchivedCollabRoom(e, value);
 					}, this);
 				}
 				
@@ -196,11 +214,11 @@ define(['ext', 'iweb/CoreModule', './CreateCollabroomWindow', './SecureRoomView'
 					});
 				}else if(!Ext.isEmpty(response.message)){
 					this.window.setName("");
-					Ext.MessageBox.alert("NICS", response.message);
+					Ext.MessageBox.alert("Status", response.message);
 				}
 			},
 			
-			onJoinIncident: function(e, incident){
+			onJoinArchivedIncident: function(incident){
 				//Close the incident if we already have one open
 				if(this.currentIncidentId != -1){
 					this.onCloseIncident();
@@ -208,19 +226,37 @@ define(['ext', 'iweb/CoreModule', './CreateCollabroomWindow', './SecureRoomView'
 				
 				this.currentIncidentId = incident.id;
 				
-				Core.EventManager.addListener(
-						Ext.String.format(this.createTopic, incident.id), 
-						this.addCollabRoom);
-				
-				Core.EventManager.addListener(
-						Ext.String.format(this.updateTopic, incident.id), 
-						this.addUpdatedCollabRoom);
-				
-				this.toggleEnableNewRoom(true);
-				
 				//request rooms
 				this.mediator.sendRequestMessage(
-					this.getLoadCollabRoomUrl(incident.id, UserProfile.getUserId()), "nics.collabroom.load");
+					this.getLoadCollabRoomUrl(incident.id, UserProfile.getUserId()), "nics.archived.collabroom.load");
+			},
+			
+			onJoinIncident: function(e, incident){
+				if(incident.archived){
+					this.onJoinArchivedIncident(incident);
+				}else{
+				
+					//Close the incident if we already have one open
+					if(this.currentIncidentId != -1){
+						this.onCloseIncident();
+					}
+					
+					this.currentIncidentId = incident.id;
+					
+					Core.EventManager.addListener(
+							Ext.String.format(this.createTopic, incident.id), 
+							this.addCollabRoom);
+					
+					Core.EventManager.addListener(
+							Ext.String.format(this.updateTopic, incident.id), 
+							this.addUpdatedCollabRoom);
+					
+					this.toggleEnableNewRoom(true);
+					
+					//request rooms
+					this.mediator.sendRequestMessage(
+						this.getLoadCollabRoomUrl(incident.id, UserProfile.getUserId()), "nics.collabroom.load");
+				}
 			},
 			
 			onCloseIncident: function(e, menuItem){
@@ -292,10 +328,26 @@ define(['ext', 'iweb/CoreModule', './CreateCollabroomWindow', './SecureRoomView'
 				}
 			},
 			
+			addArchivedCollabRoom: function(e, collabRoom){
+				if(collabRoom){
+					
+					collabRoom.readOnly = true;
+					
+					//Distinguish item from My Map
+					collabRoom.featureType = "collabroom";
+					
+					this.rooms.push(collabRoom);
+					var item = this.getView().addMenuItem(collabRoom);
+					if(item){
+						item.on("click", this.openCollabRoom, this);
+					}
+				}
+			},
+			
 			addCollabRoom: function(e, collabRoom){
 				if(collabRoom){
 					
-					if(collabRoom.name == "Incident Map"){
+					if(collabRoom.name == UserProfile.getIncidentMapName()){
 						if($.inArray(UserProfile.getUserId(), collabRoom.readWriteUsers) == -1 &&
 								$.inArray(UserProfile.getUserId(), collabRoom.adminUsers) == -1){
 							collabRoom.readOnly = true;
@@ -305,7 +357,7 @@ define(['ext', 'iweb/CoreModule', './CreateCollabroomWindow', './SecureRoomView'
 					if(collabRoom.adminUsers && 
 							collabRoom.adminUsers.length > 0){
 						if($.inArray(UserProfile.getUserId(), collabRoom.adminUsers) != -1){
-							
+							//Add user to the list of admins
 							Core.EventManager.fireEvent("nics.administration.collabroom.admin", collabRoom.collabRoomId);
 						}else if($.inArray(UserProfile.getUserId(), collabRoom.readWriteUsers) == -1){
 							return;

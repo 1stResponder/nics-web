@@ -27,8 +27,8 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-define(['ext', 'iweb/CoreModule','nics/modules/UserProfileModule', './FeatureTopicListener'], 
-		function(Ext, Core, UserProfile, FeatureTopicListener){
+define(["ol",'ext', 'iweb/CoreModule','nics/modules/UserProfileModule', './FeatureTopicListener'], 
+		function(ol, Ext, Core, UserProfile, FeatureTopicListener){
 	
 	// custom Vtype for alphanum only fields, plus apostrophes, and - .  + , ? _ %
 	Ext.apply(Ext.form.field.VTypes, {
@@ -41,6 +41,7 @@ define(['ext', 'iweb/CoreModule','nics/modules/UserProfileModule', './FeatureTop
 	
 	return Ext.define('features.FeatureDetailRenderer', {
 		
+
 		constructor: function() {
 			Core.EventManager.addListener('nics.collabroom.activate', this.onActivateRoom.bind(this));
 		},
@@ -51,24 +52,44 @@ define(['ext', 'iweb/CoreModule','nics/modules/UserProfileModule', './FeatureTop
 		
 		render: function(container, feature) {
 	      if (this.supportsComments(feature)){
-			var attributes;
+
+			//clone attributes object, fixes feature.set equality check
+			var attributes = Ext.Object.merge({}, feature.get('attributes'));
 			var user = feature.get('username');
+			var description = feature.get('description');
+			if (!description) {
+				//The description is either in the feature itself (when it is first created) or in the attributes (when it is an existing feature)
+				//get description from the attributes
+				if (attributes && attributes.description){
+					
+						description = new Ext.form.field.Display({
+						fieldLabel: 'Description',
+						value: attributes.description
+						
+					});
+					container.add( description);
+				
+				}
+			}
+
 			if (user) {
-					user = new Ext.form.field.Display({
+				user = new Ext.form.field.Display({
 					fieldLabel: 'User',
 					value: user
 				});
 				container.add(user);
 			}
-			var updateDate = feature.get('lastupdate');
-			if (updateDate) {
-					updateDate = new Ext.form.field.Display({
+			 
+			
+			var updateDate= this.formatDateString(feature.get('lastupdate'));
+			if (updateDate ) {	
+				updateDate = new Ext.form.field.Display({
 					fieldLabel: 'Last Updated',
 					value: updateDate
 				});
 				container.add( updateDate );
-			}
 			
+			}
 			var importName = feature.get('name');
 			
 			if(importName){
@@ -77,9 +98,36 @@ define(['ext', 'iweb/CoreModule','nics/modules/UserProfileModule', './FeatureTop
 					value: importName
 				});
 				container.add( importName );
-			}
+			}	
 			
-			attributes = feature.get('attributes');
+			if (attributes && attributes.length){
+				var length = new Ext.form.field.Display({
+					fieldLabel: 'Distance',
+					value: attributes.length
+				});
+				container.add( length );
+			}	
+
+			if (attributes && attributes.layerid) {
+				var layerid = new Ext.form.field.Display({
+					fieldLabel: 'Layer',
+					value: attributes.layerid
+				});
+				container.add( layerid );
+			}
+
+			if (attributes && attributes.area) {
+				var area = new Ext.form.field.Display({
+					fieldLabel: 'Area',
+					value: attributes.area
+				});
+				container.add( area );
+			}	
+		
+			//Add sketch info
+
+
+			//Add Comments
 			//if attributes is undefined, define it with empty comments so that it won't throw an error
 			if (!attributes) attributes = {comments:""};	
 			var commentsText=attributes.comments;
@@ -127,9 +175,7 @@ define(['ext', 'iweb/CoreModule','nics/modules/UserProfileModule', './FeatureTop
 								else {
 									alert('Please enter a valid comment');
 									newComments.setValue("");
-								}
-								
-						
+								}			
 								break;
 							}
 							
@@ -147,12 +193,46 @@ define(['ext', 'iweb/CoreModule','nics/modules/UserProfileModule', './FeatureTop
 		},
 		
 		
+	
+	    calculateAcres: function(feature){
+	    	var wgs84Sphere = new ol.Sphere(6378137);
+	    	var linearRing = feature.getGeometry().getLinearRing(0).clone();
+			//TODO: get projection from map / controller?
+			linearRing.transform("EPSG:3857", "EPSG:4326");
+			var sqMetersArea = wgs84Sphere.geodesicArea(linearRing.getCoordinates());
+			return(sqMetersArea  * 0.000247105381);
+	    	
+	    },
+		
+    	formatDateString: function(date)
+        {
+    		var str = "";
+    		if (date){
+    		  var components = date.split("-",3);
+    		  str = components[1] + "/" + components[2] + "/" + components[0];
+        	}
+            return str;
+        
+        },
+        formatDate: function(date)
+        {
+            var str = (date.getMonth() + 1) + "/"
+            + date.getDate() + "/"
+            + date.getFullYear();
 
-		
-	
-		
-		
-	
+            return str;
+        },
+	    formatDashStyle: function(dashStyle)
+        {
+    		var str = "";
+    		if (dashStyle){
+    		  var str = dashStyle.replace(/-/g, " ");
+    		  str = str.charAt(0).toUpperCase() + str.slice(1);
+    		  
+        	}
+            return str;
+        
+        }
 
 		
 	});

@@ -52,7 +52,24 @@ html, body {
 	/* Height of the footer element */
 	padding-bottom:70px;
 }
-
+.login {
+	
+    text-align: center;
+	
+	
+}
+.announcements  {
+	
+    text-align: center;
+	
+	
+}
+.announcements ul {
+	
+    text-align: left;
+	
+	
+}
 .footer {
 	width:100%;
 	min-height:30px;
@@ -68,6 +85,8 @@ html, body {
     right: 0;
     margin: 5px;
 }
+
+
 
 .center-container {
     text-align: center;

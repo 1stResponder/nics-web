@@ -38,7 +38,10 @@ define(['ol'], function(ol){
 	
 	ArcGISCapabilities.prototype.read = function(doc) {
 		var parsed = JSON.parse(doc);
-		return parsed.layers;
+		return {
+			version: parsed.currentVersion,
+			layers: parsed.layers
+		};
 	};
 	
 	return ArcGISCapabilities;

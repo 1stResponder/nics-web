@@ -35,7 +35,7 @@
 		
 		idProperty: 'datasourceid',
 		fields:[
-			'datasourceid', 'displayname', 'internalurl',
+			'datasourceid', 'displayname', 'internalurl','secure',
 			{
 				name: 'layers',
 				persist: false
@@ -164,6 +164,22 @@
 				
 				
 			}, {
+				xtype: 'combo',
+				fieldLabel: 'Refresh Rate',
+				reference: 'refreshRateCombo',
+				queryMode: 'local',
+				store: new Ext.data.SimpleStore({
+					fields: [
+						'value',
+						'text'
+					],
+					data: [[30, '0:30'],[60, '1:00'], [90, '1:30'], [180, '3:00'], [300, '5:00']]
+				}),
+				valueField: 'value',
+				displayField: 'text',
+				allowBlank: false,
+				disabled: true
+			}, {
 				xtype: 'button',
 				text: 'Import Data Layer',
 				reference: 'importButton',
@@ -195,6 +211,10 @@
 		
 		getLegendInput: function() {
 			return	this.lookupReference('legendInput');
+		},
+
+		getRefreshRateCombo: function() {
+			return this.lookupReference('refreshRateCombo');
 		}
 	});
 });

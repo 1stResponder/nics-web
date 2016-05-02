@@ -27,26 +27,77 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-define([
-    "iweb/CoreModule", "./administration/AdminView", "./administration/RoomManagementView"], 
+define(["iweb/CoreModule", "./administration/AdminView",
+		"./administration/RoomManagementView", "nics/modules/UserProfileModule", 
+		"./administration/ArchivedIncidentLookup"],
 	
-	function(Core, AdminView, RoomManagementView, OrgView) {
+	function(Core, AdminView, RoomManagementView, UserProfile, ArchivedIncidentLookup) {
 	
 		var AdminModule = function(){};
 		
+		var view;
 		AdminModule.prototype.load = function(){
 			new AdminView();//Create Tool Dropdown
 			
-			var view = new RoomManagementView();
+			view = new RoomManagementView();
 			//Add Item to Tools Menu
 			Core.Ext.ToolsMenu.add({
-					text: 'Room Management',
+				text: 'Room Management',
+				menu: {
+					items:[{
+						text: "Copy drawings from 'Workspace' to current collaboration room",
+						handler: this.copyWorkspaceFeatures,
+						scope: this
+					}, {
+						text: 'Modify Room Permissions',
+						handler: function(){
+							view.controller.load();
+						}
+					}]
+				}
+			});
+			
+			var lookupArchive = new ArchivedIncidentLookup();
+			//Add Item to Tools Menu
+			Core.Ext.ToolsMenu.add({
+					text: 'View Archived Incidents',
 					handler: function(){
-						view.controller.load();
+						lookupArchive.show();
 					}
 				}
 			);
 			
+		};
+		
+		AdminModule.prototype.copyWorkspaceFeatures = function(){
+			var restEndpoint = Core.Config.getProperty(UserProfile.REST_ENDPOINT),
+					collabRoomId = view.controller.collabRoomId,
+					userId = UserProfile.getUserId(),
+					topic = "nics.collabroom.feature.copy." + userId;
+			
+			if (collabRoomId == "myMap") {
+				Ext.MessageBox.alert("Warning",
+					"There is no current collab room. Please choose one from the list or join a new room.");
+				return;
+			}
+			
+			var	url = Ext.String.format('{0}/features/user/{1}/copy?collabRoomId={2}',
+							restEndpoint, userId, collabRoomId);
+							
+			Core.EventManager.createCallbackHandler(topic, this, function(evt, response){
+				if (!response || response.message !== "OK") {
+					Ext.MessageBox.alert("No Workspace Features Copied",
+						"Unexpected error attempting to copy features");
+				} else if (response.count) {
+					Ext.MessageBox.alert("Workspace Features Copied",
+						Ext.String.format("{0} features were copied to the current workspace", response.count));
+				} else {
+					Ext.MessageBox.alert("No Workspace Features Copied",
+						"No workspace features were found to copy");
+				}
+			});
+			
+			Core.Mediator.getInstance().sendPostMessage( url, topic, {});
 		};
 		
 		return new AdminModule();

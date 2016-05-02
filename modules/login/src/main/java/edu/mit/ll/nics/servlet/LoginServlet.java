@@ -35,8 +35,13 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.jar.Manifest;
+
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.core.type.TypeReference;
 
 import javax.servlet.Servlet;
 import javax.servlet.ServletException;
@@ -45,6 +50,7 @@ import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 import javax.ws.rs.ProcessingException;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.client.Client;
@@ -97,6 +103,9 @@ public class LoginServlet extends HttpServlet implements Servlet {
 	private String restEndpoint;
 	private String warVersion;
 	private String cookieDomain;
+	private String helpSite;
+	private String siteLogo;
+	private String siteLabel;
 
 	public LoginServlet() {
 		//jerseyClient = ClientBuilder.newClient();
@@ -107,7 +116,10 @@ public class LoginServlet extends HttpServlet implements Servlet {
 		Configuration config = Config.getInstance().getConfiguration();
 		restEndpoint = config.getString("endpoint.rest");
 		cookieDomain = config.getString("private.cookie.domain");
-
+		helpSite = config.getString("help.site.url","https://public.nics.ll.mit.edu/");
+		siteLogo = config.getString("main.site.logo","login/images/nics-logo.jpg");
+		siteLabel = config.getString("main.site.label","Welcome to NICS 6");
+		
 		try {
 			warVersion = getWarVersion();
 
@@ -135,20 +147,42 @@ public class LoginServlet extends HttpServlet implements Servlet {
 				req.getRequestDispatcher(FAILED_JSP_PATH).forward(req, resp);
 				return;
 			}
+			String chosenWorkspace  = "1";
+			//String chosenWorkspace  = req.getParameter("workspace");
 			
 			Object loggedOut = req.getParameter("loggedOut");
 			logger.info("loggedOut: " + loggedOut);
 			String s_loggedOut = (loggedOut == null) ? null : (String) loggedOut;
 			boolean b_loggedOut = Boolean.parseBoolean(s_loggedOut);
 			
-			List<?> workspaces = getWorkspaces(req.getServerName());
+			List<Map<String, Object>> workspaces = getWorkspaces(req.getServerName());
+			System.out.println("Hereis " +  (workspaces.get(0)).get("workspaceid"));
+			String defaultWorkspace = workspaces.get(0).get("workspaceid").toString();
 			if (workspaces.size() > 0 && !b_loggedOut) {
 				req.setAttribute("version", warVersion);
 				req.setAttribute("workspaces", workspaces);
+				chosenWorkspace  = req.getParameter("currentWorkspace");
+				if (chosenWorkspace != null && chosenWorkspace != ""){
+			    	req.setAttribute("announcements",this.getAnnouncements(chosenWorkspace));
+			    	req.setAttribute("selectedWorkspace", chosenWorkspace);
+			    }
+			    else {
+			    	req.setAttribute("announcements",this.getAnnouncements(defaultWorkspace));
+			    	req.setAttribute("selectedWorkspace", defaultWorkspace);
+			    }
+				req.setAttribute("selectedWorkspace", workspaces);
+				req.setAttribute("helpsite",helpSite);
+				req.setAttribute("sitelogo",siteLogo);
+				req.setAttribute("sitelabel",siteLabel);
 				req.getRequestDispatcher(LOGIN_JSP_PATH).forward(req, resp);
+				
+				
 			} else if( b_loggedOut ) {
-				// TODO: could do message key and message properties, but for now just
-				// hardcoding a logged out page
+				HttpSession session = req.getSession(false);
+				if (session != null) {
+					SessionHolder.removeSession(session.getId());
+					session.invalidate();
+				}
 				req.getRequestDispatcher(LOGGED_OUT_JSP_PATH).forward(req, resp);
 			} else {
 				req.setAttribute(ERROR_MESSAGE_KEY,
@@ -173,6 +207,9 @@ public class LoginServlet extends HttpServlet implements Servlet {
 			throws ServletException, IOException {
 
 		String username = req.getParameter(EMAIL);
+		if(username != null) {
+			username = username.toLowerCase(Locale.ENGLISH);
+		}
 		String password = req.getParameter(PASSWORD);
 		String workspaceId = req.getParameter(WORKSPACE);
 
@@ -214,7 +251,7 @@ public class LoginServlet extends HttpServlet implements Servlet {
 		req.getRequestDispatcher(FAILED_JSP_PATH).forward(req, resp);
 	}
 
-	private List<?> getWorkspaces(String hostname) throws URISyntaxException {
+	private List<Map<String, Object>> getWorkspaces(String hostname) throws URISyntaxException {
 		CookieTokenUtil tokenUtil = new CookieTokenUtil();
 		URI uri = new URI(workspaceUrl).resolve(hostname);
 		Client jerseyClient = ClientBuilder.newClient();
@@ -227,7 +264,7 @@ public class LoginServlet extends HttpServlet implements Servlet {
 		Map<String, Object> entity = builder
 				.get(new GenericType<Map<String, Object>>() {
 				});
-		List<?> ret = (List<?>) entity.get("workspaces");
+		List<Map<String, Object>> ret = (List<Map<String, Object>>) entity.get("workspaces");
 		response.close();
 		jerseyClient.close();
 
@@ -298,5 +335,42 @@ public class LoginServlet extends HttpServlet implements Servlet {
 				MANIFEST_PATH);
 		Manifest manifest = new Manifest(is);
 		return manifest.getMainAttributes().getValue(IMPL_VERSION);
+	}
+	private List<?> getAnnouncements(String workspaceId)  {
+		List<?> announcements = null;	
+		if (restEndpoint != null) {
+			try {
+				String url = new java.net.URI(restEndpoint.concat("/"))
+						.resolve(
+								String.format(
+										"announcement/%s/",
+										workspaceId)).toASCIIString();
+				CookieTokenUtil tokenUtil = new CookieTokenUtil();
+				Client jerseyClient = ClientBuilder.newClient();
+				WebTarget target = jerseyClient.target(url.toString());
+
+				Builder builder = target
+						.request(MediaType.APPLICATION_JSON_TYPE);
+				tokenUtil.setCookies(builder);
+
+				Response response = builder.get();
+				Map<String, Object> entity = builder
+						.get(new GenericType<Map<String, Object>>() {
+						});
+				announcements = (List<?>) entity.get("results");
+				response.close();
+				jerseyClient.close();
+
+				tokenUtil.destroyToken();
+
+				return announcements;
+			}
+			catch (URISyntaxException exception) {
+				logger.error(String.format(
+						"URISyntax error getting announcements"));
+				
+			}
+		}
+			return announcements;
 	}
 }

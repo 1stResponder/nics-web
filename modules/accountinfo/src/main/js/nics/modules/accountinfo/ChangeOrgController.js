@@ -80,7 +80,7 @@ define([
 				
 				if (userOrg) {
 					this.setUserOrg(userOrg.getData());
-					Ext.MessageBox.alert("NICS","User organization has been changed.");
+					Ext.MessageBox.alert("Organization Update","User organization has been changed.");
 				}
 			}, 
 			
@@ -105,10 +105,8 @@ define([
 			},
 			
 			setUserOrg: function(userOrg){
-				//Create a new User Session
-
 				var topic = "nics.changeuser.usersession.callback";
-				
+
 				Core.EventManager.createCallbackHandler(topic, this, this.setUserSessionId, [userOrg]);
 				
 				var url = Ext.String.format("{0}/users/{1}/updatesession?userId={2}&displayName={3}&userOrgId={4}&systemRoleId={5}&sessionId={6}",
@@ -144,7 +142,7 @@ define([
 			
 			showChangeOrg: function(profile){
 				if(profile == "Forbidden"){
-					Ext.MessageBox.alert("NICS", "You do not have permission to view this profile");
+					Ext.MessageBox.alert("Permissions Error", "You do not have permission to view this profile");
 					return;
 				}
 				

@@ -27,8 +27,8 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-define(['iweb/CoreModule','./OrganizationView', './AdminController'],
-		function(Core, OrganizationView) {
+define(['iweb/CoreModule','./OrganizationView','./announcements/AnnouncementView', './AdminController'],
+		function(Core, OrganizationView,AnnouncementView) {
 
 	return Ext.define('modules.administration.AdminView', {
 	 
@@ -53,7 +53,8 @@ define(['iweb/CoreModule','./OrganizationView', './AdminController'],
 	 	listeners: {
 	 		close: 'onClose'
 	 	},
-	 	
+	 	 
+                
 	 	initComponent: function(){
 	 		var main = Core.View.getMainContentComponent();
 			var height = 300;
@@ -67,21 +68,33 @@ define(['iweb/CoreModule','./OrganizationView', './AdminController'],
 			this.setHeight(height);
 			this.setWidth(width);
 	 		
+			
 			this.callParent();
 			
 			this.lookupReference('adminTabPanel').add(new OrganizationView({ gridHeight: height *.33 }));
+			this.lookupReference('announceTabPanel').add(new AnnouncementView({ gridHeight: height *.60 }));
 	 	},
 	 	
 	 	load: function(){
-	 		this.lookupReference('orgView').getController().load();
+	 		 this.lookupReference('orgView').getController().load();
 	 	},
+	 	items:[{
+	 		  xtype: 'tabpanel',
+              reference: 'tabpanel',
+              items: [
+      	 	        {
+      	 	        	title:'Organizations',
+      	 	        	reference: 'adminTabPanel',
+      	 	        	layout:'fit'
+      	 	        	
+      	 	        },
+      	 	       {
+      	 	        	title:'Announcements',
+      	 	        	reference: 'announceTabPanel',
+      	 	        	layout:'fit'
+      	 	        }
+      	 	]
+	 	}]
 	 	
-	 	items: [
-	 	        {
-	 	        	xtype: 'tabpanel',
-	 	        	reference: 'adminTabPanel',
-	 	        	layout: 'fit'
-	 	        }
-	 	]
 	 });
 });

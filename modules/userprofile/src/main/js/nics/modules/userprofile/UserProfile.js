@@ -53,6 +53,7 @@ define(["iweb/CoreModule", 'ol', 'iweb/modules/MapModule'],
 			var description;
 			var isSuperUser;
 			var isAdminUser;
+			var incidentMapName;
 			
 			var propertiesLoadedEvt = "nics.user.properties.loaded";
 			var profileLoadedEvt = "nics.user.profile.loaded";
@@ -155,6 +156,14 @@ define(["iweb/CoreModule", 'ol', 'iweb/modules/MapModule'],
 				REST_ENDPOINT: "endpoint.rest",
 				
 				GEOSERVER_ENDPOINT: "endpoint.geoserver",
+				
+				getIncidentMapName: function(){
+					if(!incidentMapName){
+						var name = Core.Config.getProperty("collabroom.incident.map.name");
+						incidentMapName = name ? name : "Incident Map";
+					}
+					return incidentMapName;
+				},
 			
 				getWorkspaceId: function(){
 					return workspaceId;

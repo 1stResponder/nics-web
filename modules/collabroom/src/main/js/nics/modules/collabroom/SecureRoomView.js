@@ -38,8 +38,12 @@ define(['./SecureRoomController', 'nics/modules/administration/UserModel', 'nics
 	return Ext.define('modules.administration.SecureRoomView', {
 	 
 	 	extend: 'Ext.Panel',
+	 	
+	 	referenceHolder: true,
 
 	 	controller: 'secureroomcontroller',
+	 	
+	 	reference: "managePermissions",
 	 	
 	 	 dockedItems: [{
             xtype: 'toolbar',

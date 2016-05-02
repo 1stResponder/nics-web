@@ -27,9 +27,10 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-define(['ext', "iweb/CoreModule", "./DatalayerBuilder", 'nics/modules/UserProfileModule'],
+define(['ext', "iweb/CoreModule", "./DatalayerBuilder", 
+        'nics/modules/UserProfileModule',  "./RefreshLayerManager", "./TokenManager"],
 
-	function(Ext, Core, DatalayerBuilder, UserProfile){
+	function(Ext, Core, DatalayerBuilder, UserProfile, RefreshLayerManager, TokenManager){
 	
 		return Ext.define('modules.datalayer.WindowController', {
 			extend : 'Ext.app.ViewController',
@@ -43,6 +44,8 @@ define(['ext', "iweb/CoreModule", "./DatalayerBuilder", 'nics/modules/UserProfil
 			    this.mediator = Core.Mediator.getInstance();
 			    
 			    this.datalayerBuilder = Ext.create('modules.datalayer.builder');
+			    
+			    this.tokenHandlerTopic = "nics.datalayer.token." + this.rootName;
 					
 			    this.bindEvents();
 			},
@@ -77,9 +80,18 @@ define(['ext', "iweb/CoreModule", "./DatalayerBuilder", 'nics/modules/UserProfil
 					Ext.String.format('iweb.NICS.{0}.folder.delete', UserProfile.getWorkspaceId()),
 					this.onDeleteFolder);
 				
+				this.listenAndSubscribe(
+					Ext.String.format('iweb.NICS.datalayer.delete'),
+					this.onDeleteDatalayer);
+					
+				this.listenAndSubscribe(
+					Ext.String.format('iweb.NICS.datalayer.update', UserProfile.getWorkspaceId()),
+					this.onRenameDatalayer);
+				
 				//local callback topics
 				Core.EventManager.addListener("nics.data.loadfolder." + this.rootName, this.onLoadFolder.bind(this));
 				Core.EventManager.addListener("nics.data.createtree." + this.rootName, this.onCreateTree.bind(this));
+				Core.EventManager.addListener(this.tokenHandlerTopic, this.tokenHandler.bind(this));
 			},
 			
 			listenAndSubscribe: function(topic, callback) {
@@ -156,52 +168,65 @@ define(['ext', "iweb/CoreModule", "./DatalayerBuilder", 'nics/modules/UserProfil
 				}
 			},
 			
+			tokenHandler: function(evt, node){
+				this.addNewLayer(node);
+			},
+			
+			addNewLayer: function(node){
+				if(node.data.secure){
+					//Add the layer once we have a token
+					var token = TokenManager.getToken(node.data.datasourceid, {
+						topic: this.tokenHandlerTopic,
+						params: node
+					});
+					
+					if(!token){ return; }
+				}
+				
+				if(node.data.refreshrate){
+					RefreshLayerManager.addLayer(
+							node.data.refreshrate, node.data.datalayerid, 
+							node.data.layer, node.data.datasourceid);
+				}
+				Core.EventManager.fireEvent("nics.datalayer.legend.click", node.data);
+				Core.Ext.Map.addLayer(node.data.layer);
+			},
+			
+			showLayer: function(node){
+				node.data.layer.setVisible(true);
+				if(node.data.refreshrate){
+					RefreshLayerManager.addLayer(
+							node.data.refreshrate, node.data.datalayerid, 
+							node.data.layer, node.data.datasourceid);
+				}
+				Core.EventManager.fireEvent("layerVisible", node.data.layer);
+				Core.EventManager.fireEvent("nics.datalayer.legend.click", node.data);
+			},
+			
+			hideLayer: function(node){
+				node.data.layer.setVisible(false);
+				Core.EventManager.fireEvent("layerInvisible", node.data.layer);
+				Core.EventManager.fireEvent("nics.datalayer.legend.unclick", node.data);
+				if(node.data.refreshrate){
+					RefreshLayerManager.removeLayer(node.data.refreshrate, node.data.datalayerid);
+				}
+			},
+			
 			onDatalayerCheck: function( node, checked, eOpts ){
 				//turn data layer on/off
 				if(checked){
 					if(!node.data.layer){
 						node.data.layer = this.datalayerBuilder.buildLayer(
 								node.data.layerType, node.data);
-						if(node.data.layer){
-							if (this.isTrackingWindow())
-							{
-								Core.EventManager.fireEvent("nics.datalayer.tracking.click", node.data);
-							}
-							Core.EventManager.fireEvent("nics.datalayer.legend.click", node.data);
-							Core.Ext.Map.addLayer(node.data.layer);
-						}
+						this.addNewLayer(node);
 					}else{
-						node.data.layer.setVisible(true);
-						Core.EventManager.fireEvent("layerVisible", node.data.layer);
-						Core.EventManager.fireEvent("nics.datalayer.legend.click", node.data);
-						if (this.isTrackingWindow())
-						{
-							Core.EventManager.fireEvent("nics.datalayer.tracking.click", node.data);
-						}
+						this.showLayer(node);
 					}
 				}else{
 					if(node.data.layer){
-						node.data.layer.setVisible(false);
-						Core.EventManager.fireEvent("layerInvisible", node.data.layer);
-						Core.EventManager.fireEvent("nics.datalayer.legend.unclick", node.data);
-						if (this.isTrackingWindow())
-						{
-							Core.EventManager.fireEvent("nics.datalayer.tracking.unclick", node.data);
-						}
+						this.hideLayer(node);
 					}//throw exception - no layer found on the node
 				}
-			},
-
-			/**
-			 * Use this method to test whether the event was from the tracking window or not.
-			 * PLI Locator will only use WFS layers from Tracking
-			 * @returns {boolean}
-			 */
-			isTrackingWindow: function()
-			{
-				if (this.rootName && this.rootName == 'Tracking')
-					return true;
-				return false;
 			},
 			
 			addDatalayerFolder: function(rootId, datalayerfolder) {
@@ -212,7 +237,8 @@ define(['ext', "iweb/CoreModule", "./DatalayerBuilder", 'nics/modules/UserProfil
 			
 			buildDataLayerFolderModel: function(datalayerfolder) {
 				var datalayer = datalayerfolder.datalayer;
-				return {
+				
+				var props = {
 					id: datalayerfolder.datalayerfolderid,
 					text: datalayer.displayname,
 					
@@ -225,8 +251,16 @@ define(['ext', "iweb/CoreModule", "./DatalayerBuilder", 'nics/modules/UserProfil
 					layername: datalayer.datalayersource.layername,
 					attributes: datalayer.datalayersource.attributes,
 					opacity: datalayer.datalayersource.opacity,
-					legend: datalayer.legend
+					legend: datalayer.legend,
+					refreshrate: datalayer.datalayersource.refreshrate
 				};
+				
+				if(datalayer.datalayersource.datasource.secure){
+					props.secure = true;
+					props.datasourceid = datalayer.datalayersource.datasource.datasourceid;
+				}
+				
+				return props;
 			},
 			
 			onNewDatalayer: function(evt, datalayerfolderData){
@@ -310,9 +344,21 @@ define(['ext', "iweb/CoreModule", "./DatalayerBuilder", 'nics/modules/UserProfil
 				if(UserProfile.isSuperUser() || UserProfile.isAdminUser()){
 					var isFolder = record.get("folderid") !== undefined;
 					var isRootChild = record.parentNode && record.parentNode.isRoot();
-					menuItems.push({
-						text: 'Folder Management',
-						menu: {
+					menuItems.push({	
+							text: 'Rename Layer',
+							handler: 'renameDatalayer',
+							scope: this,
+							disabled: isFolder	
+							
+						}, {
+							text: 'Delete Layer',
+							handler: 'deleteDatalayer',
+							scope: this,
+							disabled: isFolder							
+
+						}, {
+							text: 'Folder Management',
+							menu: {
 							items: [{
 								text: 'New',
 								handler: 'newFolder',
@@ -344,7 +390,7 @@ define(['ext', "iweb/CoreModule", "./DatalayerBuilder", 'nics/modules/UserProfil
 			
 			onCallbackHandler: function(evt, response){
 				if(response && response.message != "OK"){
-					Ext.MessageBox.alert("NICS", response.message);
+					Ext.MessageBox.alert("Status", response.message);
 				}
 			},
 
@@ -432,6 +478,75 @@ define(['ext', "iweb/CoreModule", "./DatalayerBuilder", 'nics/modules/UserProfil
 					}, this);
 			},
 			
+			renameDatalayer: function(event, record){
+				var selection = this.getView().getTree().getSelection()[0];
+				
+				Ext.Msg.prompt('Rename Datalayer', 'Please enter a new layer name:',
+					function(btn, name){
+						if (btn !== 'ok' || name.trim().length < 0) {
+							return;
+						}
+						
+						var url = Ext.String.format("{0}/datalayer/{1}/sources/layer/update",
+								Core.Config.getProperty(UserProfile.REST_ENDPOINT),
+								UserProfile.getWorkspaceId()
+							);
+						
+						var topic = 'nics.data.renamedatalayer.' + this.rootName;
+						Core.EventManager.createCallbackHandler(topic, this, this.onCallbackHandler);
+						
+						this.mediator.sendPostMessage(
+							url, topic, {
+								displayname: name,
+								datalayerid: selection.get('datalayerid')
+							}
+						);
+					}, this);
+			},
+			
+			onRenameDatalayer: function(event, datalayer){
+			
+				var store = this.getView().getTree().getStore();
+				var datalayerNode = store.findNode('datalayerid',datalayer.datalayerid);
+				if(datalayerNode){
+					datalayerNode.set('text',datalayer.displayname);
+				}
+				
+			},
+			
+			
+			deleteDatalayer: function(event, record){
+				var selection = this.getView().getTree().getSelection()[0];
+
+				Ext.MessageBox.confirm(
+					'Delete Datalayer?',
+					'Are you sure you want delete this datalayer?',
+					function(btn){
+						if (btn !== 'yes') {
+							return;
+						}
+						var url = Ext.String.format("{0}/datalayer/{1}/sources/{2}/layer",
+								Core.Config.getProperty(UserProfile.REST_ENDPOINT),
+								UserProfile.getWorkspaceId(),
+								selection.get('datalayerid')
+							);
+						
+						var topic = 'nics.data.deletedatalayer.' + this.rootName;
+						Core.EventManager.createCallbackHandler(topic, this, this.onCallbackHandler);
+						
+						this.mediator.sendDeleteMessage(
+							url, topic);
+					}, this);
+				
+			},
+			
+			onDeleteDatalayer: function(event, datalayerId){
+				var store = this.getView().getTree().getStore();
+				var datalayerNode = store.findNode('datalayerid',datalayerId);
+				if (datalayerNode) {
+					datalayerNode.remove();
+				}
+			},
 			
 			onTreeNodeDragOver: function (targetNode, position, dragData, e, eOpts) {
 				var dragNode = dragData.records[0];

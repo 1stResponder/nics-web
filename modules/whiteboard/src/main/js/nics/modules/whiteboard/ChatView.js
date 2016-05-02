@@ -30,6 +30,13 @@
 define(['./ChatLog', './ChatController', './PresenceController'],
 		function(ChatLog, ChatController, PresenceController) {
 
+	var tooltipTemplate = new Ext.Template([
+	  'Username: {username:defaultValue("N/A")} <br>',
+	  'Name: {nickname:defaultValue("N/A")} <br>',
+	  'Organization: {organization:defaultValue("N/A")} <br>',
+	  'Status: {status:defaultValue("N/A")}'
+	]);
+
 	return Ext.define('modules.whiteboard.ChatView', {
 	 
 	 	extend: 'Ext.panel.Panel',
@@ -124,7 +131,17 @@ define(['./ChatLog', './ChatController', './PresenceController'],
                 	metadata.tdCls = value.toLowerCase() + '-presence-status-icon';
                 }
             }, {
-                dataIndex: 'nickname',
+                text: 'Name',
+                xtype:'templatecolumn',
+                tpl:'{nickname} ({organization})',
+                defaultRenderer: function(value, meta, record){
+                  //add our tooltip
+                  meta.tdAttr='data-qtip="' + tooltipTemplate.apply(record.data) + '"';
+                  
+                  //do the default template column rendering
+                  var data = Ext.apply({}, record.data, record.getAssociatedData());
+                  return this.tpl.apply(data);
+                },
                 flex: 1
             }]
 	    }]

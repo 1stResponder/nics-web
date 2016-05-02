@@ -27,9 +27,9 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-define(['ext', 'iweb/CoreModule', './WindowController', './TrackingLocatorWindow'],
+define(['ext', 'iweb/CoreModule', './WindowController', './TrackingLocatorWindow', './AVLTrackingRenderer'],
 
-    function(Ext, Core, WindowController, TrackingLocatorWindow){
+    function(Ext, Core, WindowController, TrackingLocatorWindow, AVLTrackingRenderer){
 
         return Ext.define('modules.datalayer.TrackingWindowController', {
             extend : 'modules.datalayer.WindowController',
@@ -40,6 +40,7 @@ define(['ext', 'iweb/CoreModule', './WindowController', './TrackingLocatorWindow
             {
                 this.callParent();
                 this.locatorWindow = new TrackingLocatorWindow();
+                this.avlRenderer = new AVLTrackingRenderer();
             },
 
             onLocatePliClick: function() {
@@ -51,9 +52,30 @@ define(['ext', 'iweb/CoreModule', './WindowController', './TrackingLocatorWindow
 
             onPliLabelsClick: function() {
                 // TODO add labels next to features
-
-
-
-            }
+            },
+            
+            onDatalayerCheck: function( node, checked, eOpts ){
+				//turn data layer on/off
+				if(checked){
+					if(!node.data.layer){
+						node.data.layer = this.datalayerBuilder.buildLayer(
+								node.data.layerType, node.data);
+						if(node.data.layer){
+							this.addNewLayer(node);
+							
+							node.data.layer.setStyle(this.avlRenderer.getStyle);
+							Core.EventManager.fireEvent("nics.datalayer.tracking.click", node.data);
+						}
+					}else{
+						this.showLayer(node);
+						Core.EventManager.fireEvent("nics.datalayer.tracking.click", node.data);
+					}
+				}else{
+					if(node.data.layer){
+						this.hideLayer(node);
+						Core.EventManager.fireEvent("nics.datalayer.tracking.unclick", node.data);
+					}//throw exception - no layer found on the node
+				}
+			}
         });
     });

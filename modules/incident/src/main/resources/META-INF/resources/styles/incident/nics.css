@@ -298,28 +298,28 @@
 .x-btn-wrap-default-toolbar-small.nontb_style-arrow-right:after {
   width: 8px;
   padding-right: 8px;
-  background-image: url(../../js/lib/extjs/build/packages/ext-theme-classic/build/resources/images/button/arrow.gif); }
+  background-image: url(../../js/lib/extjs/build/classic/theme-classic/resources/images/button/arrow.gif); }
 /* line 563, ../../../ext-theme-neutral/sass/src/button/Button.scss */
 .x-btn-wrap-default-toolbar-small.nontb_style-arrow-bottom:after {
   height: 8px;
-  background-image: url(../../js/lib/extjs/build/packages/ext-theme-classic/build/resources/images/button/arrow.gif); }
+  background-image: url(../../js/lib/extjs/build/classic/theme-classic/resources/images/button/arrow.gif); }
 
 /* line 583, ../../../ext-theme-neutral/sass/src/button/Button.scss */
 .x-btn-wrap-default-toolbar-small.nontb_style-split-right:after {
   width: 14px;
   padding-right: 14px;
-  background-image: url(../../js/lib/extjs/build/packages/ext-theme-classic/build/resources/images/button/s-arrow-noline.gif); }
+  background-image: url(../../js/lib/extjs/build/classic/theme-classic/resources/images/button/s-arrow-noline.gif); }
 /* line 597, ../../../ext-theme-neutral/sass/src/button/Button.scss */
 .x-btn-wrap-default-toolbar-small.nontb_style-split-bottom:after {
   height: 14px;
-  background-image: url(../../js/lib/extjs/build/packages/ext-theme-classic/build/resources/images/button/s-arrow-b-noline.gif); }
+  background-image: url(../../js/lib/extjs/build/classic/theme-classic/resources/images/button/s-arrow-b-noline.gif); }
 
 /* line 606, ../../../ext-theme-neutral/sass/src/button/Button.scss */
 .x-btn-over > .x-btn-wrap-default-toolbar-small.nontb_style-split-right:after {
-  background-image: url(../../js/lib/extjs/build/packages/ext-theme-classic/build/resources/images/button/s-arrow-o.gif); }
+  background-image: url(../../js/lib/extjs/build/classic/theme-classic/resources/images/button/s-arrow-o.gif); }
 /* line 616, ../../../ext-theme-neutral/sass/src/button/Button.scss */
 .x-btn-over > .x-btn-wrap-default-toolbar-small.nontb_style-split-bottom:after {
-  background-image: url(../../js/lib/extjs/build/packages/ext-theme-classic/build/resources/images/button/s-arrow-bo.gif); }
+  background-image: url(../../js/lib/extjs/build/classic/theme-classic/resources/images/button/s-arrow-bo.gif); }
 
 /* line 624, ../../../ext-theme-neutral/sass/src/button/Button.scss */
 .nontb_style-split-right > .nontb_style-icon.nontb_style-no-text.nontb_style-button-default-toolbar-small {

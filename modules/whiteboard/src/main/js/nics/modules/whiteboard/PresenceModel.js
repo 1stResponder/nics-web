@@ -40,6 +40,8 @@ define(['ext'], function(Ext) {
 			}, {
 				name : 'nickname'
 			}, {
+				name : 'organization'
+			}, {
 				name : 'status'
 			}, {
 				name : 'timestamp',

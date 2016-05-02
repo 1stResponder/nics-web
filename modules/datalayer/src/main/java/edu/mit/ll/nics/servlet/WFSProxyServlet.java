@@ -73,6 +73,18 @@ public class WFSProxyServlet extends HttpServlet implements Servlet {
         BasicRequest basicRequest = new BasicRequest();
         String result = (String) basicRequest.getRequest(url, headerOptions);
         
+        if(url.indexOf(".kml") > -1){
+        	if(result.indexOf("<kml") == -1){
+        		result = this.appendKMLHeader(result);
+        	}
+        	//OL3 does not current support BalloonStyle
+			/*
+        	if(result.indexOf("BalloonStyle") > -1){
+        		result = this.replaceBalloonStyle(result);
+        	}
+        	*/
+    	}
+        
         try {
             ServletOutputStream out = response.getOutputStream();
             response.setContentType("text/plain");
@@ -105,5 +117,16 @@ public class WFSProxyServlet extends HttpServlet implements Servlet {
 		}
 		
 		return urlString.toString();
+	}
+	
+	private String appendKMLHeader(String result){
+	    StringBuffer header = new StringBuffer();
+	    header.append("<kml xmlns=\"http://www.opengis.net/kml/2.2\" ");
+		header.append("xmlns:gx=\"http://www.google.com/kml/ext/2.2\" ");
+		header.append("xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" ");
+		header.append("xsi:schemaLocation=\"http://www.opengis.net/kml/2.2 http://schemas.opengis.net/kml/2.2.0/ogckml22.xsd http://www.google.com/kml/ext/2.2 http://code.google.com/apis/kml/schema/kml22gx.xsd\">");
+		header.append(result);
+		header.append("</kml>");
+		return header.toString();
 	}
 }

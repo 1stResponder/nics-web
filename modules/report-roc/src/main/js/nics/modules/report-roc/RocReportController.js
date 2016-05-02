@@ -62,12 +62,6 @@ function(Core, UserProfile, RocReportView, RocFormView) {
 			});
 			this.mediator.sendRequestMessage(Core.Config.getProperty(UserProfile.REST_ENDPOINT) +
 					"/reports/types", topic);
-			
-			
-		   
-		
-			
-			
 		},
 		
 		bindEvents: function(){

@@ -129,8 +129,9 @@ define(['ext', 'iweb/CoreModule', './ChatModel','nics/modules/UserProfileModule'
 			this.mediator.sendPostMessage(this.url, this.callbackTopic, {
 				username: this.user.username,
 				nickname: this.user.nickname,
+				organization: this.user.organization,
 				status: status
-			})
+			});
 		},
 		
 		/**

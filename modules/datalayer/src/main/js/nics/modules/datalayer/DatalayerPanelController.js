@@ -90,28 +90,37 @@ define(['iweb/CoreModule'],
 			},
 			
 			getHtml : function(event, info){
-				var regex = /<img.*?src=['"](.*?)['"]/;
 				
-				if(info && info[0]){
-					var htmlSrc = regex.exec(info[0])[1];
+				if(info){
+				
+					var regex = /<img.*?src=['"](.*?)['"]/;
+					var htmlSrc = regex.exec(info[0]);
 					
 					if(!this.lookupReference('legendpanel.ajax.' + info[1])){
+					
 						this.getView().ajaxPhoto = info[1];
-						var legendCmp = Ext.create('Ext.Img',{
-							src: htmlSrc,
-							reference: 'legendpanel.' + info[1],
-							padding: '0 0 20 0',
-							listeners : {
-					            load : {
-					               element : 'el',
-					               fn : function(el){
-					               		Core.EventManager.fireEvent('nics.legend.panel.load',[ 'legendpanel.', el.target.clientWidth, el.target.clientHeight]);
-					               }
-					            }
-				        	}
-						});
+						var legendCmp;
+						
+						if(htmlSrc && htmlSrc[1]){
+						
+							legendCmp = Ext.create('Ext.Img',{
+								src: htmlSrc[1],
+								reference: 'legendpanel.' + info[1],
+								padding: '0 0 20 0',
+								listeners : {
+						            load : {
+						               element : 'el',
+						               fn : function(el){
+						               		Core.EventManager.fireEvent('nics.legend.panel.load',[ 'legendpanel.', el.target.clientWidth, el.target.clientHeight]);
+						               }
+						            }
+					        	}
+							});
+					
+						}
 						
 						this.getView().add(legendCmp);
+						
 					}
 				}
 			},

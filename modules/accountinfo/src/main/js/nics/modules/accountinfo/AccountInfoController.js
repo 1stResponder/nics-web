@@ -67,9 +67,10 @@ define(['iweb/CoreModule',  './AccountInfoModel','nics/modules/UserProfileModule
 				}
 
 				Core.EventManager.addListener("nics.user.profile.loaded", this.onProfileLoaded.bind(this));
-				Core.EventManager.addListener("nics.user.contact.loaded", this.setContactInfo.bind(this));
+				Core.EventManager.addListener("nics.user.contact.set", this.setContactInfo.bind(this));
 				Core.EventManager.addListener("nics.user.contact.validate", this.validateContactInfo.bind(this));
-				Core.EventManager.addListener("nics.user.contact.update", this.updateContactInfo.bind(this));
+				Core.EventManager.addListener("nics.user.contact.add", this.onAddContactInfo.bind(this));
+				Core.EventManager.addListener("nics.user.contact.delete", this.onDeleteContactInfo.bind(this));
 				Core.EventManager.addListener("nics.accountInfo.response",this.accountInfoResponse.bind(this));	
 				
 				
@@ -77,7 +78,7 @@ define(['iweb/CoreModule',  './AccountInfoModel','nics/modules/UserProfileModule
 			
 			showAccountInfo: function(profile){
 				if(profile == "Forbidden"){
-					Ext.MessageBox.alert("NICS", "You do not have permission to view this profile");
+					Ext.MessageBox.alert("Permissions Error", "You do not have permission to view this profile");
 					return;
 				}
 				
@@ -107,6 +108,12 @@ define(['iweb/CoreModule',  './AccountInfoModel','nics/modules/UserProfileModule
 						sysRoleId: UserProfile.getSystemRoleId()
 					});
 				}
+				
+				this.enableButtons();
+				
+				this.getContactInfo(this.username);
+
+				
 			},
 			
 			submitAccountInfo: function(e){
@@ -126,20 +133,20 @@ define(['iweb/CoreModule',  './AccountInfoModel','nics/modules/UserProfileModule
 				if(oldpw || newpw || confirmpw){
 					
 					if(!oldpw){
-						return Ext.MessageBox.alert("NICS", "Please include your old password.");
+						return Ext.MessageBox.alert("Input Error", "Please include your old password.");
 					}
 					
 					
 					if(newpw != confirmpw){
-						return Ext.MessageBox.alert("NICS", "New passwords do not match.");
+						return Ext.MessageBox.alert("Input Error", "New passwords do not match.");
 					}
 					
 					if(oldpw && (!newpw || !confirmpw)){
-						return Ext.MessageBox.alert("NICS", "Please include a new password.");
+						return Ext.MessageBox.alert("Input Error", "Please include a new password.");
 					}
 					
 					if(oldpw == newpw){
-						return Ext.MessageBox.alert("NICS", "Password can not match old password. Please enter a new password.");
+						return Ext.MessageBox.alert("Input Error", "Password can not match old password. Please enter a new password.");
 					}
 					
 					var numCheck = new RegExp("[0-9]");
@@ -148,7 +155,7 @@ define(['iweb/CoreModule',  './AccountInfoModel','nics/modules/UserProfileModule
 					var symbolCheck = new RegExp("[\\#\\-\\_\\!\\@]");
 					
 					if(newpw.length < 8 || newpw.length > 20 || !numCheck.test(newpw) || !lowerCaseCheck.test(newpw) || !capCaseCheck.test(newpw) || !symbolCheck.test(newpw)){
-						return Ext.MessageBox.alert("NICS", "Your password must be a minimum 8 characters long and a maximum of 20 with at least one digit, one upper case letter, one lower case letter and one special symbol (“#-_!@”)");
+						return Ext.MessageBox.alert("Input Error", "Your password must be a minimum 8 characters long and a maximum of 20 with at least one digit, one upper case letter, one lower case letter and one special symbol (“#-_!@”)");
 					}
 					
 				}
@@ -168,7 +175,7 @@ define(['iweb/CoreModule',  './AccountInfoModel','nics/modules/UserProfileModule
 			
 			accountInfoResponse: function(event, response){
 				if(response == "Forbidden"){
-					Ext.MessageBox.alert("NICS", "You do not have permission to edit this profile");
+					Ext.MessageBox.alert("Permissions Error", "You do not have permission to edit this profile");
 					return;
 				}
 				
@@ -187,11 +194,11 @@ define(['iweb/CoreModule',  './AccountInfoModel','nics/modules/UserProfileModule
 						this.getView().setButtonLabel(UserProfile.getNickName());
 					}
 					
-					Ext.MessageBox.alert("NICS","User info has been updated.");
+					Ext.MessageBox.alert("Status","User info has been updated.");
 				}	  
 				else{
 
-					Ext.MessageBox.alert("NICS","Failed: " + response.message);
+					Ext.MessageBox.alert("Status","Failed: " + response.message);
 				}
 				
 				this.getView().setFormField('oldpw','');
@@ -249,9 +256,11 @@ define(['iweb/CoreModule',  './AccountInfoModel','nics/modules/UserProfileModule
 								roles.push([response[i].systemroleid, response[i].rolename]);
 							}
 						}
+						if (!this.view.userAccountTab.getForm().findField('sysrole')){
 						this.view.userAccountTab.add({
 							xtype: 'combobox',
 							width: '75%',
+							reference:'systemRole',
 							store : roles,
 							forceSelection: true,
 							queryMode: 'local',
@@ -259,8 +268,10 @@ define(['iweb/CoreModule',  './AccountInfoModel','nics/modules/UserProfileModule
 							valueField: 'name',
 							name: 'sysrole'
 						});
+				}
 					}, [UserProfile]
 				);
+				
 				
 				var url = Ext.String.format('{0}/users/{1}/systemroles', 
 						Core.Config.getProperty(UserProfile.REST_ENDPOINT),
@@ -268,13 +279,8 @@ define(['iweb/CoreModule',  './AccountInfoModel','nics/modules/UserProfileModule
 
 				this.mediator.sendRequestMessage(url, topic);
 				
-				topic = "nics.user.contact.loaded";
-				
-				url = Ext.String.format("{0}/users/{1}/contactinfo?userName={2}",
-					Core.Config.getProperty(UserProfile.REST_ENDPOINT),
-					UserProfile.getWorkspaceId(),
-					UserProfile.getUsername());
-					
+				this.getContactInfo(UserProfile.getUsername());
+
 				this.mediator.sendRequestMessage(url,topic);
 				//Now get orgs for org drop down
 				var endpoint = Core.Config.getProperty(UserProfile.REST_ENDPOINT);
@@ -286,17 +292,35 @@ define(['iweb/CoreModule',  './AccountInfoModel','nics/modules/UserProfileModule
 			},
 			
 			
-			setButtonLabel: function(e){
+			setButtonLabel: function(event){
 				this.getView().setButtonLabel(UserProfile.getNickName());
 			},
 			
-			setContactInfo: function(event, response){
-					if(response.users[0]){
-						this.getView().userContactTab.store.loadRawData(response.users[0].contacts);
-					}
+			getContactInfo: function(username){
+
+					
+					this.getView().userContactTab.store.removeAll();
+					
+					var url = Ext.String.format("{0}/users/{1}/contactinfo?userName={2}",
+						Core.Config.getProperty(UserProfile.REST_ENDPOINT), UserProfile.getWorkspaceId(), username);
+				
+					var topic = 'nics.user.contact.set';
+				
+					this.mediator.sendRequestMessage(url, topic);
+					
 			},
 			
-			addContactInfo: function(e){
+			setContactInfo: function(event, response){
+
+				if(response.users && response.users[0] && response.users[0].contacts){
+				
+					this.getView().userContactTab.store.loadRawData(response.users[0].contacts);
+				
+				}
+
+			},
+			
+			addContactInfo: function(event){
 				
 				var rowEdit = this.getView().userContactTab.getPlugin('rowediting');
 				
@@ -315,27 +339,22 @@ define(['iweb/CoreModule',  './AccountInfoModel','nics/modules/UserProfileModule
 				}
 			},
 			
-			deleteContactInfo: function(e){
+			deleteContactInfo: function(event){
 				
 				var selected = this.getView().userContactTab.getSelectionModel().getSelection()[0];
 				
-				if(selected == null){
-					Ext.MessageBox.alert("NICS","Select contact information to delete.");
-				}
-				else{
+				if(selected != null){
 					
-					this.view.userContactTab.store.remove(selected);
-					var contactTypeId = this.contactList.indexOf(selected.get('contacttypeid'));
+					var contactId = selected.get('contactid');
 					var value = selected.get('value');
 				
-					var topic = "";
+					var topic = "nics.user.contact.delete";
 				
-					var url = Ext.String.format("{0}/users/{1}/deletecontactinfo?userName={2}&contactTypeId={3}&value={4}",
+					var url = Ext.String.format("{0}/users/{1}/deletecontactinfo?userName={2}&contactId={3}",
 						Core.Config.getProperty(UserProfile.REST_ENDPOINT),
 						UserProfile.getWorkspaceId(),
 						UserProfile.getUsername(),
-						contactTypeId,
-						value
+						contactId
 					);
 					
 					this.mediator.sendDeleteMessage(url,topic);	
@@ -344,14 +363,21 @@ define(['iweb/CoreModule',  './AccountInfoModel','nics/modules/UserProfileModule
 				
 			},
 			
-			validateContactInfo: function(e, context){
+			onDeleteContactInfo: function(event, response){
+				if(response.message == "OK"){
+					var selected = this.getView().userContactTab.getSelectionModel().getSelection()[0];
+					this.view.userContactTab.store.remove(selected);
+				}
+			},
+			
+			validateContactInfo: function(event, context){
 				
 				if(context.newValues.contacttypeid == 'N/A'){
 					this.getView().userContactTab.store.removeAt(0);
 				}
 				else{
 				
-					var topic = "nics.user.contact.update";
+					var topic = "nics.user.contact.add";
 				
 					var url = Ext.String.format("{0}/users/{1}/updatecontactinfo?userName={2}&contactTypeId={3}&value={4}",
 						Core.Config.getProperty(UserProfile.REST_ENDPOINT),
@@ -366,14 +392,19 @@ define(['iweb/CoreModule',  './AccountInfoModel','nics/modules/UserProfileModule
 				}
 			},
 			
-			updateContactInfo: function(event, response){
-				if(response.message = "OK"){
+			onAddContactInfo: function(event, response){
+				if(response.message == "OK"){
+					var contact = this.getView().userContactTab.store.getAt(0);
+					contact.set('contactid',response.users[0].contacts[0].contactid);
 					this.getView().userContactTab.store.commitChanges();
+				}else{
+					Ext.MessageBox.alert("Status", response.message);
 				}
 			},
+			
 			changeOrgInfo: function(profile){
 				if(profile == "Forbidden"){
-					Ext.MessageBox.alert("NICS", "You do not have permission to view this profile");
+					Ext.MessageBox.alert("Permission Error", "You do not have permission to view this profile");
 					return;
 				}
 				
@@ -383,7 +414,17 @@ define(['iweb/CoreModule',  './AccountInfoModel','nics/modules/UserProfileModule
 				
 			},
 			
+			enableButtons: function(){
+				this.getView().userContactTab.getAddButton().enable();
+				this.getView().userContactTab.getDeleteButton().enable();
+			},
 			
+			
+			disableButtons: function(){
+				this.getView().userContactTab.getAddButton().disable();
+				this.getView().userContactTab.getDeleteButton().disable();
+
+			}
 	
 		
 			

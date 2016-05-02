@@ -45,8 +45,15 @@ define(['ext','iweb/CoreModule'], function(Ext, Core) {
 	    numbers:  function(v) {
 	        return /^[0-9\., -]*$/i.test(v);
 	    },
-	    numbersText: 'This field should only contain letters, numbers, spaces, apostrophes - . and _',
+	    numbersText: 'This field should only contain numbers, spaces, apostrophes - . and _',
 	    numbersMask: /[0-9\., -]/i
+	});
+	Ext.apply(Ext.form.field.VTypes, {
+	    latlon:  function(v) {
+	        return /^[0-9\.-]*$/i.test(v);
+	    },
+	    latlonText: 'This field should only contain decimal latitude and longitude numbers' ,
+	    latlonMask: /[0-9\.-]/i
 	});
 
 	// custom Vtype for alphanum only fields, plus apostrophes, and - .  + , ? _ %

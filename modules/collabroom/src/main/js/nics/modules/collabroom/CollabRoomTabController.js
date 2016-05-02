@@ -50,7 +50,7 @@ define(["iweb/CoreModule", 'nics/modules/UserProfileModule'],
 				if(!view.hasTab(collabRoom.name)){
 					view.setActiveTab(view.addTab(collabRoom));
 				}else{
-					Ext.MessageBox.alert("NICS", "You are already in the collaboration room " +
+					Ext.MessageBox.alert("Collaboration Room Error", "You are already in the collaboration room " +
 							collabRoom.name + ". To view this room, select the tab from above.");
 				}
 			},

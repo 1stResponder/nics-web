@@ -41,6 +41,7 @@ define(['ext', 'iweb/CoreModule', './PresenceModel', './PresenceListener', 'nics
 			this.mediator = Core.Mediator.getInstance();
 
 			Core.EventManager.addListener("nics.collabroom.load", this.onLoadUserProfile.bind(this));
+			Core.EventManager.addListener("nics.archived.collabroom.load", this.onLoadUserProfile.bind(this));
 			Core.EventManager.addListener("nics.incident.join", this.onJoinIncident.bind(this));
 			
 			Core.EventManager.addListener("nics.collabroom.open", this.onOpenCollabRoom.bind(this));
@@ -58,7 +59,8 @@ define(['ext', 'iweb/CoreModule', './PresenceModel', './PresenceListener', 'nics
 			this.user = {
 				userId: UserProfile.getUserId(),
 				username: UserProfile.getUsername(),
-				nickname: UserProfile.getFirstName() + " " + UserProfile.getLastName()
+				nickname: UserProfile.getFirstName() + " " + UserProfile.getLastName(),
+				organization: UserProfile.getOrgName()
 			};
 		},
 		

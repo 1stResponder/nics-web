@@ -27,7 +27,7 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
- define(['iweb/CoreModule', './IncidentController'], function(Core) {
+ define(['iweb/CoreModule', './IncidentController', 'nics/modules/report/common/FormVTypes'], function(Core ) {
 	Ext.define('modules.incident.IncidentViewer', {
 
 		extend: 'Ext.Button',
@@ -45,11 +45,15 @@
 			});
 			
 			this.countryDropdown = Core.UIBuilder.buildComboBox(
-					"country", "Country", 135, ['country'], {forceSelection: true, typeAhead: true});
+					"country", "Country <em>optional</em>", 135, ['country', 'countryCode'], {valueField: 'countryCode', displayField: 'country',  allowBlank: true, typeAhead: true,  });
 			this.countryDropdown.on("change", this.onCountryChange, this);
 			
 			this.stateDropdown = Core.UIBuilder.buildComboBox(
-				"state", "State", 135, ['country', 'state'], {valueField: 'state', forceSelection: true, typeAhead: true, emptyText: 'None'});
+				"state", "State <em>required</em> ", 135, ['countryCode', 'state'], {valueField: 'state', forceSelection: true, typeAhead: true, emptyText: 'None', hidden:true});
+			this.stateDropdown.on("change", this.onStateChange, this);
+			this.regionInput = Ext.create('Ext.form.field.Text', { name: 'region', fieldLabel: 'State/Province /Region <em>required</em>', width: 100, maxLength: 40, enforceMaxLength: true , hidden:true});
+			this.regionInput.on("change", this.onRegionChange, this);
+			this.regionWarning = Ext.create('Ext.form.field.Display', { name: 'regionWarning', value: '<em>Please enter either a State (US) or a Region</em>', flex:1, hidden:true});
 				
 			this.latitudeInput = Ext.create('Ext.form.field.Number', { name: 'lat', fieldLabel: 'Latitutde', width: 100,
 				hideTrigger: true, keyNavEnabled: false, mouseWheelEnabled: false, decimalPrecision: 14 });
@@ -65,7 +69,7 @@
 			this.parentDropdown.on("change", this.onParentChange, this);
 			
 			this.description = Ext.create('Ext.form.field.TextArea',
-					{ name: 'incidentDescription', fieldLabel: 'Description', width: 100 , stripCharsRe: /[^a-zA-Z0-9,_\-\.\s]/,  maxLength: 500, enforceMaxLength: true});
+					{ name: 'incidentDescription', fieldLabel: 'Description', width: 100 ,  maxLength: 500, enforceMaxLength: true});
 	
 			this.createButton = Ext.create('Ext.Button', { text: 'Create' });
 			this.cancelButton = Ext.create('Ext.Button', { text: 'Cancel', handler: function(){ this.createWindow.hide(); }, scope: this});
@@ -107,7 +111,7 @@
 				closable : true,
 				maximizable : false,
 				resizable : false,
-				draggable : false,
+				draggable : true,
 				padding : 10,
 				width: 400,
 				closeAction: 'hide',
@@ -123,11 +127,13 @@
 				        defaultType: 'textfield',
 				        defaults: {
 				            anchor: '-10',
-				            stripCharsRe: /[^a-zA-Z0-9_\-\s.]/
+				            vtype:'simplealphanum'
 				        },
 				        items:[
 				        	this.countryDropdown,
 				        	this.stateDropdown,
+				        	this.regionInput,
+				        	this.regionWarning,
 				        	this.latitudeInput,
 				        	this.longitudeInput,
 				        	this.prefixValue,
@@ -189,6 +195,7 @@
 		resetCreateWindow: function(){
 			this.setDescription("");
 			this.setName("");
+			this.setRegion("");
 			this.setCountry("");
 			this.resetIncidentTypes();
 			this.resetParentIncident();
@@ -203,8 +210,22 @@
 			this.clearMenuItems();
 			
 			this.setCountries(model.getCountries());
+			
 			if (userProfile.getOrgCountry()) {
-				this.setCountry(userProfile.getOrgCountry());
+				var countryCode = this.getCodeFromCountry(userProfile.getOrgCountry());
+				if (typeof(countryCode))
+				//If we know the Country is US,
+				if (countryCode == 'US'){
+					 var stateStore = this.stateDropdown.getStore();
+				        stateStore.filter("countryCode", 'US');
+					 this.stateDropdown.setVisible(true);
+				       this.regionInput.setVisible(false);
+				}
+				else {
+					 this.stateDropdown.setVisible(false);
+				        this.regionInput.setVisible(true);
+				}
+				
 			}
 			
 			this.setStates(model.getStates());
@@ -262,8 +283,41 @@
 		},
 
 		onCountryChange: function( combo, newValue, oldValue, eOpts) {
-			var stateStore = this.stateDropdown.getStore();
-			stateStore.filter("country", newValue);
+			//Check to see if it's a real country
+			
+		    if (newValue == 'US'){
+		    	//Show the US States Dropdown
+		        this.stateDropdown.setVisible(true);
+		        this.regionInput.setVisible(false);
+		        var stateStore = this.stateDropdown.getStore();
+		        stateStore.filter("countryCode", newValue);
+		        this.regionWarning.setVisible(false);
+		    }
+		    else if (newValue == 'ZZ'){
+		    	//Show both 
+		    	this.regionInput.setVisible(true);
+		    	this.stateDropdown.setVisible(true);
+		    	this.regionWarning.setVisible(true);
+		    }
+		    else {
+		    	
+		    	//Show the region input for Non US
+		    	this.regionInput.setVisible(true);
+		    	this.stateDropdown.setVisible(false);
+		    	this.regionWarning.setVisible(false);
+			
+		    }
+		},
+		onStateChange: function( ) {
+			//clear out the region
+			this.regionInput.setValue('');
+			
+		},
+		onRegionChange: function( ) {
+			//clear out the state
+			this.stateDropdown.clearValue();
+			
+		   
 		},
 		
 		setCountries: function(countries){
@@ -276,6 +330,19 @@
 			this.countryDropdown.setValue(country);
 		},
 		
+		
+		getCodeFromCountry: function(country){
+			var countryCode ='ZZ';
+			if (typeof(country) === "string") {
+				if (this.countryDropdown.getStore().findRecord('country',country)){
+					countryCode = this.countryDropdown.getStore().findRecord('country',country).getData().countryCode
+				}
+			}
+			
+			return countryCode;
+		},
+		
+		
 		getCountry: function(){
 			return this.countryDropdown.getValue();
 		},
@@ -286,14 +353,21 @@
 			this.stateDropdown.select(store.getAt(0));
 		},
 
-		setState: function(state){
-			this.stateDropdown.setValue(state);
+		setState: function(location){
+			this.stateDropdown.setValue(location);
 		},
+		
 		
 		getState: function(){
 			return this.stateDropdown.getValue();
 		},
-
+		setRegion: function(location){
+			this.regionInput.setValue(location);
+		},
+		getRegion: function(){
+			return this.regionInput.getValue();
+			
+		},
 		setPrefixValue: function(prefix){
 			this.prefixValue.setValue(prefix);
 		},
@@ -314,7 +388,7 @@
 					     })
 					);
 				}
-		
+				this.incidentTypeSet.removeAll();
 				this.incidentTypeSet.add(displayIncidentTypes);
 			}
 		},
@@ -422,12 +496,26 @@
 		},
 
 		getIncidentName: function(){
-			return this.buildName([
+			if (this.getCountry() == 'ZZ'){
+				return this.buildName([
+				    this.getStateRegion(),
+				    this.getPrefixValue(),
+				    this.getName()
+			])
+			}
+			
+			else {
+				return this.buildName([
 				this.getCountry(),
-				this.getState(),
+			    this.getStateRegion(),
 				this.getPrefixValue(),
 				this.getName()
 			]);
+			}
+		},
+		getStateRegion: function(){
+			 var stateRegion = (this.getState() === null ? this.getRegion() : this.getState())
+			return stateRegion;
 		},
 		
 		buildName: function(parts) {

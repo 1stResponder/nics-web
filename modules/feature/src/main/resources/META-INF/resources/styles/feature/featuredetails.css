@@ -30,6 +30,12 @@
 .form-feature-detail div.x-form-item label.x-form-item-label, .form-feature-detail div.x-form-item *.x-form-item-body  {
 	padding-left : 10px;
         padding-top : 0;
+        min-height: 10px;
+}
+.form-feature-detail div.x-form-item label.x-form-item-label   {
+	 text-align: right;
+	 font-weight:bold;
+   
 }
 .form-feature-detail div.x-form-item:first-child label.x-form-item-label, .form-feature-detail div.x-form-item:first-child *.x-form-item-body {
 	padding-top : 10px;
@@ -41,4 +47,12 @@
 }
 .form-feature-detail div.x-form-display-field-default {
 	margin-top:0;
+	min-height:10px;
 }
+
+.form-feature-detail div.x-form-item-label x-form-item-label-default x-form-item-label-top > .x-form-item-label-inner {
+    display: inline-block;
+} 
+
+
+

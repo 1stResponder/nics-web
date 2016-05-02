@@ -63,7 +63,7 @@ define(['ext', 'iweb/CoreModule', 'nics/modules/UserProfileModule'],
 		
 		loadUsers: function(evt, response){
 			if(response.users.length == 0){
-				Ext.MessageBox.alert("NICS", "No users where found that match the given criteria.");
+				Ext.MessageBox.alert("Search Results", "No users where found that match the given criteria.");
 				return;
 			}
 			

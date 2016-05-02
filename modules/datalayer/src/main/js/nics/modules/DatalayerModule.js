@@ -35,11 +35,13 @@ define(["iweb/CoreModule",
 		"./datalayer/TrackingLocatorWindow"],
 	
 	function(Core, Button, Window, DataWindow, MapsController, ExportView,
-			 DatalayerPanelView, UserProfile, TrackingWindow, TrackingLocatorWindow) {
+			 DatalayerPanelView, UserProfile, TrackingWindow, TrackingLocatorWindow,
+			 StyleRendererController) {
 	
 		var DatalayerModule = function(){};
 		
 		DatalayerModule.prototype.load = function(){
+			
 			var mapsButton = new Button({
 				text: 'Maps',
 				window: new Window({
@@ -66,11 +68,14 @@ define(["iweb/CoreModule",
 				})
 			});
 
+			var tw = new TrackingWindow({
+				rootName: 'Tracking'
+			});
+
+
 			var trackingButton = new Button({
 				text: 'Tracking',
-				window: new TrackingWindow({
-					rootName: 'Tracking'
-				})
+				window: tw
 			});
 			
 			//Add View to Core
@@ -177,16 +182,38 @@ define(["iweb/CoreModule",
 		DatalayerModule.prototype.getHtml = function(event, info){
 		
 			if(info){
+	
 				var regex = /<img.*?src=['"](.*?)['"]/;
 				
-				var htmlSrc = regex.exec(info[2])[1];
+				var htmlSrc = regex.exec(info[2]);
+				var legendCmp;
 	
-				var legendCmp = Ext.create('Ext.Window',{
-					title: info[1] + ' - Legend',
-					items:[{
-						xtype: 'image',
-						src: htmlSrc, 
+				if(htmlSrc && htmlSrc[1]){
+
+					legendCmp = Ext.create('Ext.Window',{
+						title: info[1] + ' - Legend',
+						items:[{
+							xtype: 'image',
+							src: htmlSrc[1], 
+							id: info[0],
+							listeners : {
+					            load : {
+					               element : 'el',
+					               fn : function(el){
+				               			Core.EventManager.fireEvent('nics.data.legend.update' ,[this.id, el.target.clientWidth, el.target.clientHeight]);
+				               		}
+					            }
+				        	}
+				        }]
+					});
+					
+				}
+				else{
+					
+					legendCmp = Ext.create('Ext.Window',{
+						title: info[1] + ' - Legend',
 						id: info[0],
+						html: info[2],
 						listeners : {
 				            load : {
 				               element : 'el',
@@ -195,12 +222,16 @@ define(["iweb/CoreModule",
 			               		}
 				            }
 			        	}
-			        }]
-				});
+						
+					});
 					
+				}
+	
 				legendCmp.show();
 	
-	
+			}
+			else{
+				Ext.MessageBox.alert("Legend", "Unable to load legend");
 			}
 	
 		};

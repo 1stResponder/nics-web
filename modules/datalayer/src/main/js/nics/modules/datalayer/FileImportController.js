@@ -124,6 +124,8 @@ define(['ext', 'ol', "iweb/CoreModule", "nics/modules/UserProfileModule"],
 						buttons: Ext.Msg.OK
 					});
 				}
+
+				console.log("Submitting form for "+ fileName +" to url: " + url);
 				
 				form.submit({
 					url: url,

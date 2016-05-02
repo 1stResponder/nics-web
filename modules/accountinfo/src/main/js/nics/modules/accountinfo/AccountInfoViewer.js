@@ -58,6 +58,8 @@
 				    defaults: {
 				        anchor: '100%'
 				    },
+				    
+				        
 				    defaultType: 'textfield',
 				    items: [{
 				        fieldLabel: 'Username',
@@ -108,11 +110,17 @@
 				        fieldLabel: 'Job Description',
 				        name: 'desc',
 				        vtype:'simplealphanum'
-				    }],
+				    },
+				   
+				    ],
 				    buttons: [{
 				    	 text: 'Submit',
 				    	 reference: 'submitButton'
-				    }]
+				    }],
+				    
+				    getSubmitButton: function(){
+						return this.lookupReference('submitButton');
+					}
 				});
 				
 				this.userContactTab = Ext.create('Ext.grid.Panel', {
@@ -182,7 +190,17 @@
 									Core.EventManager.fireEvent('nics.user.contact.validate',context)
 								}
 							}
-					}]
+					}],
+
+					
+					getAddButton: function(){
+						return this.lookupReference('addButton');
+					},
+					
+					getDeleteButton: function(){
+						return this.lookupReference('deleteButton');
+					}
+					
 				});
 				
 
@@ -234,7 +252,7 @@
 				    		this.organizationInfoTabs
 				    ]
 				});	
-				 	
+			
 
 				this.callParent();
 			},
@@ -267,10 +285,11 @@
 			setButtonLabel: function(name){
 				this.setText(name);
 			},
-			
+	
 			setFormField: function(field, value){
 				this.userAccountTab.getForm().findField(field).setValue(value);
-			},
+
+			}
 			
 
 		});

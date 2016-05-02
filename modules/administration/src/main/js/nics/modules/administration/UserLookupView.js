@@ -27,7 +27,7 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-define(['./DDGridView', './UserLookupController', './UserModel'],
+define(['./DDGridView', './UserLookupController', './UserModel', 'nics/modules/report/common/FormVTypes'],
 		function(DDGridView, UserLookupController, UserModel) {
 	
 	return Ext.define('modules.administration.UserLookupView', {
@@ -53,12 +53,7 @@ define(['./DDGridView', './UserLookupController', './UserModel'],
 	 		xtype:'form',
             layout: 'vbox',
             reference: 'userLookupForm',
-            listeners: {
-    			
-            	hide:  function() {
-                     alert('Rendered.');}
-    		},
-	 		items: [{
+            items: [{
 	            xtype: 'fieldcontainer',
 	            fieldLabel: 'Search Type',
 	            defaultType: 'radiofield',
@@ -88,11 +83,13 @@ define(['./DDGridView', './UserLookupController', './UserModel'],
 	        },{
 	        	xtype: 'textfield',
 	        	fieldLabel: 'First Name ',
-	        	reference: 'firstName'
+	        	reference: 'firstName',
+		        vtype:'simplealphanum'
 	        },{
 	        	xtype: 'textfield',
 	        	fieldLabel: 'Last Name',
-	        	reference: 'lastName'
+	        	reference: 'lastName',
+		        vtype:'simplealphanum'
 	        }],
 	        
 	        buttons: [{

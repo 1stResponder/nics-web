@@ -37,7 +37,7 @@
   <artifactId>nics-web</artifactId>
   <packaging>pom</packaging>
   <name>NICS Web Pom</name>
-  <version>6.1.2</version>
+  <version>6.2</version>
 
   <modules>
     <module>modules</module>
@@ -75,7 +75,7 @@
     <jstl.api.version>1.2</jstl.api.version>
     <websocket.api.version>1.1</websocket.api.version>
     <json.version>20140107</json.version>
-
+    <esapi.version>2.1.0</esapi.version>
     <junit.version>3.8.1</junit.version>
 
     <iweb.version>${project.version}</iweb.version>
@@ -139,7 +139,13 @@
         <artifactId>json</artifactId>
         <version>${json.version}</version>
       </dependency>
-      
+     
+      <dependency>
+        <groupId>org.owasp.esapi</groupId>
+        <artifactId>esapi</artifactId>
+        <version>${esapi.version}</version>
+      </dependency>
+ 
       <!-- test dependencies -->
       <dependency>
         <groupId>junit</groupId>
@@ -207,8 +213,8 @@
                             <includes>**/src/**/*.html</includes>
                             <includes>**/src/**/*.properties</includes>
                             <includes>**/src/**/*.jsp</includes>
-                            <includes>**/*.xml</includes>
-                            <includes>**/*.js</includes>
+                            <includes>**/pom.xml</includes>
+                            <includes>**/Gruntfile.js</includes>
                         </includes>
                     </configuration>
                     <inherited>false</inherited>

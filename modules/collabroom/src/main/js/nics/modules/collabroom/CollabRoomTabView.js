@@ -68,7 +68,6 @@ define(['iweb/CoreModule', './CollabRoomTabController'], function(Core) {
 		
 		removeTab: function(tab){
 			this.remove(tab);
-			this.doLayout();
 		},
 		
 		hasTab: function(name){

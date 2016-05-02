@@ -27,8 +27,8 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-define(['ext', 'ol', "iweb/CoreModule", "nics/modules/UserProfileModule"], 
-	function(Ext, ol, Core, UserProfile){
+define(['ext', 'ol', "iweb/CoreModule", "nics/modules/UserProfileModule", "./TokenManager"], 
+	function(Ext, ol, Core, UserProfile, TokenManager){
 	
 		return Ext.define('modules.datalayer.DatasourceImportController', {
 			extend : 'Ext.app.ViewController',
@@ -39,6 +39,7 @@ define(['ext', 'ol', "iweb/CoreModule", "nics/modules/UserProfileModule"],
 				this.dataSourceType = this.getView().dataSourceType;
 				this.capabilitiesFormat = this.getView().capabilitiesFormat;
 				this.workspaceId = this.getView().workspaceId;
+				this.tokenHandlerTopic =  "nics.datasource.token." + this.dataSourceType;
 				
 				this.mediator = Core.Mediator.getInstance();
 				
@@ -54,6 +55,7 @@ define(['ext', 'ol', "iweb/CoreModule", "nics/modules/UserProfileModule"],
 				Core.EventManager.addListener("nics.data.loaddatasources." + this.dataSourceType, this.onLoadDataSources.bind(this));
 				Core.EventManager.addListener("nics.data.adddatasource." + this.dataSourceType, this.onAddDatasource.bind(this));
 				Core.EventManager.addListener("nics.data.adddatalayer." + this.dataSourceType, this.onAddDatalayer.bind(this));
+				Core.EventManager.addListener(this.tokenHandlerTopic, this.tokenHandler.bind(this));
 			},
 			
 			updateGridTitle: function() {
@@ -104,22 +106,141 @@ define(['ext', 'ol', "iweb/CoreModule", "nics/modules/UserProfileModule"],
 			
 			onGridEdit: function(editor, context, eOpts) {
 				var record = context.record;
-				this.getCapabilities(record,
-					function(){
-						this.storeDatasource(record);
-					},
-					function(){
-						var rowEditPlugin = this.getView().getGrid().getPlugin('rowediting');
-						rowEditPlugin.startEdit(record, 0);
-					});
+				
+				Ext.Msg.show({
+				    title:'Secure',
+				    message: 'Would you like to secure the datasource?',
+				    buttons: Ext.Msg.YESNO,
+				    icon: Ext.Msg.QUESTION,
+				    fn: function(btn) {
+				        if (btn === 'yes') {
+				            this.requestAuthentication(record);
+				        } else if (btn === 'no') {
+				        	this.getCapabilities(record,
+								function(){
+									this.storeDatasource(record);
+								},
+								function(){
+									var rowEditPlugin = this.getView().getGrid().getPlugin('rowediting');
+									rowEditPlugin.startEdit(record, 0);
+								});
+				        }
+				    },
+				    scope: this
+				});
 			},
 			
-			storeDatasource: function(record) {
+			requestAuthentication: function(record){
+				
+				var _this = this;
+				
+				Ext.create('Ext.window.Window', {
+				    height: 200,
+				    width: 300,
+				    layout: 'fit',
+				    modal: true,
+				    buttonAlign: 'center',
+				    referenceHolder: true,
+				    items: [
+				        {
+				            xtype: 'form',
+				            frame: false,
+				            reference: 'authForm',
+						    record: record,
+				            border: 0,
+				            layout: {
+				                type: 'hbox',
+				                align: 'middle'
+				            },
+				            fieldDefaults: {
+				                msgTarget: 'side',
+				                labelWidth: 55
+				            },
+				            items: [
+				                {
+				                    xtype: 'container',
+				                    flex: 1,
+				                    padding: 10,
+				                    layout: {
+				                        type: 'vbox'
+				                    },
+				                    items: [
+				                        {
+				                            xtype: 'textfield',
+				                            name: 'username',
+				                            fieldLabel: 'Username',
+				                            allowBlank: false
+				                        },{
+				                            xtype: 'textfield',
+				                            name: 'password',
+				                            fieldLabel: 'Password',
+				                            inputType: 'password',
+				                            allowBlank: false
+				                        }
+				                    ]
+				                }
+				            ]
+				        }
+				    ],
+				    buttons: [{
+				            text: 'Save',
+				            handler: function () {
+				               var component = this.up('window').items.get(0);
+				               var internalurl = component.record.data.internalurl;
+				               var username = component.getForm().findField("username").getValue();
+				               var password = component.getForm().findField("password").getValue();
+				              
+				               var endpoint = Core.Config.getProperty(UserProfile.REST_ENDPOINT);
+							   var url = Ext.String.format("{0}/datalayer/{1}/token?internalurl={2}&" +
+							   		"username={3}&password={4}",
+									endpoint,
+									UserProfile.getWorkspaceId(),
+									internalurl, username, password);
+								
+								var topic = Core.Util.generateUUID();
+								Core.EventManager.createCallbackHandler(topic, _this, _this.handleTokenResponse, 
+										[component.record, username, password]);
+								Core.Mediator.getInstance().sendRequestMessage(url, topic);
+								
+								//Close the window
+								this.up('window').close();
+				            }
+				        }
+				    ]
+				}).show();
+				
+			},
+			
+			handleTokenResponse: function(record, username, password, evt, response){
+				if(response.token){
+					record.set("secure", true);
+					TokenManager.addToken(record.get("datasourceid"), response);
+					this.getCapabilities(record,
+						function(){
+							this.storeDatasource(record, username, password);
+						},
+						function(){
+							var rowEditPlugin = this.getView().getGrid().getPlugin('rowediting');
+							rowEditPlugin.startEdit(record, 0);
+						});
+				}else{
+					Ext.MessageBox.alert("Authentication Error", "The username and password were not valid.");
+					var rowEditPlugin = this.getView().getGrid().getPlugin('rowediting');
+					rowEditPlugin.startEdit(record, 0);
+				}
+			},
+			
+			storeDatasource: function(record, username, password) {
 				var values = {
 					displayname: record.get('displayname'),
 					internalurl: record.get('internalurl'),
 					legend: record.get('legend')
 				};
+				
+				if(username && password){
+					values.username = username;
+					values.password = password;
+				}
 				
 				var url = Ext.String.format('{0}/datalayer/{1}/sources/{2}', 
 						Core.Config.getProperty(UserProfile.REST_ENDPOINT),
@@ -146,8 +267,11 @@ define(['ext', 'ol', "iweb/CoreModule", "nics/modules/UserProfileModule"],
 				}
 			},
 			
-			getCapabilities: function(record, success, failure) {
+			tokenHandler: function(evt, params){
+				this.getCapabilities(params[0], params[1], params[2]);
+			},
 			
+			getCapabilities: function(record, success, failure) {
 				var url = "";
 				
 				if(this.dataSourceType == 'arcgisrest'){
@@ -156,6 +280,21 @@ define(['ext', 'ol', "iweb/CoreModule", "nics/modules/UserProfileModule"],
 				else{
 					url = Ext.String.format('{0}?service={1}&request=GetCapabilities',
 						record.get('internalurl'), this.dataSourceType);
+				}
+				
+				if(record.get('secure')){
+					var token = TokenManager.getToken(record.get('datasourceid'),{
+						topic: this.tokenHandlerTopic,
+						params: [record, success, failure]
+					});
+					
+					//The function will be called again if 
+					//a token is successfully retrieved
+					if(token == null){
+						return;
+					}else{
+						url = url + "&token=" + token;
+					}
 				}
 				
 				var dataSourceType = this.dataSourceType;
@@ -256,7 +395,8 @@ define(['ext', 'ol', "iweb/CoreModule", "nics/modules/UserProfileModule"],
 				var grid = this.getView().getGrid(),
 					combo = this.getView().getLayerCombo(),
 					input = this.getView().getLabelInput(),
-					legend = this.getView().getLegendInput();
+					legend = this.getView().getLegendInput(),
+					refreshRate = this.getView().getRefreshRateCombo();
 				
 				var record = grid.getSelectionModel().getSelection()[0];
 				var datasourceid = record.getId();
@@ -268,7 +408,8 @@ define(['ext', 'ol', "iweb/CoreModule", "nics/modules/UserProfileModule"],
 					usersessionid: userSessionId,
 					datalayersource: {
 						layername: combo.getValue(),
-						usersessionid: userSessionId
+						usersessionid: userSessionId,
+						refreshrate: refreshRate.getValue()
 					},
 					legend: legend.getValue()
 				};
@@ -311,6 +452,7 @@ define(['ext', 'ol', "iweb/CoreModule", "nics/modules/UserProfileModule"],
 				this.getView().getLayerCombo().reset();
 				this.getView().getImportButton().disable();
 				this.getView().getLegendInput().reset();
+				this.getView().getRefreshRateCombo().reset();
 			},
 			
 			/**
@@ -323,6 +465,7 @@ define(['ext', 'ol', "iweb/CoreModule", "nics/modules/UserProfileModule"],
 				this.getView().getLayerCombo().setDisabled(disabled);
 				this.getView().getImportButton().setDisabled(disabled);
 				this.getView().getLegendInput().setDisabled(disabled);
+				this.getView().getRefreshRateCombo().setDisabled(disabled);
 			}
 			
 		});
