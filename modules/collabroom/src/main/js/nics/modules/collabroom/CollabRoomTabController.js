@@ -49,6 +49,20 @@ define(["iweb/CoreModule", 'nics/modules/UserProfileModule'],
 				var view = this.getView();
 				if(!view.hasTab(collabRoom.name)){
 					view.setActiveTab(view.addTab(collabRoom));
+					if(collabRoom.name == UserProfile.getIncidentMapName() &&
+							collabRoom.readOnly){
+						if(collabRoom.incidentMapAdmins){
+							var admins = "";
+							for(var i=0; i<collabRoom.incidentMapAdmins.length; i++){
+								admins += collabRoom.incidentMapAdmins[i].firstname + " " + 
+								collabRoom.incidentMapAdmins[i].lastname + ": " +
+								collabRoom.incidentMapAdmins[i].value + "<br/>";
+							}
+							
+							Ext.MessageBox.alert("Permissions", "You are in read-only mode. To modify this map, " + 
+									" please contact one of the following NICS Administrators : <br/>" + admins);
+						}
+					}
 				}else{
 					Ext.MessageBox.alert("Collaboration Room Error", "You are already in the collaboration room " +
 							collabRoom.name + ". To view this room, select the tab from above.");

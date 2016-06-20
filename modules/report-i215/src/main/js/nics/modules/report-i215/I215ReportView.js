@@ -79,10 +79,22 @@ define(['iweb/CoreModule','./I215ReportController', './I215ReportModel' , 'nics/
 	            }, {
 	            	xtype: 'button',
 	            	text: 'New',
-	            	 tooltip: 'Create New Report',
-	                reference: 'createButton',
+	            	tooltip: 'Create New Report',
+	            	id:'create215',
+	            	reference: 'createButton',
 	                listeners: {
 						click: 'onAdd'
+		            }
+	                
+	            },
+	            {
+	            	xtype: 'button',
+	            	text: 'View',
+	            	tooltip: 'View Report',
+	            	id:'view215',
+	            	reference: 'viewButton',
+	                listeners: {
+						click: 'onView'
 		            }
 	                
 	            },
@@ -90,6 +102,7 @@ define(['iweb/CoreModule','./I215ReportController', './I215ReportModel' , 'nics/
 					xtype: 'button',
 					text: 'Update',
 					tooltip: 'Update',
+					id:'update215',
 					reference: 'updateButton',
 					disabled: true,
 					listeners: {
@@ -99,6 +112,8 @@ define(['iweb/CoreModule','./I215ReportController', './I215ReportModel' , 'nics/
 				},
 	            {
 		           	xtype: 'button',
+		           	text: 'Final', 
+		           	id:'finalize215',
 		           	text: 'Final', 
 		           	enableToggle: true,
 		            tooltip: 'Finalize Report',
@@ -112,7 +127,8 @@ define(['iweb/CoreModule','./I215ReportController', './I215ReportModel' , 'nics/
 				{
 					xtype: 'button',
 					text: 'Print',
-					tooltip: 'Print',
+					id:'print215',
+			        tooltip: 'Print',
 					reference: 'printButton',
 					disabled: true,
 					listeners: {

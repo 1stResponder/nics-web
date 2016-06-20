@@ -35,7 +35,7 @@
   <parent>
     <groupId>edu.mit.ll.nics</groupId>
     <artifactId>nics-web</artifactId>
-    <version>6.2</version>
+    <version>6.3</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 

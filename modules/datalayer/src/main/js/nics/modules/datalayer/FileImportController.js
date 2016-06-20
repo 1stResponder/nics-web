@@ -45,10 +45,17 @@ define(['ext', 'ol', "iweb/CoreModule", "nics/modules/UserProfileModule"],
 				
 				this.updatePanelTitle();
 				this.bindEvents();
+				
+				var form = this.getView().getFormPanel().getForm();
+				if(form){
+					var refreshrate = form.findField('refreshrate');
+					if(refreshrate){
+						refreshrate.setValue(0);
+					}
+				}
 			},
 			
 			bindEvents: function(){
-				
 				Core.EventManager.addListener("nics.data.onFileUploadSuccess", this.onFileImportSuccess.bind(this));
 			},
 			
@@ -58,7 +65,6 @@ define(['ext', 'ol', "iweb/CoreModule", "nics/modules/UserProfileModule"],
 				var formPanel = this.getView().getFormPanel();
 				var formPanelTitle = formPanel.getTitle();
 				formPanel.setTitle(panelTitle + ' ' + formPanelTitle);
-				
 				formPanel.getForm().findField('fileName').setFieldLabel("Choose a " + panelTitle + " file to load as a data layer");
 				
 			},
@@ -113,7 +119,7 @@ define(['ext', 'ol', "iweb/CoreModule", "nics/modules/UserProfileModule"],
 							buttons: Ext.Msg.OK
 						});
 					}
-				
+
 				}
 				
 				

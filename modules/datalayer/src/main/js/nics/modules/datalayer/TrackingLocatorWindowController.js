@@ -76,12 +76,7 @@ define(['ext', "iweb/CoreModule", "iweb/modules/MapModule"],
                         	}
                         }
                         
-                        var name = props.name ? props.name : props.Name;
-                        
-                        //TEMPORARY until all formats are consistent
-                        if(!name){
-                        	name = props["VehicleName"];
-                        }
+                        var name = props.name || props.Name || props.VehicleName || props.Unit;
                         
                         arr.push([name, 'Group', 'Subgroup', geom]);
                     }
@@ -101,7 +96,8 @@ define(['ext', "iweb/CoreModule", "iweb/modules/MapModule"],
                 for (f in features)
                 {
                     var props = features[f].getProperties();
-                    var rec = this.getView().pliStore.findRecord('vehicle', props.name);
+                    var name = props.name || props.Name || props.VehicleName || props.Unit;
+                    var rec = this.getView().pliStore.findRecord('vehicle', name);
                     if (rec)
                     {
                         arr.push(rec);

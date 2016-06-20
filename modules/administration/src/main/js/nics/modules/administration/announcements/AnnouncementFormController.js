@@ -60,7 +60,7 @@ define(['iweb/CoreModule' ,'nics/modules/UserProfileModule'  ],
 	    		Core.EventManager.createCallbackHandler(topic, this, 
 						function(evt, response){
 							if(response != OK_STATUS){
-								Ext.MessageBox.alert("NICS", "There was an error updating the announcement");
+								Ext.MessageBox.alert("Announcement Error", "There was an error creating the announcement");
 							}
 							else{
 								Core.EventManager.fireEvent("nics.announcements.new");

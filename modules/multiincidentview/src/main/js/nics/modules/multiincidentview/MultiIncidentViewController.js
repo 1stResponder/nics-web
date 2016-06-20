@@ -64,7 +64,10 @@ define(['ext', 'iweb/CoreModule', 'ol', './MultiIncidentViewModel', 'nics/module
 		loadAllIncidents: function(e) {
 			var grid = this.lookupReference('multiincidentsgrid');
 			
-			if(UserProfile.getSystemRoleId() != 4 && !UserProfile.isSuperUser()){
+			if(UserProfile.isAdminUser() || UserProfile.isSuperUser()){
+				this.lookupReference('miveditbutton').show()
+			}
+			else {
 				this.lookupReference('miveditbutton').hide()
 			}
 			

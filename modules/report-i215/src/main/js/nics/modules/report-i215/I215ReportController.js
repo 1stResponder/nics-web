@@ -42,6 +42,7 @@ function(Core, UserProfile, I215ReportView, I215FormView) {
 		
 			this.mediator = Core.Mediator.getInstance();
 			this.lookupReference('createButton').enable();
+			this.lookupReference('viewButton').disable();
 			this.lookupReference('updateButton').disable();
 			this.lookupReference('finalButton').disable();
 			this.lookupReference('printButton').disable();
@@ -70,6 +71,7 @@ function(Core, UserProfile, I215ReportView, I215FormView) {
 			Core.EventManager.addListener("nics.incident.close", this.onCloseIncident.bind(this));
 			Core.EventManager.addListener("Load215Reports", this.onLoadReports.bind(this));
 			Core.EventManager.addListener("Print215Report", this.onReportReady.bind(this));
+			Core.EventManager.addListener("Cancel215Report", this.onCancel.bind(this));
 			Core.EventManager.fireEvent("nics.report.add", {title: "215", component: this.getView()});
 		},
 	
@@ -82,6 +84,7 @@ function(Core, UserProfile, I215ReportView, I215FormView) {
 			
 			var endpoint = Core.Config.getProperty(UserProfile.REST_ENDPOINT);
 			//Load reports
+			this.hasFinalForm = false;
 			this.mediator.sendRequestMessage(endpoint +
 					"/reports/" + this.incidentId + '/215', "Load215Reports");
 			
@@ -100,7 +103,7 @@ function(Core, UserProfile, I215ReportView, I215FormView) {
 			
 			Core.EventManager.removeListener(this.newTopic, this.newHandler);
 			Core.EventManager.removeListener("Print215Report", this.onReportReady);
-			
+			Core.EventManager.removeListener("Cancel215Report", this.onReportReady);
 			
 			
 			var I215ReportContainer = this.view.lookupReference('I215Report');
@@ -112,6 +115,7 @@ function(Core, UserProfile, I215ReportView, I215FormView) {
 			this.incidentId = null;
 			this.incidentName = null;
 			this.emailList = null;
+			this.hasFinalForm = false;
 			        
 		},
 		
@@ -143,6 +147,25 @@ function(Core, UserProfile, I215ReportView, I215FormView) {
 			this.displayCurrentRecord(false, 'FINAL');
 		},
 		
+		onView: function(){
+			this.displayCurrentRecord(true, 'select');	
+		},
+		onCancel: function(){
+			var combo  = this.lookupReference('I215List');
+			var currentFormId=combo.getValue();
+			if (currentFormId){
+				this.hasFinalForm = false;
+				this.displayCurrentRecord(true, 'select');
+			}
+			else{
+				var i215ReportContainer = this.view.lookupReference('I215Report');
+				i215ReportContainer.removeAll();
+				this.lookupReference('createButton').enable();
+				
+			}
+			
+				
+		},
 		onReportSelect: function(){
 			this.displayCurrentRecord(true, 'select');	
 		},
@@ -174,7 +197,6 @@ function(Core, UserProfile, I215ReportView, I215FormView) {
 			    formData.report.incidentId = record.data.incidentId;
 			    formData.report.incidentName = record.data.incidentName;
 			    formData.report.formTypeId = this.formTypeId;
-				formData.report.preptime = new Date();
 				//Convert request date, requestArrival date and starttime back to date objects so they will display properly on the forms
 				formData.report.startdate = new Date(formData.report.startdate);
 				formData.report.starttime = new Date(formData.report.starttime);
@@ -182,14 +204,30 @@ function(Core, UserProfile, I215ReportView, I215FormView) {
 				
 				if (displayOnly){
 					I215Form.controller.setFormReadOnly();
+					formData.report.preptime = new Date(formData.report.preptime);
+					
+					if (this.hasFinalForm){
+						this.lookupReference('updateButton').disable();
+						this.lookupReference('finalButton').disable();
+					}
+					else {
+						
+						this.lookupReference('updateButton').enable();
+						this.lookupReference('finalButton').enable();
+					}
 				}
 				else {
 					if(status == 'UPDATE' || status == 'FINAL' )
+						formData.report.preptime = new Date();
 					//this is an updated or finalized form, change report name to the current status
 					 formData.report.reportType =status;
-				
+					formData.report.preptime = new Date();
+					if(status == 'FINAL' )this.hasFinalForm = true;
+					
+					this.lookupReference('viewButton').disable();
 					this.lookupReference('finalButton').disable();
 					this.lookupReference('printButton').disable();
+					
 				}
 				I215Form.viewModel.set(formData.report);
 			}
@@ -201,9 +239,17 @@ function(Core, UserProfile, I215ReportView, I215FormView) {
 		
 		onReportAdded: function() {	
 			this.lookupReference('createButton').disable();
-			this.lookupReference('updateButton').enable();
-			this.lookupReference('finalButton').enable();
+			this.lookupReference('viewButton').enable();
 			this.lookupReference('printButton').enable();
+			
+			if (this.hasFinalForm){
+				this.lookupReference('updateButton').disable();
+				this.lookupReference('finalButton').disable();
+			}
+			else {
+				this.lookupReference('updateButton').enable();
+				this.lookupReference('finalButton').enable();
+			}
 			this.mediator.sendRequestMessage(Core.Config.getProperty(UserProfile.REST_ENDPOINT) +
 					"/reports/" + this.incidentId + '/215', "Load215Reports");
 			
@@ -211,7 +257,7 @@ function(Core, UserProfile, I215ReportView, I215FormView) {
 		
 		onLoadReports: function(e, response) {
 			var newReports = [];
-			var isFinal = false;
+			//var isFinal = false;
 			var combo = this.lookupReference('I215List');
 			if(response) {
 				if(response.reports && 
@@ -219,6 +265,7 @@ function(Core, UserProfile, I215ReportView, I215FormView) {
 					//Add each report
 					this.lookupReference('createButton').disable();
 					this.lookupReference('printButton').enable();
+					this.lookupReference('viewButton').enable();
 					
 					for(var i=0; i<response.reports.length; i++){
 						var report = response.reports[i];
@@ -226,7 +273,7 @@ function(Core, UserProfile, I215ReportView, I215FormView) {
 						var newReport  = this.buildReportData(report);
 						newReports.push(newReport);
 						if (newReport.status == 'FINAL') {
-							isFinal = true;	
+							this.hasFinalForm = true;	
 						}						
 					}
 					combo.getStore().removeAll();
@@ -234,7 +281,7 @@ function(Core, UserProfile, I215ReportView, I215FormView) {
 					var latestForm = combo.getStore().getAt(0).data.formId;
 					combo.setValue(latestForm);
 					//this.displayCurrentRecord(true, 'select');
-					if (isFinal){
+					if (this.hasFinalForm){
 						this.lookupReference('updateButton').disable();
 						this.lookupReference('finalButton').disable();
 					}
@@ -246,6 +293,7 @@ function(Core, UserProfile, I215ReportView, I215FormView) {
 				}
 				else {
 					this.lookupReference('createButton').enable();
+					this.lookupReference('viewButton').disable();
 					this.lookupReference('updateButton').disable();
 					this.lookupReference('finalButton').disable();
 					this.lookupReference('printButton').disable();

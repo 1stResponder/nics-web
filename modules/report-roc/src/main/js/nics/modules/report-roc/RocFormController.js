@@ -42,14 +42,14 @@ define(['iweb/CoreModule', "nics/modules/UserProfileModule", './RocReportView', 
 			
 				this.mediator = Core.Mediator.getInstance();
 				Core.EventManager.addListener("EmailROCReport", this.emailROC.bind(this));
-			
-				
+				this.callParent();
 				
 			},
 			clearForm: function () {
 				
 			 var username  = UserProfile.getFirstName() + " " + UserProfile.getLastName();	
 			 this.view.getForm().getFields().each (function (field) {
+				 if (field.fieldLabel != 'Incident Number*' && field.fieldLabel != 'Incident Name*' && field.fieldLabel != 'Report Type' && !(field.isHidden()) )
 					 field.setValue("");
 		    	});
 		    },
@@ -61,6 +61,11 @@ define(['iweb/CoreModule', "nics/modules/UserProfileModule", './RocReportView', 
 			    	this.view.lookupReference('submitButton').hide();
 			    	this.view.lookupReference('cancelButton').hide();
 			    	this.view.lookupReference('resetButton').hide();
+			    	
+			    	Ext.getCmp('printROC').enable();
+			    	Ext.getCmp('updateROC').enable();
+			    	Ext.getCmp('finalizeROC').enable(); 
+			    	Ext.getCmp('viewROC').enable(); 
 			    },
 			    enableForm: function () {
 			    	this.view.getForm().getFields().each (function (field) {
@@ -253,7 +258,7 @@ define(['iweb/CoreModule', "nics/modules/UserProfileModule", './RocReportView', 
     	},
 	    	
 	    	cancelForm: function(){
-	    		this.setFormReadOnly();
+	    		Core.EventManager.fireEvent("CancelROCReport");
 		    		
 	    	},
 	    	

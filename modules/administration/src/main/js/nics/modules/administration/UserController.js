@@ -43,7 +43,7 @@ define(['ext', 'iweb/CoreModule','nics/modules/UserProfileModule', 'nics/modules
 			Core.EventManager.addListener("nics.admin.org.clear", this.clearGrids.bind(this));
 			Core.EventManager.addListener("nics.admin.org.users.load", this.loadUsers.bind(this));
 			Core.EventManager.addListener(this.showUserProfileTopic, this.showUserProfile.bind(this));
-			Core.EventManager.addListener("dcds.user.profile.loaded", this.loadUserProfile.bind(this));
+			Core.EventManager.addListener("nics.user.profile.loaded", this.loadUserProfile.bind(this));
 			
 			this.getView().getFirstGrid().getView().on('drop', this.enableUsers, this);
 			this.getView().getSecondGrid().getView().on('drop', this.disableUsers, this);

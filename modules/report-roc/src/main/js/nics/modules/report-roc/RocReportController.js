@@ -42,10 +42,11 @@ function(Core, UserProfile, RocReportView, RocFormView) {
 		
 			this.mediator = Core.Mediator.getInstance();
 			this.lookupReference('createButton').enable();
+			this.lookupReference('viewButton').disable();
 			this.lookupReference('updateButton').disable();
 			this.lookupReference('finalButton').disable();
 			this.lookupReference('printButton').disable();
-		
+			
 			
 			var topic = "nics.report.reportType";
 			Core.EventManager.createCallbackHandler(
@@ -59,6 +60,7 @@ function(Core, UserProfile, RocReportView, RocFormView) {
 						
 						//Continue loading
 						this.bindEvents();
+						
 			});
 			this.mediator.sendRequestMessage(Core.Config.getProperty(UserProfile.REST_ENDPOINT) +
 					"/reports/types", topic);
@@ -70,6 +72,8 @@ function(Core, UserProfile, RocReportView, RocFormView) {
 			Core.EventManager.addListener("nics.incident.close", this.onCloseIncident.bind(this));
 			Core.EventManager.addListener("LoadROCReports", this.onLoadReports.bind(this));
 			Core.EventManager.addListener("PrintROCReport", this.onReportReady.bind(this));
+			Core.EventManager.addListener("CancelROCReport", this.onCancel.bind(this));
+			
 			Core.EventManager.fireEvent("nics.report.add", {title: "ROC", component: this.getView()});
 			Core.EventManager.addListener("LoadOrgAdminList", this.loadOrgAdminList.bind(this));
 			Core.EventManager.addListener("LoadOrgDistList", this.loadOrgDistList.bind(this));
@@ -84,6 +88,7 @@ function(Core, UserProfile, RocReportView, RocFormView) {
 			
 			var endpoint = Core.Config.getProperty(UserProfile.REST_ENDPOINT);
 			//Load reports
+			this.hasFinalForm = false;
 			this.mediator.sendRequestMessage(endpoint +
 					"/reports/" + this.incidentId + '/ROC', "LoadROCReports");
 			//Load list of admins, and distribution list for this incident
@@ -111,6 +116,7 @@ function(Core, UserProfile, RocReportView, RocFormView) {
 			Core.EventManager.removeListener("LoadOrgAdminList", this.loadOrgAdminList);
 			Core.EventManager.removeListener("LoadOrgDistList", this.loadOrgDistList);
 			Core.EventManager.removeListener("PrintROCReport", this.onReportReady);
+			Core.EventManager.removeListener("CancelROCReport", this.onReportReady);
 			
 			
 			
@@ -166,6 +172,25 @@ function(Core, UserProfile, RocReportView, RocFormView) {
 		onReportSelect: function(){
 			this.displayCurrentRecord(true, 'select');	
 		},
+		onViewROC: function(){
+			this.displayCurrentRecord(true, 'select');	
+		},
+		onCancel: function(){
+			var combo  = this.lookupReference('rocList');
+			var currentFormId=combo.getValue();
+			if (currentFormId){
+				this.hasFinalForm = false;
+				this.displayCurrentRecord(true, 'select');
+			}
+			else{
+				var rocReportContainer = this.view.lookupReference('rocReport');
+				rocReportContainer.removeAll();
+				this.lookupReference('createButton').enable();
+				
+			}
+			
+				
+		},
 		displayCurrentRecord: function(displayOnly, status){
 			var combo  = this.lookupReference('rocList');
 			var currentFormId=combo.getValue();
@@ -201,15 +226,25 @@ function(Core, UserProfile, RocReportView, RocFormView) {
 				
 				if (displayOnly){
 					rocForm.controller.setFormReadOnly();
+					if (this.hasFinalForm){
+						this.lookupReference('updateButton').disable();
+						this.lookupReference('finalButton').disable();
+					}
+					else {
+						this.lookupReference('updateButton').enable();
+						this.lookupReference('finalButton').enable();
+					}
 				}
 				else {
 					if(status == 'UPDATE' || status == 'FINAL' )
 					//this is an updated or finalized form, change report name to the current status
 					 formData.report.reportType =status;
+					if(status == 'FINAL' )this.hasFinalForm = true;
+					this.lookupReference('viewButton').disable();
 					this.lookupReference('finalButton').disable();
 					this.lookupReference('printButton').disable();
 				}
-				rocForm.viewModel.set(formData.report);
+				if (rocForm.viewModel) rocForm.viewModel.set(formData.report);
 			}
 			
 			
@@ -220,6 +255,7 @@ function(Core, UserProfile, RocReportView, RocFormView) {
 		onReportAdded: function() {	
 			this.lookupReference('createButton').disable();
 			this.lookupReference('updateButton').enable();
+			this.lookupReference('viewButton').enable();
 			this.lookupReference('finalButton').enable();
 			this.lookupReference('printButton').enable();
 			this.mediator.sendRequestMessage(Core.Config.getProperty(UserProfile.REST_ENDPOINT) +
@@ -237,6 +273,7 @@ function(Core, UserProfile, RocReportView, RocFormView) {
 					//Add each report
 					this.lookupReference('createButton').disable();
 					this.lookupReference('printButton').enable();
+					this.lookupReference('viewButton').enable();
 					
 					for(var i=0; i<response.reports.length; i++){
 						var report = response.reports[i];
@@ -244,15 +281,15 @@ function(Core, UserProfile, RocReportView, RocFormView) {
 						var newReport  = this.buildReportData(report);
 						newReports.push(newReport);
 						if (newReport.status == 'FINAL') {
-							isFinal = true;	
+							this.hasFinalForm = true;	
 						}						
 					}
 					combo.getStore().removeAll();
 					combo.getStore().loadRawData(newReports, true);
 					var latestForm = combo.getStore().getAt(0).data.formId;
 					combo.setValue(latestForm);
-					//this.displayCurrentRecord(true, 'select');
-					if (isFinal){
+					//this.displayCurrentRecord(true, 'select');	
+					if (this.hasFinalForm){
 						this.lookupReference('updateButton').disable();
 						this.lookupReference('finalButton').disable();
 					}
@@ -261,9 +298,11 @@ function(Core, UserProfile, RocReportView, RocFormView) {
 						this.lookupReference('finalButton').enable();
 					}
 					
+					
 				}
 				else {
 					this.lookupReference('createButton').enable();
+					this.lookupReference('viewButton').disable();
 					this.lookupReference('updateButton').disable();
 					this.lookupReference('finalButton').disable();
 					this.lookupReference('printButton').disable();

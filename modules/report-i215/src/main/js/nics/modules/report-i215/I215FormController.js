@@ -49,6 +49,8 @@ define(['iweb/CoreModule', "nics/modules/UserProfileModule", './I215ReportView',
 				
 				 var username  = UserProfile.getFirstName() + " " + UserProfile.getLastName();	
 				 this.view.getForm().getFields().each (function (field) {
+					 if (field.fieldLabel != 'Incident Number*' && field.fieldLabel != 'Incident Name*' && field.fieldLabel != 'Report Type' && !(field.isHidden()) )
+			    			
 						 field.setValue("");
 			    	});
 			    },
@@ -60,6 +62,11 @@ define(['iweb/CoreModule', "nics/modules/UserProfileModule", './I215ReportView',
 			    	this.view.lookupReference('submitButton').hide();
 			    	this.view.lookupReference('cancelButton').hide();
 			    	this.view.lookupReference('resetButton').hide();
+			    	
+			    	Ext.getCmp('print215').enable();
+			    	Ext.getCmp('update215').enable();
+			    	Ext.getCmp('finalize215').enable(); 
+			    	Ext.getCmp('view215').enable(); 
 			    },
 			    enableForm: function () {
 			    	this.view.getForm().getFields().each (function (field) {
@@ -68,6 +75,7 @@ define(['iweb/CoreModule', "nics/modules/UserProfileModule", './I215ReportView',
 			    	this.view.lookupReference('submitButton').show();
 			    	this.view.lookupReference('cancelButton').show();
 			    	this.view.lookupReference('resetButton').show();
+			    	
 			    },
 			    
 
@@ -131,7 +139,7 @@ define(['iweb/CoreModule', "nics/modules/UserProfileModule", './I215ReportView',
 	    	
 	    	
 	    	cancelForm: function(){
-	    		this.setFormReadOnly();
+	    		Core.EventManager.fireEvent("Cancel215Report");
 	    		
 	    	},
 		    buildReport: function(data, simple, reportType){			    	

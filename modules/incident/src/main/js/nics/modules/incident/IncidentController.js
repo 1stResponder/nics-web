@@ -271,16 +271,19 @@ define(['iweb/CoreModule',
 				// Don't set Country though, or it will show up in the Incident name automatically.
 				var countryCode = this.getView().getCodeFromCountry(UserProfile.getOrgCountry());
 				
-				if (typeof(countryCode)  === 'string' && countryCode == 'US' ){
+				if (typeof(countryCode)  === 'string' && (countryCode == 'US' || countryCode == 'ZZ') ){
+					//We know our country code is US or the an empty country code, show states
 					view.stateDropdown.setVisible(true);
 				    view.regionInput.setVisible(false);
 				    view.regionWarning.setVisible(false);
 				}
-				else {
+				else if (typeof(countryCode)  === 'string' && countryCode != 'US' ){
+					//We know our country, it's not the US
 					 view.stateDropdown.setVisible(false);
 				     view.regionInput.setVisible(true);
 				     view.regionWarning.setVisible(false);
 				}
+				
 				
 				view.createWindow.show();
 				

@@ -64,7 +64,8 @@ public class WFSProxyServlet extends HttpServlet implements Servlet {
 		
 		Map<String, String> headerOptions = new HashMap<>();
 		
-		if(url.startsWith(Config.getInstance().getConfiguration().getString("endpoint.geoserver"))){
+		if(url.startsWith(Config.getInstance().getConfiguration().getString("endpoint.geoserver")) ||
+				url.startsWith(Config.getInstance().getConfiguration().getString("endpoint.upload"))){
 			String token = (String) SessionHolder.getData(request.getSession().getId(), SessionHolder.TOKEN);
 			headerOptions.put("Cookie", String.format("AMAuthCookie=%1$s;iPlanetDirectoryPro=%1$s", token));
 		}
@@ -74,7 +75,7 @@ public class WFSProxyServlet extends HttpServlet implements Servlet {
         String result = (String) basicRequest.getRequest(url, headerOptions);
         
         if(url.indexOf(".kml") > -1){
-        	if(result.indexOf("<kml") == -1){
+        	if(result != null && result.indexOf("<kml") == -1){
         		result = this.appendKMLHeader(result);
         	}
         	//OL3 does not current support BalloonStyle

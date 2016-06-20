@@ -33,9 +33,16 @@ define(["ol",'ext', 'iweb/CoreModule','iweb/modules/MapModule'],
 	return Ext.define('modules.datalayer.avltrackingrenderer', {
 		
 		constructor: function(){
+			this.showLabels = false;
 			this.sources = Core.Config.getProperty("datalayer.avl.source");
 			MapModule.getClickListener().addRenderer(this);
-			MapModule.getMapStyle().addStyleFunction(this.getStyle.bind(this));
+			
+			this.getStyle = this.getStyle.bind(this);
+			MapModule.getMapStyle().addStyleFunction(this.getStyle);
+		},
+		
+		setLabelsVisible: function(visible) {
+			this.showLabels = visible;
 		},
 		
 		getStyle: function(feature, resolution, selected){
@@ -94,9 +101,19 @@ define(["ol",'ext', 'iweb/CoreModule','iweb/modules/MapModule'],
 			style.push(new ol.style.Style({
 				image: new ol.style.Icon({
 					src: graphic,
-					scale: .15
+					scale: 0.15
 				})
 			}));
+			
+			if (this.showLabels) {
+				var label = feature.get('name') || feature.get('VehicleName') || feature.get('Unit');
+				style.push(new ol.style.Style({
+					text: new ol.style.Text({
+						text: label,
+						textAlign: 'start'
+					})
+				}));
+			}
 			
 			if(selected){
 				style.push(new ol.style.Style({

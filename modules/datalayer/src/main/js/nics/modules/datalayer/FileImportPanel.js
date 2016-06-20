@@ -79,14 +79,14 @@
 						'value',
 						'text'
 					],
-					data: [[30, '0:30'],[60, '1:00'], [90, '1:30'], [180, '3:00'], [300, '5:00']]
+					data: [[0, '0'],[30, '0:30'],[60, '1:00'], [90, '1:30'], [180, '3:00'], [300, '5:00']]
 				}),
 				valueField: 'value',
 				displayField: 'text'
 			}],
 		    buttons: [{
 				    text: 'Upload',
-				    handler :  'submitForm'     
+				    handler :  'submitForm'
 			}]
 		}],
 		

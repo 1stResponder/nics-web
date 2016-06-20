@@ -78,17 +78,29 @@ define(['iweb/CoreModule','./FmagReportController', './FmagReportModel'],
 	            }, {
 	            	xtype: 'button',
 	            	text: 'New',
+	            	id:'createFmag',
 	            	tooltip: 'Create New Report',
 	                reference: 'createButton',
 	                listeners: {
 						click: 'onAddFmag'
 		            }
 	                
+	            },{
+	            	xtype: 'button',
+	            	text: 'View',
+	            	tooltip: 'View Report',
+	            	id:'viewFmag',
+	            	reference: 'viewButton',
+	                listeners: {
+						click: 'onViewFmag'
+		            }
+	                
 	            },
 				{
 					xtype: 'button',
 					text: 'Update',
-					tooltip: 'Update FMAG',
+					id:'updateFmag',
+	            	tooltip: 'Update FMAG',
 					reference: 'updateButton',
 					disabled: true,
 					listeners: {
@@ -101,7 +113,8 @@ define(['iweb/CoreModule','./FmagReportController', './FmagReportModel'],
 		           	text: 'Final', 
 		           	enableToggle: true,
 		            tooltip: 'Finalize Report',
-		            reference: 'finalButton',
+		            id:'finalizeFmag',
+	            	reference: 'finalButton',
 		            enableToggle:false,
 		            disabled: true,
 		            listeners: {
@@ -111,7 +124,8 @@ define(['iweb/CoreModule','./FmagReportController', './FmagReportModel'],
 				{
 					xtype: 'button',
 					text: 'Print',
-					tooltip: 'Print FMAG',
+					id:'printFmag',
+	            	tooltip: 'Print FMAG',
 					reference: 'printButton',
 					disabled: true,
 					listeners: {

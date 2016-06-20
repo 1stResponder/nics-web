@@ -117,9 +117,33 @@ define(['ol',
 				
 				if(message["dr-B-propertyLongitude"] &&
 						message["dr-B-propertyLatitude"]){
-					this.addFeature(message["dr-B-propertyLongitude"],
+					var feature = this.addFeature(message["dr-B-propertyLongitude"],
 							message["dr-B-propertyLatitude"], report.formId);
+
+					var fields = [];
+
+					for (var prop in this.reportView) {
+						// Only show the data with values
+						if (this.reportView[prop]) {
+							if(typeof this.reportView[prop] === 'object'){
+								fields.push({
+									xtype: 'displayfield',
+									fieldLabel: this.reportView[prop].label,
+									value: Ext.String.format(this.reportView[prop].html, message[prop])
+								});
+							}else{
+								fields.push({
+									xtype: 'displayfield',
+									fieldLabel: this.reportView[prop],
+									value: message[prop]
+								});
+							}
+						}
+					}
+					feature.set('fields', fields);
 				}
+
+
 				
 				return {
 					formId: report.formId,

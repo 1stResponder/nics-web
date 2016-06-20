@@ -35,10 +35,10 @@ requirejs.config({
 
 define(['iweb/CoreModule', './report/ReportViewer', './GeneralReportModule',
 
-		'./DamageReportModule', './RocReportModule','./FmagReportModule','./I215ReportModule', 'iweb/modules/MapModule' ],
+		'./DamageReportModule', './RocReportModule','./FmagReportModule','./I215ReportModule', 'iweb/modules/MapModule', './report/common/ReportFeatureRenderer' ],
 
 function(Core, ReportViewer, GeneralReportModule, DamageReportModule,
-		RocReportModule, FmagReportModule, I215ReportModule,  MapModule) {
+		RocReportModule, FmagReportModule, I215ReportModule,  MapModule, ReportFeatureRenderer) {
 
 
 	var ReportModule = function() {};
@@ -55,6 +55,9 @@ function(Core, ReportViewer, GeneralReportModule, DamageReportModule,
 
 		reportViewer.setDisabled(true); // Enables when user joins an incident
 		Core.View.addToSidePanel(reportViewer);
+
+		var clickListener = MapModule.getClickListener();
+		clickListener.addRenderer(new ReportFeatureRenderer());
 	};
 
 	return new ReportModule();

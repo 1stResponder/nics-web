@@ -43,6 +43,7 @@ define(['iweb/CoreModule','./RocReportController', './RocReportModel'],
         
         listeners: {
         	selectionchange: 'onSelectionChange'
+        	
         
         },
 	    reference: 'rocPanel',
@@ -58,6 +59,7 @@ define(['iweb/CoreModule','./RocReportController', './RocReportModel'],
 	            items: [{
 	            	xtype: 'combobox',
 	            	 reference:'rocList',
+	            	 id:'rocListSelect',
 	            	 displayField: 'name',
 	            	 valueField:'formId',
 	            	 forceSelection:true,
@@ -68,7 +70,8 @@ define(['iweb/CoreModule','./RocReportController', './RocReportModel'],
 	            	 trackRemoved:false,
 	            	 store: {fields:['formId', 'name'], sorters:[{property:'formId', direction:'DESC'}]},
 	                listeners: {
-						select: 'onReportSelect'
+						select: 'onReportSelect',
+						
 		            },
 		           
 	                
@@ -77,16 +80,28 @@ define(['iweb/CoreModule','./RocReportController', './RocReportModel'],
 	            }, {
 	            	xtype: 'button',
 	            	text: 'New',
-	            	 tooltip: 'Create New Report',
+	            	id:'createROC',
+	            	tooltip: 'Create New Report',
 	                reference: 'createButton',
 	                listeners: {
 						click: 'onAddROC'
+		            }
+	                
+	            },{
+	            	xtype: 'button',
+	            	text: 'View',
+	            	tooltip: 'View Report',
+	            	id:'viewROC',
+	            	reference: 'viewButton',
+	                listeners: {
+						click: 'onViewROC'
 		            }
 	                
 	            },
 				{
 					xtype: 'button',
 					text: 'Update',
+					id:'updateROC',
 					tooltip: 'Update ROC',
 					reference: 'updateButton',
 					disabled: true,
@@ -95,8 +110,10 @@ define(['iweb/CoreModule','./RocReportController', './RocReportModel'],
 		            }
 					
 				},
+				
 	            {
 		           	xtype: 'button',
+		           	id:'finalizeROC',
 		           	text: 'Final', 
 		           	enableToggle: true,
 		            tooltip: 'Finalize Report',
@@ -110,6 +127,7 @@ define(['iweb/CoreModule','./RocReportController', './RocReportModel'],
 				{
 					xtype: 'button',
 					text: 'Print',
+					id: 'printROC',
 					tooltip: 'Print ROC',
 					reference: 'printButton',
 					disabled: true,

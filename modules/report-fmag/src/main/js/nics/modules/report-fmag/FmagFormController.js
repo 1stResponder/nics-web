@@ -125,7 +125,10 @@ define(['iweb/CoreModule', "nics/modules/UserProfileModule", './FmagReportView',
 				
 				 var username  = UserProfile.getFirstName() + " " + UserProfile.getLastName();	
 				 this.view.getForm().getFields().each (function (field) {
+					 if (field.fieldLabel != 'Inc. Number*' && field.fieldLabel != 'Fire Incident Name*' && field.fieldLabel != 'Report Type' && !(field.isHidden()) )
+					    	
 						 field.setValue("");
+				 
 			     });
 			    	
 			},
@@ -137,12 +140,17 @@ define(['iweb/CoreModule', "nics/modules/UserProfileModule", './FmagReportView',
 		    	this.view.lookupReference('submitButton').hide();
 		    	this.view.lookupReference('resetButton').hide();
 		    	this.view.lookupReference('cancelButton').hide();
+		    	Ext.getCmp('printFmag').enable();
+		    	Ext.getCmp('updateFmag').enable();
+		    	Ext.getCmp('finalizeFmag').enable(); 
+		    	Ext.getCmp('viewFmag').enable(); 
 		    },
 		    enableForm: function () {
 		    	this.view.getForm().getFields().each (function (field) {
 		    		field.setReadOnly(false);
 		    	});
 		    	this.view.lookupReference('submitButton').show();
+		    	this.view.lookupReference('cancelButton').show();
 		    	this.view.lookupReference('resetButton').show();
 		    },
 			    
@@ -203,7 +211,7 @@ define(['iweb/CoreModule', "nics/modules/UserProfileModule", './FmagReportView',
 	    	},
 	    	
 	    	cancelForm: function(){
-	    		this.setFormReadOnly();
+	    		Core.EventManager.fireEvent("CancelFmagReport");
 	    	},
 	    	
 	    	formatDate: function(date)

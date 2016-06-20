@@ -61,7 +61,8 @@ function(Core, FmagFormController, FmagFormModel ) {
 		         defaults: {
 		             anchor: '100%'
 		         },
-		    	 items:[  
+		    	 items:[ 
+		    	        {xtype: 'hiddenfield',bind:'{formTypeId}' },
 	    	 	        {bind:'{reportType}',fieldLabel: 'Report Type', xtype:'displayfield'},
 	    	 	        {bind:'{agencyRequest}',vtype:'simplealphanum',fieldLabel: 'Agency Making Request*',allowBlank:false,cls:'fmag-required'},
 	    	 	        {bind:'{requestDate}',xtype:'datefield', fieldLabel: 'Date/Time of Request:*',format: 'Y-m-d H:i:s',allowBlank:false,cls:'fmag-required'},
@@ -194,9 +195,9 @@ function(Core, FmagFormController, FmagFormModel ) {
 					        },
 					    	items:[  
 					    	 	
-					    	 	 {bind:'{current}',vtype:'extendedalphanum',fieldLabel: 'Current', xtype:'textarea', allowBlank:false,cls:'fmag-required'},
-					    	 	 {bind:'{predicted}',vtype:'extendedalphanum',fieldLabel: 'Predicted', xtype:'textarea', allowBlank:false,cls:'fmag-required'},
-					    	 	 {bind:'{tempRelHum}',vtype:'extendednum',fieldLabel: 'Temp./Relative Humidity', allowBlank:false,cls:'fmag-required'}
+					    	 	 {bind:'{current}',vtype:'extendedalphanum',fieldLabel: 'Current*', xtype:'textarea', allowBlank:false,cls:'fmag-required'},
+					    	 	 {bind:'{predicted}',vtype:'extendedalphanum',fieldLabel: 'Predicted*', xtype:'textarea', allowBlank:false,cls:'fmag-required'},
+					    	 	 {bind:'{tempRelHum}',vtype:'extendednum',fieldLabel: 'Temp./Relative Humidity*', allowBlank:false,cls:'fmag-required'}
 					    	 	 
 		    	 	        ]
 		    	 	    },
@@ -224,7 +225,7 @@ function(Core, FmagFormController, FmagFormModel ) {
 							    	 	 {bind:'{lra}',vtype:'extendednum',fieldLabel: 'LRA*', allowBlank:false,cls:'fmag-required'},
 							    	 	 {bind:'{sra}',vtype:'extendednum',fieldLabel: 'SRA*', allowBlank:false,cls:'fmag-required'},
 							    	 	 {bind:'{fra}',vtype:'extendednum',fieldLabel: 'FRA*', allowBlank:false,cls:'fmag-required'},
-							    	 	 {bind:'{tribal}',vtype:'extendednum',fieldLabel: 'Tribal', allowBlank:false,cls:'fmag-required'}
+							    	 	 {bind:'{tribal}',vtype:'extendednum',fieldLabel: 'Tribal*', allowBlank:false,cls:'fmag-required'}
 							    	 	 
 				    	 	        ]
 				    	 	    }
@@ -235,7 +236,7 @@ function(Core, FmagFormController, FmagFormModel ) {
 			    	 	 {bind:'{incidentMap}',vtype:'simplealphanum',fieldLabel: 'Incident Map*', allowBlank:false,cls:'fmag-required'},
 			    	 	 {bind:'{weather}',vtype:'simplealphanum',fieldLabel: 'Weather*', allowBlank:false,cls:'fmag-required'},
 			    	 	 {bind:'{otherDocs}',vtype:'simplealphanum',fieldLabel: 'Other Docs*', allowBlank:false,cls:'fmag-required'},
-			    	 	 {xtype:'label', text: 'Provide closest RAWS print out data, and/or the currentfire weather forecast'}
+			    	 	 {xtype:'label', text: 'Provide closest RAWS print out data, and/or the current fire weather forecast'}
 		    	 	 
 	 	        ]
 	 	    },

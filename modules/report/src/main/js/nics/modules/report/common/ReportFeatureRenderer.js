@@ -27,46 +27,26 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-/**
- * This module is
- */
-define(["iweb/CoreModule", './Window', './TrackingWindowController', 'nics/modules/UserProfileModule'],
-    function(Core, Window, TrackingWindowController, UserProfile) {
-        return Ext.define('modules.datalayer.TrackingWindow', {
-            extend: 'modules.datalayer.Window',
+define(['ol', 'ext', 'iweb/CoreModule', 'nics/modules/UserProfileModule'],
+    function(ol, Ext, Core, UserProfile) {
 
-            controller: 'datalayer.trackingwindowcontroller',
+        return Ext.define('features.ReportFeatureRenderer', {
 
-            config: {
-                closeAction: 'hide',
-                resizable: true,
-                closable: true,
-                shadow: false,
-                layout: 'fit',
-                autoScroll: true,
-                button: null,
-                minButtonWidth: 0,
-                buttonAlign: 'center',
-                width: 275,
-                height: 475,
-                bodyCls: 'data-tree-body'
+            constructor: function() {
+                Core.EventManager.addListener('dcds.collabroom.activate', this.onActivateRoom.bind(this));
             },
 
-            buttons: [{
-                xtype: 'checkbox',
-                boxLabel: 'PLI labels',
-                id: 'pliLabelsChk',
-                handler: 'onPliLabelsChange'
-            },{
-                text: 'Locate PLI',
-                id: 'locatePliButton',
-                handler: 'onLocatePliClick'
+            onActivateRoom: function(evt, collabRoomId, readOnly) {
+                this.readOnly = readOnly;
+            },
+
+            render: function(container, feature) {
+                var fields = feature.get('fields');
+                if (fields)
+                {
+                    container.add(fields);
+                }
             }
-            //    ,{
-            //    text: 'PLI Labels',
-            //    id: 'pliLabelsButton',
-            //    handler: 'onPliLabelsClick'
-            //}
-            ]
+
         });
     });

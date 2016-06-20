@@ -50,8 +50,17 @@ define(['ext', 'iweb/CoreModule', './WindowController', './TrackingLocatorWindow
                 this.locatorWindow.show();
             },
 
-            onPliLabelsClick: function() {
-                // TODO add labels next to features
+            onPliLabelsChange: function(checkbox, checked) {
+                this.avlRenderer.setLabelsVisible(checked);
+
+                //force a redraw on all checked layers
+                var store = this.getView().getTree().getStore();
+                store.queryRecords("checked", true).forEach(function(item){
+                  var layer = item.data.layer;
+                  if (layer) {
+                    layer.getSource().changed();
+                  }
+                });
             },
             
             onDatalayerCheck: function( node, checked, eOpts ){

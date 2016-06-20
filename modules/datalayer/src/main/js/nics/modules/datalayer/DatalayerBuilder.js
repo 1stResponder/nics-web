@@ -28,14 +28,22 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-define(['iweb/CoreModule', 'ol', './TokenManager'], function(Core, ol, TokenManager){
+define(['iweb/CoreModule', 'ol', './TokenManager', './ArcGISFeatureRequestManager'], 
+		function(Core, ol, TokenManager, ArcGISFeatureRequest){
+	
+	// matches href tags with relative urls
+	var relativeHrefRegex = /<href>(?!http|#)(.*)<\/href>/gi;
+	
+	// matches href tags with relative urls
+	var relativeHrefRegex = /<href>(?!http|#)(.*)<\/href>/gi;
 	
 	return Ext.define('modules.datalayer.builder', {
 		
 		constructor: function() {
 			this.mediator = Core.Mediator.getInstance();
+			ArcGISFeatureRequest.init();
 		},
-		
+				
 		buildLayer: function(type, config){
 			if(type == "wms"){
 				return this.buildWMSLayer(config.url, config.layername, config);
@@ -160,8 +168,10 @@ define(['iweb/CoreModule', 'ol', './TokenManager'], function(Core, ol, TokenMana
 		},
 		
 		buildKMLLayer: function(url, layername, config){
+			var baseUrl = url;
 			if(layername){
 				url = url + layername;
+				baseUrl = url.substring(0, url.lastIndexOf("/") + 1);
 			}
 			
 			var format = new ol.format.KML({
@@ -175,11 +185,15 @@ define(['iweb/CoreModule', 'ol', './TokenManager'], function(Core, ol, TokenMana
 			  projection: 'EPSG:3857',
 			  
 			  loader: function(extent, resolution, projection) {
+				  
 				    var loadFeatures = function(source, status){
-							//remove all features when we get results, to avoid flash on refresh
-							this.getFeatures().forEach(this.removeFeature, this);
+				    	//remove all features when we get results, to avoid flash on refresh
+						this.getFeatures().forEach(this.removeFeature, this);
 							
 				    	if (source) {
+				    		//ol kml format uses kml document baseURI for relative URLs. since we are
+				    		//using the proxy and preprocesing the text, baseURI is not properly set.
+				    		source = source.replace(relativeHrefRegex, '<href>'+ baseUrl +'$1</href>');
 				    		
 				    		var networkLinks = this.getFormat().readNetworkLinks(source);
 				    		
@@ -190,6 +204,18 @@ define(['iweb/CoreModule', 'ol', './TokenManager'], function(Core, ol, TokenMana
 								      dataType: 'text',
 								      success: function(source, status){
 								    	  if(source){
+								    		  source = source.replace(relativeHrefRegex, '<href>'+ baseUrl +'$1</href>');
+
+								    		  if(source.indexOf("<kml") == -1){
+								    			   var header = "<kml xmlns=\"http://www.opengis.net/kml/2.2\" ";
+													header += "xmlns:gx=\"http://www.google.com/kml/ext/2.2\" ";
+													header += "xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" ";
+													header += "xsi:schemaLocation=\"http://www.opengis.net/kml/2.2 http://schemas.opengis.net/kml/2.2.0/ogckml22.xsd http://www.google.com/kml/ext/2.2 http://code.google.com/apis/kml/schema/kml22gx.xsd\">";
+													header += source;
+													header += "</kml>";
+													
+													source = header;
+								    		   }
 								    		  	// Replace BalloonStyle tags
 												var start = source.indexOf('<BalloonStyle>');
 												
@@ -319,13 +345,17 @@ define(['iweb/CoreModule', 'ol', './TokenManager'], function(Core, ol, TokenMana
 		
 		buildArcGisLayer: function(url, layername, config) {
 			
-			return new ol.layer.Tile({
+			var layer = new ol.layer.Tile({
 				opacity: config.opacity || 1,
 				source: new ol.source.TileArcGISRest({
 					url: url,
 					params: {'LAYERS': 'show:' + layername }
 				})
 			});
+			ArcGISFeatureRequest.addLayer(layer);
+			
+			return layer;
+			
 		}
 	});
 });

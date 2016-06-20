@@ -121,8 +121,8 @@
         		var imtusar = document.getElementById('imtUsar');
         		for(var usar = usarImtOrgs.length -1; usar >= 0; usar--) {
         			var opt = document.createElement('option');
-        			opt.value = orgArray[usarImtOrgs[usar]];//usarImtOrgs[usar];
-        			opt.text = orgArray[usarImtOrgs[usar]];
+        			opt.value = usarImtOrgs[usar]; // ID
+        			opt.text = orgArray[usarImtOrgs[usar]]; // Name
         			usarImtOptions.push(opt);
         			imtusar.add(opt);
         		}
@@ -130,8 +130,8 @@
         		var imtfederal = document.getElementById('imtFederal');
         		for(var fed = federalImtOrgs.length - 1; fed >= 0; fed--) {
         			var opt = document.createElement('option');
-        			opt.value = orgArray[federalImtOrgs[fed]];//federalImtOrgs[fed];
-        			opt.text = orgArray[federalImtOrgs[fed]];
+        			opt.value = federalImtOrgs[fed]; // ID
+        			opt.text = orgArray[federalImtOrgs[fed]]; // Name
         			federalImtOptions.push(opt);
         			imtfederal.add(opt);
         		}
@@ -139,8 +139,8 @@
         		var imtcdf = document.getElementById('imtCDF');        		
         		for(var cdf = cdfImtOrgs.length - 1; cdf >= 0; cdf--) {
         			var opt = document.createElement('option');
-        			opt.value = orgArray[cdfImtOrgs[cdf]];//cdfImtOrgs[cdf];
-        			opt.text = orgArray[cdfImtOrgs[cdf]];
+        			opt.value = cdfImtOrgs[cdf]; // ID
+        			opt.text = orgArray[cdfImtOrgs[cdf]]; // Name
         			cdfImtOptions.push(opt);
         			imtcdf.add(opt);
         		}
@@ -148,8 +148,8 @@
         		var imtotherlocal = document.getElementById('imtOtherLocal');
         		for(var other = otherLocalImtOrgs.length - 1; other >= 0; other--) {
         			var opt = document.createElement('option');
-        			opt.value = orgArray[otherLocalImtOrgs[other]];//otherLocalImtOrgs[other];
-        			opt.text = orgArray[otherLocalImtOrgs[other]];
+        			opt.value = otherLocalImtOrgs[other]; // ID
+        			opt.text = orgArray[otherLocalImtOrgs[other]]; // Name
         			otherLocalImtOptions.push(opt);
         			imtotherlocal.add(opt);
         		}
@@ -247,12 +247,29 @@
 		    			// orgElement: value: orgid
 		    			for( var j = 0; j < orgElement.length; j++) {
 		    				if(orgOrgTypeElement.options[i].text == orgElement.options[j].value +"") {
-		    					//console.log("Org Matches OrgType " + orgElement.options[j].value);
 		    					matchingOrgs += orgElement.options[j].text + " ";		    					
-		    					var nopt = document.createElement('option');
-		    					nopt.value = orgElement.options[j].text; // value; // Back end expects the value to the be the name
+		    					var nopt = document.createElement('option');		    					
+		    					nopt.value = orgElement.options[j].value;
 		    					nopt.text = orgElement.options[j].text;
-		    					optionsArr.push(nopt);
+		    					if(optionsArr.length > 0){
+		    						
+		    						for(var k = 0; k < optionsArr.length; k++){
+		    							if(optionsArr[k].text < nopt.text){
+		    							
+		    								if(k == optionsArr.length-1){
+		    									optionsArr.push(nopt);
+		    									break;
+		    								}
+		    								
+		    							}
+		    							else {
+		    								optionsArr.splice(k,0,nopt);
+		    								break;
+		    							}
+		    						}
+		    					}else{
+		    						optionsArr.push(nopt);
+		    					}
 		    				}
 		    			}		    			
 		    		}
@@ -292,7 +309,7 @@
 		    	var confirmPasswordValue = document.getElementById('confirmPassword').value;
 		    	var phoneMobile = document.getElementById('phoneMobile').value;
 		    	var phoneOffice = document.getElementById('phoneOffice').value;
-		    	var phoneOther = document.getElementById('phoneOther').value;		    	
+		    	var phoneOther = document.getElementById('phoneOther').value;
 		    	
 		    	if(!affValue || affValue === "" || affValue === "0") {
 		    		reasons += "- Must choose Affiliation<br/>";
@@ -619,9 +636,11 @@
                     </div>
                     
                     <br>
-                    
-                    <!--   <div class="g-recaptcha" data-sitekey="${dataSiteKey}"></div>-->
-                     
+
+					<c:if test="${requestScope.useCaptcha}">
+                    	<div class="g-recaptcha" data-sitekey="${requestScope.dataSiteKey}"></div>
+					</c:if>
+
                      </br>
                     <button type="submit" tabindex="21">Register</button>
                     

@@ -118,7 +118,7 @@ public class LoginServlet extends HttpServlet implements Servlet {
 		cookieDomain = config.getString("private.cookie.domain");
 		helpSite = config.getString("help.site.url","https://public.nics.ll.mit.edu/");
 		siteLogo = config.getString("main.site.logo","login/images/nics-logo.jpg");
-		siteLabel = config.getString("main.site.label","Welcome to NICS 6");
+		siteLabel = config.getString("main.site.title","Welcome to NICS 6");
 		
 		try {
 			warVersion = getWarVersion();

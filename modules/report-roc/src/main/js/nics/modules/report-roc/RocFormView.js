@@ -38,6 +38,7 @@ function(Core, RocFormController, RocFormModel ) {
 	 	 viewModel: {
 		       type: 'roc'
 		    },
+		   
 	 	buttonAlign: 'center',
 	 	autoHeight: true,
 	 	defaults: { padding:'5'},

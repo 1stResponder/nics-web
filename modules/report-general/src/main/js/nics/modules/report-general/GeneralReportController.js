@@ -108,7 +108,29 @@ define(['ol',
 				var message = JSON.parse(report.message);
 				
 				if(message.lon && message.lat){
-					this.addFeature(message.lon, message.lat, report.formId);
+					var feature = this.addFeature(message.lon, message.lat, report.formId);
+					var fields = [];
+
+					// Feature details
+					for (var prop in this.reportView) {
+						// Only show the data with values
+						if (this.reportView[prop]) {
+							if(typeof this.reportView[prop] === 'object'){
+								fields.push({
+									xtype: 'displayfield',
+									fieldLabel: this.reportView[prop].label,
+									value: Ext.String.format(this.reportView[prop].html, message[prop])
+								});
+							}else{
+								fields.push({
+									xtype: 'displayfield',
+									fieldLabel: this.reportView[prop],
+									value: message[prop]
+								});
+							}
+						}
+					}
+					feature.set('fields', fields);
 				}
 				
 				return {

@@ -65,6 +65,7 @@ import org.apache.log4j.Logger;
 
 import com.iplanet.services.cdm.DefaultClientTypesManager;
 import com.sun.identity.liberty.ws.authnsvc.jaxb.StatusType;
+import com.sun.identity.shared.StringUtils;
 
 import edu.mit.ll.iweb.message.ResponseMessage;
 import edu.mit.ll.iweb.session.SessionHolder;
@@ -72,6 +73,8 @@ import edu.mit.ll.iweb.websocket.Config;
 import edu.mit.ll.nics.sso.util.SSOUtil;
 import edu.mit.ll.nics.util.CookieTokenUtil;
 
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.owasp.esapi.ESAPI;
 
 
@@ -105,7 +108,7 @@ public class RegisterServlet extends HttpServlet implements Servlet {
 	public static final String IMT_FEDERAL = "imtFederal";
 	public static final String IMT_USAR = "imtUsar";
 	public static final String IMT_OTHER_LOCAL = "imtOtherLocal";
-	public static final String NONE = "NONE";
+	public static final String NONE = "0";
 	
 	public static final String FIRST = "first";
 	public static final String LAST = "last";	
@@ -134,6 +137,7 @@ public class RegisterServlet extends HttpServlet implements Servlet {
 	/** Default SerialVersionUID */
 	private static final long serialVersionUID = 1L;
 
+	private static final String USE_CAPTCHA = "private.useCaptcha";
 	private static final String GOOGLE_RECAPTCHA_KEY = "private.google.recaptcha.key";
 	private static final String GOOGLE_RECAPTCHA_SECRET = "private.google.recaptcha.secret";
 	
@@ -236,7 +240,9 @@ public class RegisterServlet extends HttpServlet implements Servlet {
 					// Encode the password requirements for proper display on Registration form
 					safePasswordRequirements = ESAPI.encoder().canonicalize(safePasswordRequirements);
 					req.setAttribute("passwordRequirements", safePasswordRequirements);
-					
+
+					req.setAttribute("useCaptcha", Config.getInstance().getConfiguration()
+							.getBoolean(USE_CAPTCHA, false));
 					
 					req.getRequestDispatcher(REGISTER_JSP_PATH).forward(req, resp);
 				} else {
@@ -258,7 +264,7 @@ public class RegisterServlet extends HttpServlet implements Servlet {
 		}
 	}
 	
-	private boolean validateCaptcha(String captcha){
+	private boolean validateCaptcha(String captcha) throws IOException {
 		String url = String.format(
 				"https://www.google.com/recaptcha/api/siteverify?secret=%s&response=%s", 
 				Config.getInstance().getConfiguration().getString(GOOGLE_RECAPTCHA_SECRET), captcha);
@@ -276,19 +282,45 @@ public class RegisterServlet extends HttpServlet implements Servlet {
     	System.out.println("CAPTCHA RESPONSE " + message);
     	
     	response.close();
-    	
-    	return true;
+
+		try
+		{
+			JSONObject messageJson = new JSONObject(message);
+			// Return true if success boolean exists and is true
+			// Otherwise return false
+			return messageJson.optBoolean("success");
+		} catch (JSONException ex)
+		{
+			ex.printStackTrace();
+		}
+
+    	return false;
 	}
 	
 	@Override
 	protected void doPost(HttpServletRequest req, HttpServletResponse resp)
 			throws ServletException, IOException {
-		
-		//Disabled for now
-		/*String captcha = req.getParameter("g-recaptcha-response");
-		if(captcha != null){
-			this.validateCaptcha(captcha);
-		}*/
+
+		boolean useCaptcha = Config.getInstance().getConfiguration()
+				.getBoolean(USE_CAPTCHA, false);
+
+		if (useCaptcha)
+		{
+			boolean captchaSuccess = false;
+			String captcha = req.getParameter("g-recaptcha-response");
+			if (captcha != null)
+			{
+				captchaSuccess = this.validateCaptcha(captcha);
+			}
+			if (!captchaSuccess)
+			{
+				req.setAttribute(ERROR_MESSAGE_KEY, REGISTER_ERROR_INVALID_MESSAGE);
+				req.setAttribute(ERROR_DESCRIPTION_KEY, REGISTER_ERROR_INVALID_DESCRIPTION);
+				req.setAttribute("REASON", "Captcha verification failed.");
+				req.getRequestDispatcher(FAILED_JSP_PATH).forward(req, resp);
+				return;
+			}
+		}
 		
 		String affiliation = req.getParameter(AFFILIATION);
 		String org = req.getParameter(ORGANIZATION);
@@ -297,7 +329,7 @@ public class RegisterServlet extends HttpServlet implements Servlet {
 		String imtOtherLocal = req.getParameter(IMT_OTHER_LOCAL);
 		String imtUsar = req.getParameter(IMT_USAR);
 		List<String> imtTeamsList = new ArrayList<String>();
-		
+						
 		if(imtCdf != null && !imtCdf.equals(NONE)) {
 			imtTeamsList.add(imtCdf);
 		}

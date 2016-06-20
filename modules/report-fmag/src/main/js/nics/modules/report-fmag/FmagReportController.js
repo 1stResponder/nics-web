@@ -41,6 +41,11 @@ function(Core, UserProfile, FmagReportView, FmagFormView) {
 		init : function(args) {
 			
 			this.mediator = Core.Mediator.getInstance();
+			this.lookupReference('createButton').enable();
+			this.lookupReference('viewButton').disable();
+			this.lookupReference('updateButton').disable();
+			this.lookupReference('finalButton').disable();
+			this.lookupReference('printButton').disable();
 			
 			var topic = "nics.report.reportType";
 			
@@ -68,6 +73,7 @@ function(Core, UserProfile, FmagReportView, FmagFormView) {
 			Core.EventManager.addListener("nics.incident.close", this.onCloseIncident.bind(this));
 			Core.EventManager.addListener("LoadFmagReports", this.onLoadReports.bind(this));
 			Core.EventManager.addListener("PrintFmagReport", this.onReportReady.bind(this));
+			Core.EventManager.addListener("CancelFmagReport", this.onCancel.bind(this));
 			Core.EventManager.fireEvent("nics.report.add", {title: "FMAG - ABC", component: this.getView()});
 		},
 	
@@ -80,6 +86,7 @@ function(Core, UserProfile, FmagReportView, FmagFormView) {
 			
 			var endpoint = Core.Config.getProperty(UserProfile.REST_ENDPOINT);
 			//Load reports
+			this.hasFinalForm = false;
 			this.mediator.sendRequestMessage(endpoint +
 					"/reports/" + this.incidentId + '/ABC', "LoadFmagReports");
 			
@@ -97,6 +104,7 @@ function(Core, UserProfile, FmagReportView, FmagFormView) {
 			
 			Core.EventManager.removeListener(this.newTopic, this.newHandler);
 			Core.EventManager.removeListener("PrintFmagReport", this.onReportReady);
+			Core.EventManager.removeListener("CancelFmagReport", this.onReportReady);
 			
 			var fmagReportContainer = this.view.lookupReference('fmagReport');
 			fmagReportContainer.removeAll();
@@ -108,6 +116,7 @@ function(Core, UserProfile, FmagReportView, FmagFormView) {
 			
 			this.incidentId = null;
 			this.incidentName = null;
+			this.hasFinalForm = false;
         
 		},
 		
@@ -149,6 +158,24 @@ function(Core, UserProfile, FmagReportView, FmagFormView) {
 		onReportSelect: function(){
 			this.displayCurrentRecord(true, 'select');	
 		},
+		onViewFmag: function(){
+			this.displayCurrentRecord(true, 'select');	
+		},
+		onCancel: function(){
+			var combo  = this.lookupReference('fmagList');
+			var currentFormId=combo.getValue();
+			if (currentFormId){
+				this.hasFinalForm = false;
+				this.displayCurrentRecord(true, 'select');
+			}
+			else{
+				var fmagReportContainer = this.view.lookupReference('fmagReport');
+				fmagReportContainer.removeAll();
+				this.lookupReference('createButton').enable();
+			}
+			
+				
+		},
 		displayCurrentRecord: function(displayOnly, status){
 			var combo  = this.lookupReference('fmagList');
 			var currentFormId=combo.getValue();
@@ -181,12 +208,23 @@ function(Core, UserProfile, FmagReportView, FmagFormView) {
 				
 				if (displayOnly){
 					fmagForm.controller.setFormReadOnly();
+					if (this.hasFinalForm){
+						this.lookupReference('updateButton').disable();
+						this.lookupReference('finalButton').disable();
+					}
+					else {
+						formData.report.preptime = new Date();
+						this.lookupReference('updateButton').enable();
+						this.lookupReference('finalButton').enable();
+					}
 				}
 				else {
 					if(status == 'UPDATE' || status == 'FINAL' )
 					//this is an updated or finalized form, change report name to the current status
 					 formData.report.reportType = status;
-                     this.lookupReference('finalButton').disable();
+					if(status == 'FINAL' )this.hasFinalForm = true;
+					this.lookupReference('viewButton').disable();
+					this.lookupReference('finalButton').disable();
                      this.lookupReference('printButton').disable();
 					 
 				}
@@ -198,9 +236,16 @@ function(Core, UserProfile, FmagReportView, FmagFormView) {
 		
 		onReportAdded: function() {	
 			this.lookupReference('createButton').disable();
-			this.lookupReference('updateButton').enable();
-			this.lookupReference('finalButton').enable();
+			this.lookupReference('viewButton').enable();
 			this.lookupReference('printButton').enable();
+			if (this.hasFinalForm){
+				this.lookupReference('updateButton').disable();
+				this.lookupReference('finalButton').disable();
+			}
+			else {
+				this.lookupReference('updateButton').enable();
+				this.lookupReference('finalButton').enable();
+			}
 			this.mediator.sendRequestMessage(Core.Config.getProperty(UserProfile.REST_ENDPOINT) +
 					"/reports/" + this.incidentId + '/ABC', "LoadFmagReports");
 			
@@ -216,6 +261,7 @@ function(Core, UserProfile, FmagReportView, FmagFormView) {
 					//Add each report
 					this.lookupReference('createButton').disable();
 					this.lookupReference('printButton').enable();
+					this.lookupReference('viewButton').enable();
 					
 					for(var i=0; i<response.reports.length; i++){
 						var report = response.reports[i];
@@ -223,7 +269,7 @@ function(Core, UserProfile, FmagReportView, FmagFormView) {
 						var newReport  = this.buildReportData(report);
 						newReports.push(newReport);
 						if (newReport.status == 'FINAL') {
-							isFinal = true;	
+							this.hasFinalForm = true;	
 						}						
 					}
 					combo.getStore().removeAll();
@@ -231,7 +277,7 @@ function(Core, UserProfile, FmagReportView, FmagFormView) {
 					var latestForm = combo.getStore().getAt(0).data.formId;
 					combo.setValue(latestForm);
 					//this.displayCurrentRecord(true, 'select');
-					if (isFinal){
+					if (this.hasFinalForm){
 						this.lookupReference('updateButton').disable();
 						this.lookupReference('finalButton').disable();
 					}
@@ -243,6 +289,7 @@ function(Core, UserProfile, FmagReportView, FmagFormView) {
 				}
 				else {
 					this.lookupReference('createButton').enable();
+					this.lookupReference('viewButton').disable();
 					this.lookupReference('updateButton').disable();
 					this.lookupReference('finalButton').disable();
 					this.lookupReference('printButton').disable();
