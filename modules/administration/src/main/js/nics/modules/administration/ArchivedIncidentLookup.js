@@ -27,7 +27,7 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-define(['./DDGridView', './ArchivedIncidentLookupController', './ArchiveModel', 'nics/modules/report/common/FormVTypes'],
+define(['./DDGridView', './ArchivedIncidentLookupController', './ArchiveModel',  'iweb/core/FormVTypes'],
 		function(DDGridView, ArchivedIncidentLookupController, ArchiveModel) {
 	
 	return Ext.define('modules.administration.ArchivedIncidentLookup', {

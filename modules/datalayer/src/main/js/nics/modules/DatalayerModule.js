@@ -92,6 +92,8 @@ define(["iweb/CoreModule",
 			Core.EventManager.addListener("nics.data.legend.show", this.showLegend);
 			Core.EventManager.addListener("nics.data.legend.update", this.updateLegend);
 			Core.EventManager.addListener("nics.data.legend.ajax", this.getHtml);
+			Core.EventManager.addListener("nics.incident.join", this.onJoinIncident);
+			Core.EventManager.addListener("nics.userorg.change", this.removeRestrictedLayers)
 	
 			var datalayerPanelViewer = Ext.create('modules.datalayer.DatalayerPanelView');
 			
@@ -160,7 +162,7 @@ define(["iweb/CoreModule",
 							Core.EventManager.fireEvent('nics.data.legend.ajax',[this.legendId,this.legendName,data]);
 						},
 						error: function(param1, status, error) {
-							console.log('Failed to get legend for window');
+							Ext.MessageBox.alert("Legend","Failed to retrieve legend.");
 						}
 					});
 				
@@ -235,6 +237,23 @@ define(["iweb/CoreModule",
 			}
 	
 		};
+
+		DatalayerModule.prototype.onJoinIncident = function(evt, incident) {
+			if (incident)
+			{
+				this.incident = incident;
+			}
+		};
+		
+		DatalayerModule.prototype.removeRestrictedLayers = function(evt) {
+			var layers = Core.Ext.Map.getMap().getLayers().getArray().slice();
+			Ext.Array.forEach(layers, function(layer){
+				if(layer.get("dataTree")){
+					Core.Ext.Map.removeLayer(layer);
+				}
+			});
+		};
+
 		
 		return new DatalayerModule();
 	}

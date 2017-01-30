@@ -173,7 +173,7 @@ define(['ol',
 				this.incidentName = incident.name;
 				this.incidentId = incident.id;
 				
-				this.getView().enable();				
+				this.getView().enable();			
 				
 				this.mediator.sendRequestMessage(Core.Config.getProperty(UserProfile.REST_ENDPOINT) +
 						"/reports/" + this.incidentId + '/MITAM', "LoadMitamReports");

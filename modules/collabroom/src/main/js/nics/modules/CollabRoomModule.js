@@ -30,9 +30,9 @@
 define([
     "iweb/CoreModule",
 	"./collabroom/CollabRoomViewer", "./collabroom/CollabRoomController",
-	"./collabroom/CollabRoomTabView"], 
+	"./collabroom/CollabRoomTabView", "./collabroom/CollabRoomDatalayerView"], 
 	
-	function(Core, CollabRoomViewer, CollabRoomController, CollabRoomTabView) {
+	function(Core, CollabRoomViewer, CollabRoomController, CollabRoomTabView, CollabRoomDatalayerView) {
 	
 		var CollabRoomModule = function(){};
 		
@@ -52,6 +52,10 @@ define([
 			Core.View.addButtonPanel([
 					collabRoomTabView
 			]);
+			
+			var collabRoomDatalayerView = new CollabRoomDatalayerView();
+			Core.View.addToSidePanel(collabRoomDatalayerView);
+			collabRoomDatalayerView.show();
 
 		};
 		

@@ -56,8 +56,9 @@ public class CookieTokenUtil {
 	 * 
 	 */
 	public CookieTokenUtil() {
-		System.setProperty("ssoToolsPropertyPath", "/opt/data/nics/config"); //CONFIGURE THIS!!
-		System.setProperty("openamPropertiesPath", "/opt/data/nics/config"); //CONFIGURE THIS!!
+		String nicsConfigValue = System.getenv("NICS_CONFIG");
+		System.setProperty("ssoToolsPropertyPath", nicsConfigValue);
+		System.setProperty("openamPropertiesPath", nicsConfigValue);
 		ssoUtil = new SSOUtil();
 	}
 		

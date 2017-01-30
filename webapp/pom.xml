@@ -36,7 +36,7 @@
 	<parent>
 		<groupId>edu.mit.ll.nics</groupId>
 		<artifactId>nics-web</artifactId>
-		<version>6.3</version>
+		<version>6.4-SNAPSHOT</version>
 		<relativePath>..</relativePath>
 	</parent>
 
@@ -104,6 +104,11 @@
 	        <artifactId>damage-report-module</artifactId>
     	    <version>${project.version}</version>
 	    </dependency>
+	    <dependency>
+        	<groupId>${project.groupId}</groupId>
+	        <artifactId>explosives-report-module</artifactId>
+    	    <version>${project.version}</version>
+	    </dependency>
 		<dependency>
 		    <groupId>${project.groupId}</groupId>
 		    <artifactId>roc-report-module</artifactId>
@@ -114,9 +119,19 @@
 		    <artifactId>i215-report-module</artifactId>
 		    <version>${project.version}</version>
 		</dependency>
+		 <dependency>
+		    <groupId>${project.groupId}</groupId>
+		    <artifactId>opp-report-module</artifactId>
+		    <version>${project.version}</version>
+		</dependency>
 		<dependency>
 		    <groupId>${project.groupId}</groupId>
 		    <artifactId>fmag-report-module</artifactId>
+		    <version>${project.version}</version>
+		</dependency>
+		<dependency>
+		    <groupId>${project.groupId}</groupId>
+		    <artifactId>gar-report-module</artifactId>
 		    <version>${project.version}</version>
 		</dependency>
 		<dependency>
@@ -179,12 +194,42 @@
 			<artifactId>map-sync-location-module</artifactId>
 			<version>${project.version}</version>
 		</dependency>
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-log4j12</artifactId>
+			<version>${slf4j.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.cxf.fediz</groupId>
+			<artifactId>fediz-spring</artifactId>
+			<version>${fediz-spring.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-lang3</artifactId>
+			<version>${commons-lang.version}</version>
+		</dependency>    
+		
+		
+				
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>feedback-report-module</artifactId>
             <version>${project.version}</version>
         </dependency>
+
+	<dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>broadcast-module</artifactId>
+            <version>${project.version}</version>
+        </dependency>
       
+	<dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>user-module</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
 
 		<!-- test dependencies -->
 		<dependency>

@@ -143,9 +143,10 @@
                 <div class="content-wrapper">
                     <h2>Announcements</h2>
                     <ul>
+                    
                      <c:forEach items="${requestScope.announcements}" var="announcement">
                     
-                         <li> <strong>  <c:out value="${announcement['created']}"  /> </strong>
+                         <li> <strong>  <c:out value="${announcement['postedDate']}"  />, <c:out value="${announcement['postedby']}"  /> </strong>
                             <c:out value="${announcement['message']}" />
                         </li> 
                     </c:forEach>

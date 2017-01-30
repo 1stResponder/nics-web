@@ -27,8 +27,8 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-define(["ext", "./ShareWorkspaceWindow", "./ShareWorkspaceController"],
-		function(Ext, ShareWorkspaceWindow, ShareWorkspaceController) {
+define(["ext", "iweb/CoreModule", "./ShareWorkspaceWindow", "./ShareWorkspaceController", "nics/modules/UserProfileModule"],
+		function(Ext, Core, ShareWorkspaceWindow, ShareWorkspaceController, UserProfile) {
 
 	return Ext.define(null, {
 		extend: 'Ext.Button',
@@ -37,6 +37,14 @@ define(["ext", "./ShareWorkspaceWindow", "./ShareWorkspaceController"],
 		
 		text: "Share Workspace",
 		tooltip: "Share your workspace with the Collaboration Room",
+		
+		initComponent: function() {
+			Core.EventManager.addListener(UserProfile.PROFILE_LOADED, this.onLoadUserProfile.bind(this));
+		},
+		
+		onLoadUserProfile: function() {
+			this.setDisabled(UserProfile.isReadOnly());
+		},
 		
 		handler: function() {
 			if(this.activeWindow && !this.activeWindow.isDestroyed) {

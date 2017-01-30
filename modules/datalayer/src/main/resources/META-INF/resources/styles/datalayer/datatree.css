@@ -32,3 +32,67 @@
 }
 
 .data-tree-body { background-color: rgb(223, 232, 246) !important }
+
+
+.image-upload-view .thumb-wrap {
+	margin: 4px;
+	margin-right: 0;
+	padding: 5px;
+	
+	width: 160px;	
+	display: inline-block;
+	vertical-align: top;
+}
+.image-upload-view .thumb {
+	background: #dddddd;
+	padding: 3px;
+	padding-bottom: 0;
+	
+	height: 126px;
+	line-height: 120px;
+}
+.image-upload-view .thumb img {
+	height: auto;
+	max-height: 100%;
+	
+	width: auto;
+	max-width: 100%;
+	
+	vertical-align: middle;
+}
+.image-upload-view .thumb-wrap .label {
+	display: block;
+	overflow: hidden;
+	text-align: center;
+	
+	white-space: nowrap;
+	text-overflow: ellipsis;
+}
+
+.image-upload-view {
+	position: relative;
+}
+.image-upload-view .emptyText{
+	position: absolute;
+	top: 0; left: 0; bottom: 0; right: 0;
+	margin: auto;
+
+	text-align: center;
+	height: 2.0em;
+
+	color: gray;
+}
+
+.image-upload-view progress {
+	width: 100%;
+	background-color: white;
+	border: 1px solid black
+}
+
+.image-upload-view progress::-webkit-progress-bar {
+	background-color: white;
+}
+
+.image-upload-view progress[value="-1"]::-webkit-progress-bar {
+	background-color: red;
+}

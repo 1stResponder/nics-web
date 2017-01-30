@@ -32,6 +32,8 @@ define(['ext', "iweb/CoreModule", "./DatalayerBuilder",
 
 	function(Ext, Core, DatalayerBuilder, UserProfile, RefreshLayerManager, TokenManager){
 	
+		var sharedContextMenu = new Ext.menu.Menu({});
+	
 		return Ext.define('modules.datalayer.WindowController', {
 			extend : 'Ext.app.ViewController',
 			
@@ -132,7 +134,7 @@ define(['ext', "iweb/CoreModule", "./DatalayerBuilder",
 					folder.lazyLoaded = true;
 					folder.set("loading", false);
 				}
-				
+
 				//load the datalayers
 				data.datalayerfolders.forEach(function(layer){
 					this.addDatalayerFolder(data.rootId, layer);
@@ -218,6 +220,10 @@ define(['ext', "iweb/CoreModule", "./DatalayerBuilder",
 					if(!node.data.layer){
 						node.data.layer = this.datalayerBuilder.buildLayer(
 								node.data.layerType, node.data);
+						if(node.data.layer){
+							node.data.layer.set("dataTree", true);
+						}
+						
 						this.addNewLayer(node);
 					}else{
 						this.showLayer(node);
@@ -231,8 +237,31 @@ define(['ext', "iweb/CoreModule", "./DatalayerBuilder",
 			
 			addDatalayerFolder: function(rootId, datalayerfolder) {
 				var props = this.buildDataLayerFolderModel(datalayerfolder);
-				return this.getView().addChildNode(rootId,
-					datalayerfolder.datalayer.displayname, true, props);
+
+				var datalayerOrgs = datalayerfolder.datalayer.datalayerOrgs;
+
+				// If no organizations are set,
+				// the user has access to the datalayer
+				var hasAccess = true;
+
+				if (datalayerOrgs && datalayerOrgs.length > 0)
+				{
+					// If any organizations are set,
+					// then the user must be in one of them
+					// to have access to the datalayer
+					hasAccess = false;
+					for (var i=0; i<datalayerOrgs.length; i++)
+					{
+						if (UserProfile.getOrgId() == datalayerOrgs[i].orgid) {
+							hasAccess = true;
+						}
+					}
+				}
+
+				if (hasAccess) {
+					return this.getView().addChildNode(rootId,
+						datalayerfolder.datalayer.displayname, true, props);
+				}
 			},
 			
 			buildDataLayerFolderModel: function(datalayerfolder) {
@@ -333,30 +362,48 @@ define(['ext', "iweb/CoreModule", "./DatalayerBuilder",
 				//ensure the right clicked item is selectedItem
 				view.setSelection(record);
 				
+				var isFolder = record.get("folderid") !== undefined;
+				var isRootChild = record.parentNode && record.parentNode.isRoot();
+				var isChecked = record.get("checked");
+				
 				var menuItems = [{
 					text: 'Show Legend',
 					handler: function() {
 						Core.EventManager.fireEvent("nics.data.legend.show", record);
 					},
 					disabled: !record.get('legend')
+					},{
+					text: 'Add to Room',
+					disabled : UserProfile.isReadOnly(),
+					handler: function() {
+						Core.EventManager.fireEvent("nics.collabroom.data.select", record.data);
+					}	
 				}];
 				
+				var datalayer = record.get("layer");
+				if (isChecked && datalayer) {
+					var opacity = datalayer.getOpacity() * 100;
+					menuItems.push({
+						xtype: 'slider',
+						fieldLabel: 'Opacity',
+						labelAlign: 'top',
+						labelClsExtra: "x-menu-item-text-default",
+						value: opacity,
+						increment: 1,
+						minValue: 1,
+						maxValue: 100,
+						tipText: function(thumb) {
+							return Ext.String.format('{0}%', thumb.value);
+						},
+						listeners: {
+							change: 'changeDatalayerOpacity',
+							scope: this
+						}
+					});
+				}
+				
 				if(UserProfile.isSuperUser() || UserProfile.isAdminUser()){
-					var isFolder = record.get("folderid") !== undefined;
-					var isRootChild = record.parentNode && record.parentNode.isRoot();
-					menuItems.push({	
-							text: 'Rename Layer',
-							handler: 'renameDatalayer',
-							scope: this,
-							disabled: isFolder	
-							
-						}, {
-							text: 'Delete Layer',
-							handler: 'deleteDatalayer',
-							scope: this,
-							disabled: isFolder							
-
-						}, {
+					menuItems.push({
 							text: 'Folder Management',
 							menu: {
 							items: [{
@@ -367,30 +414,59 @@ define(['ext', "iweb/CoreModule", "./DatalayerBuilder",
 								disabled: !(isFolder || isRootChild)
 							},{
 								text: 'Rename',
-								handler: 'renameFolder',
-								scope: this,
-								disabled: !isFolder
+								handler: 'renameItem',
+								scope: this
 							},{
 								text: 'Delete',
-								handler: 'deleteFolder',
-								scope: this,
-								disabled: !isFolder
+								handler: 'deleteItem',
+								scope: this
 							}]
 						}
 					});
 				}
 					
-				var menu = new Ext.menu.Menu({
-							selectedItem : record,
-							items: menuItems
-					});
-			
-				menu.showAt(event.getXY());
+				//setup and show our shared menu
+				sharedContextMenu.removeAll();
+				sharedContextMenu.add(menuItems);
+				sharedContextMenu.showAt(event.getXY());
 			},
 			
 			onCallbackHandler: function(evt, response){
 				if(response && response.message != "OK"){
 					Ext.MessageBox.alert("Status", response.message);
+				}
+			},
+
+			deleteItem: function() {
+				var tree = this.getView().getTree(),
+						record = tree.getSelection()[0],
+						isFolder = record.get("folderid") !== undefined;
+						
+				if (isFolder) {
+					this.deleteFolder();
+				} else {
+					this.deleteDatalayer();
+				}
+			},
+
+			renameItem: function() {
+				var tree = this.getView().getTree(),
+						record = tree.getSelection()[0],
+						isFolder = record.get("folderid") !== undefined;
+						
+				if (isFolder) {
+					this.renameFolder();
+				} else {
+					this.renameDatalayer();
+				}
+			},
+
+			changeDatalayerOpacity: function(slider, newValue){
+				var tree = this.getView().getTree(),
+						record = tree.getSelection()[0];
+						
+				if (record.data.layer) {
+					record.data.layer.setOpacity(newValue / 100);
 				}
 			},
 

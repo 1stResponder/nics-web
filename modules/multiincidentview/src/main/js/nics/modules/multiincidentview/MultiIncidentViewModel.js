@@ -56,7 +56,6 @@ define(['ext'], function(Ext) {
 					}
 					else{
 						date = new Date(rec.data.created);
-						//console.log(date.getFullYear() + '-' + (date.getMonth()+1) + '-' + date.getDate());
 						//return date.toString("Y-m-d H:i:s");
 						
 					}

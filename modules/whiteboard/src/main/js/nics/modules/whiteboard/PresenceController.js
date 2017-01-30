@@ -40,7 +40,7 @@ define(['ext', 'iweb/CoreModule', './PresenceModel', './PresenceListener', 'nics
 			
 			this.mediator = Core.Mediator.getInstance();
 
-			Core.EventManager.addListener("nics.collabroom.load", this.onLoadUserProfile.bind(this));
+			Core.EventManager.addListener(UserProfile.PROFILE_LOADED, this.onLoadUserProfile.bind(this));
 			Core.EventManager.addListener("nics.archived.collabroom.load", this.onLoadUserProfile.bind(this));
 			Core.EventManager.addListener("nics.incident.join", this.onJoinIncident.bind(this));
 			
@@ -56,12 +56,11 @@ define(['ext', 'iweb/CoreModule', './PresenceModel', './PresenceListener', 'nics
 		},
 		
 		onLoadUserProfile: function(e) {
-			this.user = {
-				userId: UserProfile.getUserId(),
-				username: UserProfile.getUsername(),
-				nickname: UserProfile.getFirstName() + " " + UserProfile.getLastName(),
-				organization: UserProfile.getOrgName()
-			};
+			this.user = this.user || {};
+			this.user.userId = UserProfile.getUserId();
+			this.user.username = UserProfile.getUsername();
+			this.user.nickname = UserProfile.getFirstName() + " " + UserProfile.getLastName();
+			this.user.organization = UserProfile.getOrgName();
 		},
 		
 		onJoinIncident: function(e, incident) {

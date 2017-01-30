@@ -146,13 +146,7 @@ define(['ext', "iweb/CoreModule", "iweb/modules/MapModule"],
                     	this.getView().settingsStore.loadData([{name: data.text, layer: data.layer}], true);
 
                         Ext.Function.defer(this.trySelectingSettingsLayer, 500, this, [data, 0]);
-                    } else
-                    {
-                        console.log("Layer type not WFS");
                     }
-                } else
-                {
-                    console.error("Invalid data object, missing attributes")
                 }
             },
 
@@ -220,13 +214,10 @@ define(['ext', "iweb/CoreModule", "iweb/modules/MapModule"],
 
             onChange: function(filterField, newValue, oldValue, eOpts)
             {
-                console.log("[onChange] newVal: " + newValue);
-
                 // filter by name
                 var filterFn = function(rec, id)
                 {
                     if (newValue == undefined || newValue == null || newValue == '') return true;
-                    console.log("New")
                     if (rec.get('vehicle'))
                     {
                         if (rec.get('vehicle').indexOf(newValue) > -1)
@@ -265,7 +256,6 @@ define(['ext', "iweb/CoreModule", "iweb/modules/MapModule"],
                         }
                     } else if (rec.data.vehicle && rec.data.vehicle == value)
                     {
-                        console.log("matched with vehicle anyway, attempted prop: "+ property);
                         return true;
                     }
                 }
@@ -277,14 +267,12 @@ define(['ext', "iweb/CoreModule", "iweb/modules/MapModule"],
             {
                 var _this = this;
                 var filterFn = function(rec, id){
-                    console.log("Filtering rec: " + rec);
                     if (this.lastSelected && this.lastSelected.data)
                     {
                         if (rec && rec.vehicle)
                         {
                             if (rec.vehicle == this.lastSelected.data.vehicle)
                             {
-                                console.log("Matched vehicle");
                                 return true;
                             }
                         }

@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+Copyright (c) 2016, Ardent Management Consulting, All Rights Reserved
+-->
+<beans xmlns="http://www.springframework.org/schema/beans"
+    xmlns:sec="http://www.springframework.org/schema/security"
+    xmlns:p="http://www.springframework.org/schema/p"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:context="http://www.springframework.org/schema/context"
+    xmlns:util="http://www.springframework.org/schema/util"
+    xsi:schemaLocation="
+        http://www.springframework.org/schema/security
+        http://www.springframework.org/schema/security/spring-security-3.1.xsd
+        http://www.springframework.org/schema/beans
+        http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+        http://www.springframework.org/schema/util
+        http://www.springframework.org/schema/util/spring-util-3.0.xsd
+        http://www.springframework.org/schema/context
+        http://www.springframework.org/schema/context/spring-context-3.0.xsd">
+
+	<sec:http pattern="/**/*.js" security="none" />
+	<sec:http pattern="/**/*.css" security="none" />
+	<sec:http pattern="/**/*.jpg" security="none" />
+	<sec:http pattern="/**/*.gif" security="none" />
+	<sec:http pattern="/**/*.png" security="none" />
+	<sec:http pattern="/register" security="none" />
+	<sec:http pattern="/login" security="none" />
+    <sec:http entry-point-ref="federationEntryPoint" use-expressions="true" >
+        <sec:intercept-url pattern="/**" access="isAuthenticated()" />
+        <sec:custom-filter ref="federationFilter" after="BASIC_AUTH_FILTER" />
+        <sec:custom-filter ref="nicsSecurityFilter" before="SERVLET_API_SUPPORT_FILTER" />        
+        <sec:session-management session-authentication-strategy-ref="sas" />
+        <sec:logout delete-cookies="JSESSIONID" />
+    </sec:http>
+
+    <sec:authentication-manager alias="authManager">
+        <sec:authentication-provider ref="federationAuthProvider" />
+    </sec:authentication-manager>
+
+    <!-- NOTE: Not loading any properties files, but using this to load system environment variables. -->
+	<bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer" >
+		<property name="searchSystemEnvironment" value="true" />
+		<property name="systemPropertiesModeName" value="SYSTEM_PROPERTIES_MODE_OVERRIDE" />		    
+	</bean>
+
+    <bean id="fedizConfig" class="org.apache.cxf.fediz.spring.FederationConfigImpl"
+        init-method="init" p:configFile="file:${NICS_CONFIG}/fediz_config-nics.xml" />
+
+    <bean id="federationEntryPoint"
+        class="org.apache.cxf.fediz.spring.web.FederationAuthenticationEntryPoint"
+        p:federationConfig-ref="fedizConfig" />
+
+    <bean id="federationFilter"
+        class="org.apache.cxf.fediz.spring.web.FederationAuthenticationFilter"
+        p:authenticationManager-ref="authManager">
+
+        <property name="authenticationFailureHandler">
+            <bean
+                class="org.springframework.security.web.authentication.SimpleUrlAuthenticationFailureHandler" />
+        </property>
+    </bean>
+    <bean id="nicsSecurityFilter" class="com.ardentmc.dhs.nics.NICSSecurityFilter" />    
+
+    <bean id="federationAuthProvider"
+        class="org.apache.cxf.fediz.spring.authentication.FederationAuthenticationProvider"
+        p:federationConfig-ref="fedizConfig">
+        <property name="authenticationUserDetailsService">
+            <bean
+                class="org.apache.cxf.fediz.spring.authentication.GrantedAuthoritiesUserDetailsFederationService" />
+        </property>
+    </bean>
+
+    <bean id="sas"
+        class="org.springframework.security.web.authentication.session.SessionFixationProtectionStrategy" />
+</beans>
+

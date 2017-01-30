@@ -36,7 +36,8 @@ function(Core, UserProfile, FmagReportView, FmagFormView) {
 	Ext.define('modules.report-fmag.FmagReportController', {
 		extend : 'Ext.app.ViewController',
 		alias : 'controller.fmagreportcontroller',
-		
+		orgCapName: 'ABC',
+		orgIds: [],
 		
 		init : function(args) {
 			
@@ -65,6 +66,9 @@ function(Core, UserProfile, FmagReportView, FmagFormView) {
 			this.mediator.sendRequestMessage(Core.Config.getProperty(UserProfile.REST_ENDPOINT) +
 					"/reports/types", topic);
 			
+
+			this.bindOrgCaps = this.orgCapUpdate.bind(this);
+			
 		},
 		
 		bindEvents: function(){
@@ -75,16 +79,49 @@ function(Core, UserProfile, FmagReportView, FmagFormView) {
 			Core.EventManager.addListener("PrintFmagReport", this.onReportReady.bind(this));
 			Core.EventManager.addListener("CancelFmagReport", this.onCancel.bind(this));
 			Core.EventManager.fireEvent("nics.report.add", {title: "FMAG - ABC", component: this.getView()});
+			Core.EventManager.addListener("nics.user.profile.loaded", this.updateOrgCapsListener.bind(this));
+		},
+	
+		updateOrgCapsListener: function(evt, data){
+		
+			if(this.currentOrg){
+				this.mediator.unsubscribe("iweb.nics.orgcaps." + this.currentOrg + "." + this.orgCapName);
+				Core.EventManager.removeListener("iweb.nics.orgcaps." + this.currentOrg + "." + this.orgCapName, this.bindOrgCaps);
+			}
+			
+			this.currentOrg = UserProfile.getOrgId();
+			
+			if(this.orgIds.indexOf(UserProfile.getOrgId()) == -1){
+				Core.EventManager.addListener("iweb.nics.orgcaps." + this.currentOrg + "." + this.orgCapName, this.bindOrgCaps);
+				this.orgIds.push(this.currentOrg);
+			}
+
+			this.mediator.subscribe("iweb.nics.orgcaps." + this.currentOrg + "." + this.orgCapName);
+			
+		},
+	
+		orgCapUpdate: function(evt, orgcap){
+
+			if(orgcap.activeWeb){
+				this.getView().enable();
+			}
+			else{
+				this.getView().disable();
+			}
+		
+			UserProfile.setOrgCap(orgcap.cap.name,orgcap.activeWeb);
+		
 		},
 	
 		onJoinIncident: function(e, incident) {
 			
 			this.incidentName = incident.name;
 			this.incidentId = incident.id;
-			
-			this.getView().enable();		
-			
+
+			this.getView().enable();
+
 			var endpoint = Core.Config.getProperty(UserProfile.REST_ENDPOINT);
+			this.hasFinalForm = false;
 			//Load reports
 			this.hasFinalForm = false;
 			this.mediator.sendRequestMessage(endpoint +
@@ -117,7 +154,9 @@ function(Core, UserProfile, FmagReportView, FmagFormView) {
 			this.incidentId = null;
 			this.incidentName = null;
 			this.hasFinalForm = false;
+
         
+
 		},
 		
 		onAddFmag: function(e) {
@@ -237,7 +276,7 @@ function(Core, UserProfile, FmagReportView, FmagFormView) {
 		onReportAdded: function() {	
 			this.lookupReference('createButton').disable();
 			this.lookupReference('viewButton').enable();
-			this.lookupReference('printButton').enable();
+
 			if (this.hasFinalForm){
 				this.lookupReference('updateButton').disable();
 				this.lookupReference('finalButton').disable();

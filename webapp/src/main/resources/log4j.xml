@@ -35,6 +35,7 @@
 
 	<appender name="STDOUT" class="org.apache.log4j.ConsoleAppender">
 		<param name="Target" value="System.out" />
+		<param name="Threshold" value="ERROR"/>
 		<layout class="org.apache.log4j.PatternLayout">
 			<!--
 			<param name="ConversionPattern"
@@ -62,7 +63,7 @@
 		<param name="Threshold" value="DEBUG"/>
 		<param name="File" value="${catalina.base}/logs/nics.log" />
 		<param name="Append" value="true" />
-		<param name="MaxFileSize" value="500KB" />
+		<param name="MaxFileSize" value="5gb" />
 		<param name="MaxBackupIndex" value="5" />
 		<layout class="org.apache.log4j.PatternLayout">
 			<param name="ConversionPattern" value="%d{ISO8601} %-5p (%t) [%c{1}(%M:%L)] %m%n" />
@@ -94,7 +95,7 @@
 	 -->
 
 	<logger name="ALL" additivity="false">
-		<level value="INFO" />
+		<level value="ALL" />
 		<appender-ref ref="SADISPLAY_ROLLING_FILE" />
 		<appender-ref ref="STDOUT" />
 	</logger>
@@ -102,7 +103,7 @@
 	<!-- ** -->
 
 	<root>
-		<level value="INFO" />
+		<level value="ALL" />
 		<appender-ref ref="STDERR" />
 		<appender-ref ref="SADISPLAY_ROLLING_FILE" />
 	</root>

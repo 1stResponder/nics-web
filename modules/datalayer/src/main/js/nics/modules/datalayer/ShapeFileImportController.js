@@ -31,8 +31,7 @@ define(['ext', 'ol', "iweb/CoreModule", "nics/modules/UserProfileModule"],
 	function(Ext, ol, Core, UserProfile){
 	
 		return Ext.define('modules.datalayer.ShapeFileImportController', {
-			extend : 'Ext.app.ViewController',
-			
+			extend : 'Ext.app.ViewController',	
 			alias: 'controller.datalayer.shapefileimportcontroller',
 			
 			init: function() {
@@ -86,9 +85,11 @@ define(['ext', 'ol', "iweb/CoreModule", "nics/modules/UserProfileModule"],
 			
 			submitForm: function(b, e){
 				var form = this.getView().getFormPanel().getForm();
-				var url = Ext.String.format("/em-api/v1/datalayer/{0}/shapefile",
-						UserProfile.getWorkspaceId());
+				var url = Ext.String.format("/em-api/v1/datalayer/{0}/shapefile?username={1}",
+						UserProfile.getWorkspaceId(), UserProfile.getUsername());
 				
+
+
 				form.submit({
 					url: url,
 					waitMsg: 'Uploading files...',
@@ -118,6 +119,5 @@ define(['ext', 'ol', "iweb/CoreModule", "nics/modules/UserProfileModule"],
 					}
 				});
 			}
-			
 		});
 });

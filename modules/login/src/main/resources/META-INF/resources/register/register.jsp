@@ -247,6 +247,7 @@
 		    			// orgElement: value: orgid
 		    			for( var j = 0; j < orgElement.length; j++) {
 		    				if(orgOrgTypeElement.options[i].text == orgElement.options[j].value +"") {
+		    				
 		    					matchingOrgs += orgElement.options[j].text + " ";		    					
 		    					var nopt = document.createElement('option');		    					
 		    					nopt.value = orgElement.options[j].value;

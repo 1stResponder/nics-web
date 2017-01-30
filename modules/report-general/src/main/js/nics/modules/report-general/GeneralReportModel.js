@@ -29,7 +29,7 @@
  */
 define(['ext'], function(Ext) {
 
-	return Ext.define('modules.report-general.GeneralReportModel', {	 
+	return Ext.define('modules.report-general.GeneralReportModel', {
 	 	extend: 'Ext.data.Model',
 	 	
 	 	idProperty: 'formId',

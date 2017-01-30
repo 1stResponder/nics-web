@@ -32,7 +32,10 @@ div.roc-required label, div.fmag-required label{
     font-weight:bold;
 }
 
-
+div.ics-required label {
+    color:#da3d1d;
+    font-weight:bold;
+}
 .fmag-fieldset .x-fieldset-header-text{
     font-weight:bold;
 }
@@ -67,7 +70,27 @@ div.roc-required label, div.fmag-required label{
 	font-style:italic;
 	color:red;
 }
+.orgchart .node {
+	cursor: pointer;
+		}
+		
+.orgchart .node text {
+	font: 12px sans-serif;
+		}
+		
+.orgchart .node circle {
+	fill: #fff;
+	stroke: steelblue;
+	stroke-width: 3px;
+}
 
+.orgchart .link {
+	fill: none;
+	stroke: #ccc;
+	stroke-width: 2px;
+		}
+	
+		
 @media print {
    table.report {
     border-collapse: collapse;
@@ -82,7 +105,31 @@ div.roc-required label, div.fmag-required label{
    table.report td {
     padding:0 2px;
     
+    
    }
 }
 
+fieldset.icStaff, fieldset.agencyRep{
+    background-color:#F5F5F5;
+    
+}
+fieldset.intel{
+    background-color:#B6C5F5;
+    
+}
+fieldset.logistics{
+    background-color:#EEE486;
+    
+}
+fieldset.ops{
+    background-color:#FFBDBD;
+    
+}
+fieldset.finance{
+    background-color:#8FCC72;
+    
+}
 
+.formInstructions .x-tool {
+    left: 0 !important;
+}

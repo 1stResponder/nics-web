@@ -82,6 +82,7 @@ define(['iweb/CoreModule'],
 							},
 							error: function(param1, status, error) {
 								console.log('Failed to get legend for panel');
+								Ext.MessageBox.alert("Legend", "Error retrieving legend.");
 							}
 						});
 					}

@@ -44,14 +44,18 @@ define(['iweb/CoreModule', "nics/modules/UserProfileModule", './I215ReportView',
 				
 				
 			},
+			onJoinIncident: function(e, incident) {
+				
+				this.getView().enable();		
+			},
 			 clearForm: function () {
 			    
 				
 				 var username  = UserProfile.getFirstName() + " " + UserProfile.getLastName();	
 				 this.view.getForm().getFields().each (function (field) {
-					 if (field.fieldLabel != 'Incident Number*' && field.fieldLabel != 'Incident Name*' && field.fieldLabel != 'Report Type' && !(field.isHidden()) )
-			    			
-						 field.setValue("");
+					 if (field.fieldLabel != 'Incident Number*' && field.fieldLabel != 'Incident Name*' && field.fieldLabel != 'Report Type' && !(field.isHidden()) ) field.setValue("");
+
+
 			    	});
 			    },
 			   

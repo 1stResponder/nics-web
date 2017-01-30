@@ -179,6 +179,35 @@
 				displayField: 'text',
 				allowBlank: false,
 				disabled: true
+			},
+			{
+				xtype: 'combo',
+				name: 'orgid',
+				reference: 'orgCombo',
+				fieldLabel: 'Restrict to organization',
+				valueField: 'orgId',
+				displayField: 'name',
+				queryMode: 'local',
+				store: {
+					sorters: 'name'
+				},
+				forceSelection: true,
+				editable: false,
+				emptyText: 'None',
+				disabled: true
+			}, {
+				xtype: 'combo',
+				name: 'collabroomId',
+				reference: 'collabroomCombo',
+				fieldLabel: 'Restrict to room',
+				valueField: 'collabRoomId',
+				displayField: 'name',
+				queryMode: 'local',
+				disabled: true,
+				forceSelection: true,
+				editable: false,
+				emptyText: 'None',
+				disabled: true
 			}, {
 				xtype: 'button',
 				text: 'Import Data Layer',
@@ -215,6 +244,14 @@
 
 		getRefreshRateCombo: function() {
 			return this.lookupReference('refreshRateCombo');
+		},
+
+		getOrgCombo: function() {
+			return this.lookupReference('orgCombo');
+		},
+
+		getCollabroomCombo: function() {
+			return this.lookupReference('collabroomCombo');
 		}
 	});
 });

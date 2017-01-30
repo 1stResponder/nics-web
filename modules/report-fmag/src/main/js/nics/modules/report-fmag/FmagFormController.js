@@ -116,7 +116,6 @@ define(['iweb/CoreModule', "nics/modules/UserProfileModule", './FmagReportView',
 				doc += "<li><strong>Weather*:</strong> " + data.weather + "</li>";
 				doc += "<li><strong>Other Docs*:</strong> " + data.otherDocs + "</li>";
 				
-		    	console.log(doc);
 		    	Core.EventManager.fireEvent("PrintFmagReport",doc);
 				
 			},
@@ -126,9 +125,9 @@ define(['iweb/CoreModule', "nics/modules/UserProfileModule", './FmagReportView',
 				 var username  = UserProfile.getFirstName() + " " + UserProfile.getLastName();	
 				 this.view.getForm().getFields().each (function (field) {
 					 if (field.fieldLabel != 'Inc. Number*' && field.fieldLabel != 'Fire Incident Name*' && field.fieldLabel != 'Report Type' && !(field.isHidden()) )
-					    	
 						 field.setValue("");
 				 
+
 			     });
 			    	
 			},
@@ -146,7 +145,7 @@ define(['iweb/CoreModule', "nics/modules/UserProfileModule", './FmagReportView',
 		    	Ext.getCmp('viewFmag').enable(); 
 		    },
 		    enableForm: function () {
-		    	this.view.getForm().getFields().each (function (field) {
+		    	this.view.getForm().getFields().each(function (field) {
 		    		field.setReadOnly(false);
 		    	});
 		    	this.view.lookupReference('submitButton').show();

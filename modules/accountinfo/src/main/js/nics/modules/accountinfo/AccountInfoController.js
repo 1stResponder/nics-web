@@ -322,7 +322,7 @@ define(['iweb/CoreModule',  './AccountInfoModel','nics/modules/UserProfileModule
 			
 			addContactInfo: function(event){
 				
-				var rowEdit = this.getView().userContactTab.getPlugin('rowediting');
+				var rowEdit = this.getView().userContactTab.getPlugin('contactRowEditing');
 				
 				if(!rowEdit.editing){
 				

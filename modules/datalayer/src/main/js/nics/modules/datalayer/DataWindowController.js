@@ -29,50 +29,64 @@
  */
 define(['ext', 'iweb/CoreModule', 'nics/modules/UserProfileModule',
 				'./WindowController', './ImportWindow', './DatasourceImportPanel',
-				'./FileImportPanel', './ShapeFileImportPanel',
+				'./FileImportPanel', './ShapeFileImportPanel', './ImageImportPanel',
 				'./WFSCapabilities', './WMSCapabilities',
 				'./ArcGISCapabilities'],
 
 	function(Ext, Core, UserProfile,
 			WindowController, ImportWindow, DatasourceImportPanel,
-			FileImportPanel, ShapeFileImportPanel,
+			FileImportPanel, ShapeFileImportPanel, ImageImportPanel,
 			WFSCapabilities, WMSCapabilities, ArcGISCapabilities){
 	
 		return Ext.define('modules.datalayer.DataWindowController', {
 			extend : 'modules.datalayer.WindowController',
 			
 			alias: 'controller.datalayer.datawindowcontroller',
-			
+
+			init: function() {
+				this.callParent();
+				Core.EventManager.addListener(UserProfile.PROFILE_LOADED, this.onUserProfileLoad.bind(this));
+			},
+
 			onImportClick: function() {
 				if (!this.importWindow) {
 					this.importWindow = this.createImportWindow();
 				}
 				this.importWindow.show();
 			},
+
+			onUserProfileLoad: function() {
+				this.importWindow = this.createImportWindow();
+				this.importWindow.hide();
+			},
 			
 			createImportWindow: function() {
 				var win = new ImportWindow();
-				var tabPanel = win.getTabPanel();
+				var tabPanel = win.getTabPanel();				
 				
-				var kmlUrl = Ext.String.format("/em-api/v1/datalayer/{0}/sources/{1}/document/{2}",
+				var kmlUrl = Ext.String.format("/em-api/v1/datalayer/{0}/sources/{1}/document/{2}?username={3}",
 						UserProfile.getWorkspaceId(),
 						'kml',
-						UserProfile.getUserOrgId());
+						UserProfile.getUserOrgId(),
+						UserProfile.getUsername());
 				
-				var kmzUrl = Ext.String.format("/em-api/v1/datalayer/{0}/sources/{1}/document/{2}",
+				var kmzUrl = Ext.String.format("/em-api/v1/datalayer/{0}/sources/{1}/document/{2}?username={3}",
 						UserProfile.getWorkspaceId(),
 						'kmz',
-						UserProfile.getUserOrgId());
+						UserProfile.getUserOrgId(),
+						UserProfile.getUsername());
 						
-				var gpxUrl = Ext.String.format("/em-api/v1/datalayer/{0}/sources/{1}/document/{2}",
+				var gpxUrl = Ext.String.format("/em-api/v1/datalayer/{0}/sources/{1}/document/{2}?username={3}",
 						UserProfile.getWorkspaceId(),
 						'gpx',
-						UserProfile.getUserOrgId());
+						UserProfile.getUserOrgId(),
+						UserProfile.getUsername());
 						
-				var jsonUrl = Ext.String.format("/em-api/v1/datalayer/{0}/sources/{1}/document/{2}",
+				var jsonUrl = Ext.String.format("/em-api/v1/datalayer/{0}/sources/{1}/document/{2}?username={3}",
 						UserProfile.getWorkspaceId(),
 						'geojson',
-						UserProfile.getUserOrgId());
+						UserProfile.getUserOrgId(),
+						UserProfile.getUsername());
 				
 				tabPanel.add([
 					new DatasourceImportPanel({
@@ -120,6 +134,10 @@ define(['ext', 'iweb/CoreModule', 'nics/modules/UserProfileModule',
 					new ShapeFileImportPanel({
 						title: 'Shape File',
 						workspaceId: this.workspaceId
+					}),
+					new ImageImportPanel({
+						title: 'Image',
+						workspaceId: UserProfile.getWorkspaceId()
 					})
 				]);
 				tabPanel.setActiveTab(0);

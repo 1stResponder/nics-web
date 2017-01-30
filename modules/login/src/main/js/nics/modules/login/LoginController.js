@@ -82,7 +82,7 @@ define([
 				var topic = "nics.logout.usersession.callback";
 				Core.EventManager.createCallbackHandler(topic, this, function(){
 					_mediator.close();
-					location.href = "./login";
+					location.href = "./login?loggedOut=true";
 				});
 				
 				this.mediator.sendDeleteMessage(
@@ -249,7 +249,7 @@ define([
 				    icon: Ext.Msg.WARNING,
 				    fn: function(btn) {
 				    	 _mediator.close();
-				    	 location.href = "./login";
+				    	 location.href = "./login?loggedOut=true";
 				    }
 				});
 			}

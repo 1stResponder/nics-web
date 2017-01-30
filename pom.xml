@@ -37,7 +37,7 @@
   <artifactId>nics-web</artifactId>
   <packaging>pom</packaging>
   <name>NICS Web Pom</name>
-  <version>6.3</version>
+  <version>6.4-SNAPSHOT</version>
 
   <modules>
     <module>modules</module>
@@ -51,7 +51,9 @@
     <module>modules/report-mitam</module>
     <module>modules/report-roc</module>
     <module>modules/report-i215</module>
-    <module>modules/report-fmag</module>
+    <module>modules/report-opp</module>
+   <module>modules/report-fmag</module>
+    <module>modules/report-gar</module>
     <module>modules/datalayer</module>
     <module>modules/whiteboard</module>
     <module>modules/feature</module>
@@ -61,9 +63,11 @@
     <module>modules/photos</module>
     <module>modules/print</module>
     <module>modules/feedback-report</module>
+    <module>modules/broadcast</module>
     <module>modules/accountinfo</module>
     <module>modules/multiincidentview</module>
     <module>modules/map-sync-location</module>
+    <module>modules/user</module>
     <module>webapp</module>
   </modules>
 
@@ -82,6 +86,11 @@
     <nics.common.version>${project.version}</nics.common.version>
     <sso.tools.version>${project.version}</sso.tools.version>
     <openam.tools.version>${project.version}</openam.tools.version>
+
+	<!-- Fediz-Spring -->
+	<slf4j.version>1.7.1</slf4j.version>
+	<fediz-spring.version>1.2.2</fediz-spring.version>
+	<commons-lang.version>3.4</commons-lang.version>	
 
     <maven.compiler.source>1.7</maven.compiler.source>
     <maven.compiler.target>1.7</maven.compiler.target>
@@ -204,7 +213,11 @@
                         <mapping>
                             <xslt>XML_STYLE</xslt>
                         </mapping>
-
+                        <excludes>
+                        	<exclude>**/ardentmc/**</exclude>
+                        	<exclude>**/src/**/applicationContext-security.xml</exclude>
+                        	<exclude>**/src/**/fediz_config.xml</exclude>
+                        </excludes>
                         <includes>
                             <includes>**/src/**/*.java</includes>
                             <includes>**/src/**/*.js</includes>

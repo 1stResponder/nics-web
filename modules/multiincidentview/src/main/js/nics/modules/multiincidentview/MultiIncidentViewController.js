@@ -39,6 +39,8 @@ define(['ext', 'iweb/CoreModule', 'ol', './MultiIncidentViewModel', 'nics/module
 		
 		viewEnabled: false,
 		
+		orgCapName: 'MIV',
+		
 		init: function(){
 			this.mediator = Core.Mediator.getInstance();
 			
@@ -52,16 +54,49 @@ define(['ext', 'iweb/CoreModule', 'ol', './MultiIncidentViewModel', 'nics/module
 			
 			Core.Ext.Map.addLayer(this.vectorLayer);
 			
-			Core.EventManager.addListener(UserProfile.PROFILE_LOADED, this.loadAllIncidents.bind(this));
+			Core.EventManager.addListener("nics.user.profile.loaded", this.updateOrgCapsListener.bind(this));
+			Core.EventManager.addListener("nics.user.profile.loaded", this.loadAllIncidents.bind(this));
+			
 			Core.EventManager.addListener("nics.miv.onloadallincidents", this.onLoadAllIncidents.bind(this));
 			Core.EventManager.addListener("nics.incident.update.callback", this.onUpdateIncident.bind(this));
 			Core.EventManager.addListener("nics.miv.update.mivpanel", this.loadAllIncidents.bind(this));
 			Core.EventManager.addListener("nics.incident.create.callback", this.loadAllIncidents.bind(this));
-			
+
+			this.bindOrgCap = this.orgCapUpdate.bind(this);
 			
 		},
 		
-		loadAllIncidents: function(e) {
+		updateOrgCapsListener: function(evt, data){
+			
+			if(this.currentOrg){
+				this.mediator.unsubscribe("iweb.nics.orgcaps." + this.currentOrg + "." + this.orgCapName);
+				Core.EventManager.removeListener("iweb.nics.orgcaps." + this.currentOrg + "." + this.orgCapName, this.bindOrgCap);
+			}
+			else {
+				Core.EventManager.addListener("iweb.nics.orgcaps." + UserProfile.getOrgId() + "." + this.orgCapName, this.bindOrgCap);
+			}
+			
+			this.currentOrg = UserProfile.getOrgId();
+			
+			this.mediator.subscribe("iweb.nics.orgcaps." + this.currentOrg + "." + this.orgCapName);
+			
+		},
+		
+		orgCapUpdate: function(evt, orgcap){
+
+			if(orgcap.activeWeb){
+				this.getView().enable();
+				this.loadAllIncidents();
+			}
+			else{
+				this.getView().disable();
+			}
+			
+			UserProfile.setOrgCap(orgcap.cap.name,orgcap.activeWeb);
+			
+		},
+		
+		loadAllIncidents: function() {
 			var grid = this.lookupReference('multiincidentsgrid');
 			
 			if(UserProfile.isAdminUser() || UserProfile.isSuperUser()){

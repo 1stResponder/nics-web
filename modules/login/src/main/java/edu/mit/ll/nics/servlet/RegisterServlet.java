@@ -141,6 +141,7 @@ public class RegisterServlet extends HttpServlet implements Servlet {
 	private static final String GOOGLE_RECAPTCHA_KEY = "private.google.recaptcha.key";
 	private static final String GOOGLE_RECAPTCHA_SECRET = "private.google.recaptcha.secret";
 	
+	private static final String FEEDBACK_EMAIL_TO = "feedback.email.to";
 	private static final String PASSWORD_REQUIREMENTS_KEY = "password.requirements";
 	private static final String PASSWORD_PATTERN_KEY = "password.pattern";
 	
@@ -228,6 +229,7 @@ public class RegisterServlet extends HttpServlet implements Servlet {
 					req.setAttribute("orgs", orgs);
 					req.setAttribute("dataSiteKey", 
 							Config.getInstance().getConfiguration().getString(GOOGLE_RECAPTCHA_KEY));
+					req.setAttribute("supportEmail", Config.getInstance().getConfiguration().getString(FEEDBACK_EMAIL_TO));
 					
 					String passwordPattern = Config.getInstance().getConfiguration()
 							.getString(PASSWORD_PATTERN_KEY, DEFAULT_PASSWORD_PATTERN);					
@@ -505,6 +507,8 @@ public class RegisterServlet extends HttpServlet implements Servlet {
 		try {
 			Client jerseyClient = ClientBuilder.newClient();
 			URI uri = new URI(registerUserUrl);
+			logger.info("URL: " + registerUserUrl);
+			logger.info("user: " + user.toString());
 			
 			WebTarget target = jerseyClient.target(uri);
 			
@@ -520,9 +524,9 @@ public class RegisterServlet extends HttpServlet implements Servlet {
 			Object messageObj = null;
 			InputStream is = null;
 			try {
-				
+				logger.info(response.toString());
 				message = response.readEntity(String.class);
-				
+				logger.info(message);
 				/*messageObj = response.getEntity();
 				
 				if(messageObj instanceof InputStream) {
@@ -534,10 +538,10 @@ public class RegisterServlet extends HttpServlet implements Servlet {
 										
 				} else if(messageObj instanceof String) {
 					message = (String) messageObj;
-				}*/				
+				}*/		
 				
 			} catch(Exception e) {
-				System.out.println("Unhandled exception reading entity: " + e.getMessage());
+				logger.info("Unhandled exception reading entity: " + e.getMessage());
 				e.printStackTrace();
 			} finally {
 				if(is != null) {

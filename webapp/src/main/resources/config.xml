@@ -32,5 +32,7 @@
 -->
 <configuration>
   <!-- <properties fileName="usersettings.properties" config-optional="true"/> -->
-  <properties fileName="/opt/data/nics/config/core.properties"/>
+  <env/>
+  <!-- Now load the config file, using a system property in the path. -->
+  <properties fileName="${NICS_CONFIG}/core.properties"/>
 </configuration>

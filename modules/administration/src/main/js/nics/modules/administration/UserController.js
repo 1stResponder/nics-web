@@ -192,7 +192,6 @@ define(['ext', 'iweb/CoreModule','nics/modules/UserProfileModule', 'nics/modules
 			//populate the user grids
 			Core.EventManager.createCallbackHandler(topic, this, 
 					function(evt, response){
-						console.log(enabled);
 						if(response.message && response.message != "Success"){
 							Ext.MessageBox.alert("Status", "There was an error setting user " + username + "'s account to " + enabled);
 						}else if(enabled == "enable"){
@@ -214,9 +213,11 @@ define(['ext', 'iweb/CoreModule','nics/modules/UserProfileModule', 'nics/modules
 
 		loadUserProfile: function(evt, profile)
 		{
-			if (profile.isSuperUser)
+			var view = this.getView(),
+					deleteButton = view.lookupReference('deleteUsersButton');
+			if (profile.isSuperUser && !deleteButton)
 			{
-				this.getView().add({
+				view.add({
 					xtype: 'button',
 					text: 'Delete selected users',
 					reference: 'deleteUsersButton',

@@ -30,9 +30,7 @@
 define([
 	'iweb/CoreModule',
 	'./report-fmag/FmagReportView',
-	'./report-fmag/FmagReportController'//,
-	//'./report-fmag/FmagFormView',
-	//'./report-fmag/FmagFormController'
+	'./report-fmag/FmagReportController'
 	], 
 	
 	function(Core) {

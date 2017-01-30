@@ -27,7 +27,7 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-define(['iweb/CoreModule', './I215FormController', './I215FormViewModel', 'nics/modules/report/common/FormVTypes'],
+define(['iweb/CoreModule', './I215FormController', './I215FormViewModel', 'iweb/core/FormVTypes'],
        
 function(Core, I215FormController, I215FormViewModel ) {
 

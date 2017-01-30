@@ -36,7 +36,8 @@ require([
 	"nics/modules/FeaturePersistence", "nics/modules/AdministrationModule",
 	"nics/modules/UserProfileModule", "nics/modules/PhotosModule", "nics/modules/PrintModule" ,
 	"nics/modules/AccountInfoModule", "nics/modules/MultiIncidentViewModule",
-    "nics/modules/FeedbackReportModule", "nics/modules/MapSyncLocation"
+    "nics/modules/FeedbackReportModule", "nics/modules/MapSyncLocation","nics/modules/BroadcastModule",
+   	"nics/modules/UserModule"
     ],
 
     function(Core, MapModule, View, DrawMenuModule, GeocodeModule,
@@ -44,7 +45,7 @@ require([
         LoginModule, WhiteboardModule, ReportModule, DatalayerModule,
         ActiveUsersModule, FeaturePersistence, AdminModule, UserProfile,
         PhotosModule, PrintModule, AccountModule, MultiIncidentModule,
-        FeedbackReportModule, MapSyncLocation) {
+        FeedbackReportModule, MapSyncLocation, BroadcastModule, UserModule) {
 
         "use strict";
 
@@ -109,10 +110,14 @@ require([
 	            PhotosModule.load();
 	            MultiIncidentModule.load();
 
-                // Add email report to Tools Menu
-                FeedbackReportModule.load();
-                
-                MapSyncLocation.load();
+                    // Add email report to Tools Menu
+                    FeedbackReportModule.load();      
+
+                    MapSyncLocation.load();
+
+		    BroadcastModule.load();
+
+		    UserModule.load();
 	        }
 
 	        //Mediator

@@ -36,7 +36,8 @@ function(Core, UserProfile, RocReportView, RocFormView) {
 	Ext.define('modules.report-roc.RocReportController', {
 		extend : 'Ext.app.ViewController',
 		alias : 'controller.rocreportcontroller',
-		
+		orgCapName: 'ROC',
+		orgIds: [],
 		
 		init : function(args) {
 		
@@ -77,6 +78,40 @@ function(Core, UserProfile, RocReportView, RocFormView) {
 			Core.EventManager.fireEvent("nics.report.add", {title: "ROC", component: this.getView()});
 			Core.EventManager.addListener("LoadOrgAdminList", this.loadOrgAdminList.bind(this));
 			Core.EventManager.addListener("LoadOrgDistList", this.loadOrgDistList.bind(this));
+			Core.EventManager.addListener("nics.user.profile.loaded", this.updateOrgCapsListener.bind(this));
+			
+			this.bindOrgCaps = this.orgCapUpdate.bind(this);
+		},
+		
+		updateOrgCapsListener: function(evt, data){
+		
+			if(this.currentOrg){
+				this.mediator.unsubscribe("iweb.nics.orgcaps." + this.currentOrg + "." + this.orgCapName);
+				Core.EventManager.removeListener("iweb.nics.orgcaps." + this.currentOrg + "." + this.orgCapName, this.bindOrgCaps);
+			}
+			
+			this.currentOrg = UserProfile.getOrgId();
+			
+			if(this.orgIds.indexOf(UserProfile.getOrgId()) == -1){
+				Core.EventManager.addListener("iweb.nics.orgcaps." + this.currentOrg + "." + this.orgCapName, this.bindOrgCaps);
+				this.orgIds.push(this.currentOrg);
+			}
+
+			this.mediator.subscribe("iweb.nics.orgcaps." + this.currentOrg + "." + this.orgCapName);
+			
+		},
+	
+		orgCapUpdate: function(evt, orgcap){
+
+			if(orgcap.activeWeb){
+				this.getView().enable();
+			}
+			else{
+				this.getView().disable();
+			}
+		
+			UserProfile.setOrgCap(orgcap.cap.name,orgcap.activeWeb);
+		
 		},
 	
 		onJoinIncident: function(e, incident) {
@@ -84,9 +119,10 @@ function(Core, UserProfile, RocReportView, RocFormView) {
 			this.incidentId = incident.id;
 			this.emailList ="";
 			
-			this.getView().enable();				
+			this.getView().enable();
 			
 			var endpoint = Core.Config.getProperty(UserProfile.REST_ENDPOINT);
+			this.hasFinalForm = false;
 			//Load reports
 			this.hasFinalForm = false;
 			this.mediator.sendRequestMessage(endpoint +
@@ -116,7 +152,7 @@ function(Core, UserProfile, RocReportView, RocFormView) {
 			Core.EventManager.removeListener("LoadOrgAdminList", this.loadOrgAdminList);
 			Core.EventManager.removeListener("LoadOrgDistList", this.loadOrgDistList);
 			Core.EventManager.removeListener("PrintROCReport", this.onReportReady);
-			Core.EventManager.removeListener("CancelROCReport", this.onReportReady);
+			Core.EventManager.removeListener("CancelROCReport", this.onCancel);
 			
 			
 			
@@ -131,6 +167,8 @@ function(Core, UserProfile, RocReportView, RocFormView) {
 			this.incidentId = null;
 			this.incidentName = null;
 			this.emailList = null;
+			this.hasFinalForm = false;
+			
 			
 		},
 		
@@ -212,8 +250,9 @@ function(Core, UserProfile, RocReportView, RocFormView) {
 					
 					
 				});
-				 //rocReportContainer.show();
-		         rocReportContainer.add(rocForm);				//Pull data from the report, and add in the incidentName and Id
+				  rocReportContainer.add(rocForm);
+		        
+		         //Pull data from the report, and add in the incidentName and Id
 				var formData = (JSON.parse(record.data.message));
 			    formData.report.incidentId = record.data.incidentId;
 			    formData.report.incidentName = record.data.incidentName;
@@ -281,15 +320,16 @@ function(Core, UserProfile, RocReportView, RocFormView) {
 						var newReport  = this.buildReportData(report);
 						newReports.push(newReport);
 						if (newReport.status == 'FINAL') {
-							this.hasFinalForm = true;	
+							this.hasFinalForm = true; 	
+
 						}						
 					}
 					combo.getStore().removeAll();
 					combo.getStore().loadRawData(newReports, true);
 					var latestForm = combo.getStore().getAt(0).data.formId;
 					combo.setValue(latestForm);
-					//this.displayCurrentRecord(true, 'select');	
-					if (this.hasFinalForm){
+					this.displayCurrentRecord(true, 'select');	
+				if (this.hasFinalForm){
 						this.lookupReference('updateButton').disable();
 						this.lookupReference('finalButton').disable();
 					}

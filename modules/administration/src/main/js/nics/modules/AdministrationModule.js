@@ -29,9 +29,10 @@
  */
 define(["iweb/CoreModule", "./administration/AdminView",
 		"./administration/RoomManagementView", "nics/modules/UserProfileModule", 
-		"./administration/ArchivedIncidentLookup"],
+		"./administration/ArchivedIncidentLookup", "./administration/OrganizationCapabilitiesView" ],
 	
-	function(Core, AdminView, RoomManagementView, UserProfile, ArchivedIncidentLookup) {
+	function(Core, AdminView, RoomManagementView, UserProfile, 
+				ArchivedIncidentLookup, OrganizationCapabilitiesView) {
 	
 		var AdminModule = function(){};
 		

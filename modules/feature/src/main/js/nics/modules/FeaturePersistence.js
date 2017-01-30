@@ -39,12 +39,11 @@ define([
 		FeaturePersistenceModule.prototype.load = function(){
 			(new FeatureController()).init();
 			
-			Core.EventManager.addListener(UserProfile.PROFILE_LOADED, function(){
-				DrawMenuModule.addAppsButton(new ShareWorkspaceButton({
-					workspaceController: new ShareWorkspaceController(),
-					disabled: UserProfile.isReadOnly()
-				}));
-			});
+			DrawMenuModule.addAppsButton(new ShareWorkspaceButton({
+				workspaceController: new ShareWorkspaceController(),
+				disabled: true
+			}));
+
 			var clickListener = MapModule.getClickListener();
 			clickListener.addRenderer(new FeatureDetailRenderer());
 		};

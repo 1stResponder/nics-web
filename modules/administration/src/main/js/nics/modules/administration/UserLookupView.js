@@ -27,7 +27,7 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-define(['./DDGridView', './UserLookupController', './UserModel', 'nics/modules/report/common/FormVTypes'],
+define(['./DDGridView', './UserLookupController', './UserModel',  'iweb/core/FormVTypes'],
 		function(DDGridView, UserLookupController, UserModel) {
 	
 	return Ext.define('modules.administration.UserLookupView', {

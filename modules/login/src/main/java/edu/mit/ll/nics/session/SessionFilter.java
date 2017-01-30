@@ -92,9 +92,17 @@ public class SessionFilter implements Filter {
 			chain.doFilter(req,resp);
 		}
 		//Allow everyone to register
+		else if(requestURI.startsWith(REGISTER_PAGE)){
+			HttpSession session = req.getSession();
+			Map<String,Object> data = new HashMap<String,Object>();
+			data.put(USERNAME, "register");
+			
+			SessionHolder.addSession(session.getId(), data);
+			
+			chain.doFilter(req,resp);
+		}
 		//Allow everyone to resetpassword
-		else if (requestURI.startsWith(REGISTER_PAGE) || 
-				requestURI.startsWith(FORGOTPASSWORD_PAGE)){
+		else if (requestURI.startsWith(FORGOTPASSWORD_PAGE)){
 			req.getSession();
 			chain.doFilter(req,resp);
 		}

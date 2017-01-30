@@ -48,9 +48,9 @@ define(['ext', "iweb/CoreModule", 'nics/modules/UserProfileModule'],
                 // validate feedback message
                 if (Core.Util.isValidInput(content))
                 {
-                    
+                    console.log('Content validated');
                     var topic = Core.Config.getProperty(this.TOPIC_KEY);
-                    
+                    console.log("Retrieved Feedback property value: " + topic);
                     if (topic)
                     {
                         var subject = Core.Config.getProperty(this.SUBJECT_KEY) + ' ' + location.hostname;
@@ -65,6 +65,7 @@ define(['ext', "iweb/CoreModule", 'nics/modules/UserProfileModule'],
                         };
                         if (this.mediator && this.mediator.publishMessage)
                         {
+                            console.log(JSON.stringify(message));
 
                             this.mediator.publishMessage(topic, message);
 
@@ -75,14 +76,18 @@ define(['ext', "iweb/CoreModule", 'nics/modules/UserProfileModule'],
                         } else
                         {
                         	Ext.MessageBox.alert("NICS", "Unable to send feedback report");
+                            console.error("publishMessage function not defined!");
                         }
 
                     } else{
                         // TODO log error or alert user to notify system administrators topic property not set
+                        console.error("Couldn't retrieve topic from properties");
                         Ext.MessageBox.alert("NICS", "Unable to send feedback report");
                     }
                 } else
                 {
+                    console.log('Content not valid');
+                    alert('Feedback message content not valid');
                     Ext.MessageBox.alert("NICS", "Unable to send feedback report: Feedback message content not valid");
                 }
             },

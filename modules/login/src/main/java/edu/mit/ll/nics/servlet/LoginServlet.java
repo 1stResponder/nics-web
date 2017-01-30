@@ -35,10 +35,17 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Iterator;
+import java.util.ListIterator; 
+import java.util.Collections;
 import java.util.Locale;
 import java.util.Map;
 import java.util.jar.Manifest;
+import java.util.Date;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.text.ParseException;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -63,6 +70,7 @@ import javax.ws.rs.core.Response;
 
 import org.apache.commons.configuration.Configuration;
 import org.apache.log4j.Logger;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 import edu.mit.ll.iweb.session.SessionHolder;
 import edu.mit.ll.iweb.websocket.Config;
@@ -103,6 +111,7 @@ public class LoginServlet extends HttpServlet implements Servlet {
 	private String restEndpoint;
 	private String warVersion;
 	private String cookieDomain;
+	private String logoutUrl;
 	private String helpSite;
 	private String siteLogo;
 	private String siteLabel;
@@ -116,6 +125,7 @@ public class LoginServlet extends HttpServlet implements Servlet {
 		Configuration config = Config.getInstance().getConfiguration();
 		restEndpoint = config.getString("endpoint.rest");
 		cookieDomain = config.getString("private.cookie.domain");
+		logoutUrl = config.getString("logout.url");
 		helpSite = config.getString("help.site.url","https://public.nics.ll.mit.edu/");
 		siteLogo = config.getString("main.site.logo","login/images/nics-logo.jpg");
 		siteLabel = config.getString("main.site.title","Welcome to NICS 6");
@@ -156,9 +166,8 @@ public class LoginServlet extends HttpServlet implements Servlet {
 			boolean b_loggedOut = Boolean.parseBoolean(s_loggedOut);
 			
 			List<Map<String, Object>> workspaces = getWorkspaces(req.getServerName());
-			System.out.println("Hereis " +  (workspaces.get(0)).get("workspaceid"));
-			String defaultWorkspace = workspaces.get(0).get("workspaceid").toString();
 			if (workspaces.size() > 0 && !b_loggedOut) {
+				String defaultWorkspace = workspaces.get(0).get("workspaceid").toString();
 				req.setAttribute("version", warVersion);
 				req.setAttribute("workspaces", workspaces);
 				chosenWorkspace  = req.getParameter("currentWorkspace");
@@ -264,6 +273,8 @@ public class LoginServlet extends HttpServlet implements Servlet {
 		Map<String, Object> entity = builder
 				.get(new GenericType<Map<String, Object>>() {
 				});
+
+		@SuppressWarnings("unchecked")
 		List<Map<String, Object>> ret = (List<Map<String, Object>>) entity.get("workspaces");
 		response.close();
 		jerseyClient.close();
@@ -294,6 +305,8 @@ public class LoginServlet extends HttpServlet implements Servlet {
 				Map<String, Object> entity = builder
 						.get(new GenericType<Map<String, Object>>() {
 						});
+
+				@SuppressWarnings("unchecked")
 				int count = (Integer) entity.get("count");
 				response.close();
 				jerseyClient.close();
@@ -336,8 +349,9 @@ public class LoginServlet extends HttpServlet implements Servlet {
 		Manifest manifest = new Manifest(is);
 		return manifest.getMainAttributes().getValue(IMPL_VERSION);
 	}
-	private List<?> getAnnouncements(String workspaceId)  {
-		List<?> announcements = null;	
+	private List<Map<String, Object>> getAnnouncements(String workspaceId)  {
+		List<Map<String, Object>> announcements = null;	
+		List<Map<String, Object>> announcementsAmended = null;	
 		if (restEndpoint != null) {
 			try {
 				String url = new java.net.URI(restEndpoint.concat("/"))
@@ -357,20 +371,93 @@ public class LoginServlet extends HttpServlet implements Servlet {
 				Map<String, Object> entity = builder
 						.get(new GenericType<Map<String, Object>>() {
 						});
-				announcements = (List<?>) entity.get("results");
+				announcements = (List<Map<String, Object>>) entity.get("results");
 				response.close();
 				jerseyClient.close();
 
 				tokenUtil.destroyToken();
+				announcementsAmended = this.getPosterNames(announcements);
 
-				return announcements;
 			}
 			catch (URISyntaxException exception) {
 				logger.error(String.format(
 						"URISyntax error getting announcements"));
 				
 			}
-		}
-			return announcements;
+		}                
+		
+		
+		return  announcementsAmended;                                                                                                                                                                                                    
+	}
+	private List<Map<String, Object>> getPosterNames(List<Map<String, Object>> announcements)  {
+		
+		List<Map<String, Object>> poster = null;
+		List<Map<String, Object>> announcementsReversed  = null;
+		Map<String, Object> oneAnnouncement = null;
+		ListIterator iterator = announcements.listIterator();
+		
+		
+         while(iterator.hasNext()){
+         	 
+        	 oneAnnouncement  =( Map<String, Object>) iterator.next();
+             String usersessionId = oneAnnouncement.get("usersessionid").toString();
+     		    if (restEndpoint != null) {
+     				try {
+     					String url = new java.net.URI(restEndpoint.concat("/"))
+     							.resolve(
+     									String.format(
+     											"users/1/pastUsersessionId/%s/",
+     											usersessionId)).toASCIIString();
+     					CookieTokenUtil tokenUtil = new CookieTokenUtil();
+     					Client jerseyClient = ClientBuilder.newClient();
+     					WebTarget target = jerseyClient.target(url.toString());
+
+     					Builder builder = target
+     							.request(MediaType.APPLICATION_JSON_TYPE);
+     					tokenUtil.setCookies(builder);
+
+     					Response response = builder.get();
+     					Map<String, Object> entity = builder
+     							.get(new GenericType<Map<String, Object>>() {
+     							});
+     		
+     					poster = (List<Map<String, Object>>) entity.get("users");
+     					response.close();
+     					jerseyClient.close();
+
+     					tokenUtil.destroyToken();
+     					String postedBy = poster.get(0).get("firstname").toString() + " " + poster.get(0).get("lastname").toString();
+     					String datePosted = oneAnnouncement.get("created").toString();
+     					
+     					SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
+     					SimpleDateFormat formatter2 = new SimpleDateFormat("MMM dd, YYYY");
+     					
+     					try {
+     					
+
+     						Date date = formatter.parse(datePosted);
+     						oneAnnouncement.put("postedDate", formatter2.format(date));
+         					
+     				} catch (ParseException e) {
+     					logger.error(String.format(
+     							"ParseException getting date"));
+     				}
+     					
+     					oneAnnouncement.put("postedby", postedBy);
+     					iterator.set(oneAnnouncement);
+     					
+     				}
+     				catch (URISyntaxException exception) {
+     					logger.error(String.format(
+     							"URISyntax error getting user"));
+     					
+     				}
+     		    }
+         }
+       announcementsReversed = announcements.subList(0, announcements.size());
+         Collections.reverse(announcementsReversed);
+         return announcementsReversed;
+        
+			
 	}
 }

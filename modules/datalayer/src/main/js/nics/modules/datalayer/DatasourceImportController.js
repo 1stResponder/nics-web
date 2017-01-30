@@ -34,6 +34,8 @@ define(['ext', 'ol', "iweb/CoreModule", "nics/modules/UserProfileModule", "./Tok
 			extend : 'Ext.app.ViewController',
 			
 			alias: 'controller.datalayer.datasourceimportcontroller',
+
+			orgListTopic: 'nics.fileimport.orgs',
 			
 			init: function() {
 				this.dataSourceType = this.getView().dataSourceType;
@@ -52,12 +54,57 @@ define(['ext', 'ol', "iweb/CoreModule", "nics/modules/UserProfileModule", "./Tok
 			bindEvents: function(){
 				
 				//Bind UI Elements
+				Core.EventManager.addListener(UserProfile.PROFILE_LOADED, this.onLoadUserProfile.bind(this));
+				Core.EventManager.addListener(this.orgListTopic, this.onLoadOrgs.bind(this));
 				Core.EventManager.addListener("nics.data.loaddatasources." + this.dataSourceType, this.onLoadDataSources.bind(this));
 				Core.EventManager.addListener("nics.data.adddatasource." + this.dataSourceType, this.onAddDatasource.bind(this));
 				Core.EventManager.addListener("nics.data.adddatalayer." + this.dataSourceType, this.onAddDatalayer.bind(this));
+				Core.EventManager.addListener("nics.incident.join", this.onJoinIncident.bind(this));
+				Core.EventManager.addListener("nics.incident.close", this.onCloseIncident.bind(this));
+				Core.EventManager.addListener("nics.collabroom.load", this.onLoadCollabRooms.bind(this))
 				Core.EventManager.addListener(this.tokenHandlerTopic, this.tokenHandler.bind(this));
 			},
-			
+
+			onLoadUserProfile: function(e) {
+				var url = Ext.String.format('{0}/orgs/{1}?userId={2}',
+					Core.Config.getProperty(UserProfile.REST_ENDPOINT),
+					UserProfile.getWorkspaceId(), UserProfile.getUserId());
+
+				this.mediator.sendRequestMessage(url, this.orgListTopic);
+			},
+
+			onLoadOrgs: function(evt, response) {
+				if (response && response.organizations) {
+					var orgCombo = this.getView().getOrgCombo();
+					orgCombo.store.loadData(response.organizations);
+					orgCombo.store.autoSync = false;
+					orgCombo.store.insert(0, {orgId: 'none', name: '&nbsp;'});
+				}
+			},
+
+			onJoinIncident: function(evt, incident) {
+				// Send a request for the list of collab rooms for this incident
+				this.mediator.sendRequestMessage(
+					this.getLoadCollabRoomUrl(incident.id, UserProfile.getUserId()), "nics.collabroom.load");
+			},
+
+			onCloseIncident: function(evt, incidentId) {
+				// Clear and disable the collab room selector,
+				// since the user is no longer in the incident
+				this.getView().getCollabroomCombo().clearValue();
+			},
+
+			onLoadCollabRooms: function(evt, response) {
+				if (response) {
+					var rooms = response.results;
+					var roomCombo = this.getView().getCollabroomCombo();
+					// Populate the collab room selector
+					roomCombo.store.loadData(rooms);
+					roomCombo.store.autoSync = false;
+					roomCombo.store.insert(0, {collabroomId: 'none', name: '&nbsp;'});
+				}
+			},
+
 			updateGridTitle: function() {
 				var panelTitle = this.getView().getTitle();
 				
@@ -396,7 +443,9 @@ define(['ext', 'ol', "iweb/CoreModule", "nics/modules/UserProfileModule", "./Tok
 					combo = this.getView().getLayerCombo(),
 					input = this.getView().getLabelInput(),
 					legend = this.getView().getLegendInput(),
-					refreshRate = this.getView().getRefreshRateCombo();
+					refreshRate = this.getView().getRefreshRateCombo(),
+					orgCombo = this.getView().getOrgCombo(),
+					collabroomCombo = this.getView().getCollabroomCombo();
 				
 				var record = grid.getSelectionModel().getSelection()[0];
 				var datasourceid = record.getId();
@@ -414,6 +463,18 @@ define(['ext', 'ol', "iweb/CoreModule", "nics/modules/UserProfileModule", "./Tok
 					legend: legend.getValue()
 				};
 				
+				if(orgCombo.getValue()){
+					values.datalayerOrgs = [{
+						orgid: orgCombo.getValue()
+					}];
+				}
+				
+				if(collabroomCombo.getValue()){
+					values.datalayerCollabrooms = [{
+							collabroomid: collabroomCombo.getValue()
+					}];
+				}
+				
 				var version = record.get('version');
 				if (version) {
 					values.datalayersource.attributes = JSON.stringify({
@@ -424,12 +485,14 @@ define(['ext', 'ol', "iweb/CoreModule", "nics/modules/UserProfileModule", "./Tok
 				var url = Ext.String.format('{0}/datalayer/{1}/sources/{2}/layer',
 						Core.Config.getProperty(UserProfile.REST_ENDPOINT),
 						UserProfile.getWorkspaceId(), datasourceid);
+				url = url +  Ext.String.format('?username={0}', UserProfile.getUsername());
+
 				this.mediator.sendPostMessage(url, 'nics.data.adddatalayer.' + this.dataSourceType, values);
 			},
 			
 			onAddDatalayer: function(evt, response) {
 				var newLayers = response.datalayers;
-				if (newLayers.length) {
+				if (response.message == 'ok') {
 					Ext.Msg.show({
 						title: 'Data Layer',
 						message: 'Your new data layer has been created',
@@ -453,6 +516,8 @@ define(['ext', 'ol', "iweb/CoreModule", "nics/modules/UserProfileModule", "./Tok
 				this.getView().getImportButton().disable();
 				this.getView().getLegendInput().reset();
 				this.getView().getRefreshRateCombo().reset();
+				this.getView().getOrgCombo().reset();
+				this.getView().getCollabroomCombo().reset();
 			},
 			
 			/**
@@ -466,6 +531,14 @@ define(['ext', 'ol', "iweb/CoreModule", "nics/modules/UserProfileModule", "./Tok
 				this.getView().getImportButton().setDisabled(disabled);
 				this.getView().getLegendInput().setDisabled(disabled);
 				this.getView().getRefreshRateCombo().setDisabled(disabled);
+				this.getView().getOrgCombo().setDisabled(disabled);
+				this.getView().getCollabroomCombo().setDisabled(disabled);
+			},
+
+			getLoadCollabRoomUrl: function(incidentId, userid) {
+				return Ext.String.format("{0}/collabroom/{1}?userId={2}",
+					Core.Config.getProperty(UserProfile.REST_ENDPOINT),
+					incidentId, userid);
 			}
 			
 		});

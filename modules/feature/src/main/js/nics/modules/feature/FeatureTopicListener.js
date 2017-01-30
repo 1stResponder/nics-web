@@ -369,7 +369,8 @@ define(['ext', 'iweb/CoreModule', "ol", "iweb/modules/MapModule", "nics/modules/
 			
 			return new ol.layer.Vector({
 				  source: source,
-				  style: Core.Ext.Map.getStyle
+				  style: Core.Ext.Map.getStyle,
+				  zIndex: 1000 //keep room features on top
 				});
 		},
 		

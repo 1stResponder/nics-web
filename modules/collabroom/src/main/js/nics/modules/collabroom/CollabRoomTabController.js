@@ -91,7 +91,7 @@ define(["iweb/CoreModule", 'nics/modules/UserProfileModule'],
 			
 			onTabChange: function(tabpanel, tab, oldtab, eOpts){
 				Core.EventManager.fireEvent("nics.collabroom.activate", tab.collabRoom.collabRoomId, 
-						(UserProfile.isReadOnly() || tab.collabRoom.readOnly), tab.collabRoom.name);
+						(UserProfile.isReadOnly() || tab.collabRoom.readOnly), tab.collabRoom.name, tab.collabRoom);
 			}
 		});
 });

@@ -49,12 +49,21 @@ define(['ext', 'iweb/CoreModule', './FeatureTopicListener','nics/modules/UserPro
 		},
 
 		onLoadUserProfile: function(e, userProfile){
+			//create myMap listener on initial UserProfile load
+			if (!this.myMapListener) {
+				this.myMapListener = new FeatureTopicListener(
+						USER_TYPE, UserProfile.getUserId(), UserProfile.getUsername());
 			
-			this.myMapListener = new FeatureTopicListener(
-					USER_TYPE, UserProfile.getUserId(), UserProfile.getUsername());
+				//Create listener for My Map
+				this.setActiveTopicListener(this.myMapListener, false);
+			}
 			
-			//Create listener for My Map
-			this.setActiveTopicListener(this.myMapListener, false);
+			//update the current room read-only setting
+			if (this.activeTopicListener && this.activeRoom &&
+					this.activeTopicListener.featureType !== USER_TYPE) {
+				var readOnly = UserProfile.isReadOnly() || this.activeRoom.readOnly;
+				this.setActiveTopicListener(this.activeTopicListener, readOnly);
+			}
 		},
 		
 		createTopicListener: function (id, featureType) {
@@ -79,13 +88,14 @@ define(['ext', 'iweb/CoreModule', './FeatureTopicListener','nics/modules/UserPro
 				//if the closed room was the active one
 				if (this.topicListeners[layerId] === this.activeTopicListener) {
 					this.setActiveTopicListener(null);
+					this.activeRoom = null;
 				}
 				
 				delete this.topicListeners[layerId];
 			}
 		},
 
-		onActivateCollabRoom: function(e, collabRoomId, readOnly) {
+		onActivateCollabRoom: function(e, collabRoomId, readOnly, collabRoomName, collabRoom) {
 			var topicListener;
 			if(collabRoomId == 'myMap'){
 				topicListener = this.myMapListener;
@@ -100,6 +110,7 @@ define(['ext', 'iweb/CoreModule', './FeatureTopicListener','nics/modules/UserPro
 			}
 
 			this.setActiveTopicListener(topicListener, readOnly);
+			this.activeRoom = collabRoom;
 		},
 
 		setActiveTopicListener: function(topicListener, readOnly) {

@@ -34,6 +34,8 @@ define(['ext', 'ol', "iweb/CoreModule", "nics/modules/UserProfileModule"],
 			extend : 'Ext.app.ViewController',
 			
 			alias: 'controller.datalayer.fileimportcontroller',
+
+			orgListTopic: 'nics.fileimport.orgs',
 			
 			init: function() {
 				this.dataSourceType = this.getView().dataSourceType;
@@ -46,6 +48,16 @@ define(['ext', 'ol', "iweb/CoreModule", "nics/modules/UserProfileModule"],
 				this.updatePanelTitle();
 				this.bindEvents();
 				
+				this.lookupReference('orgCombo').on("select", function(combo, record, eOpts) {
+					if (record.data.orgId === 'none')
+						combo.clearValue();
+				});
+
+				this.getView().getCollabroomCombo().on("select", function(combo, record, eOpts) {
+					if (record.data.collabroomId === 'none')
+						combo.clearValue();
+				});
+				
 				var form = this.getView().getFormPanel().getForm();
 				if(form){
 					var refreshrate = form.findField('refreshrate');
@@ -56,7 +68,55 @@ define(['ext', 'ol', "iweb/CoreModule", "nics/modules/UserProfileModule"],
 			},
 			
 			bindEvents: function(){
+				Core.EventManager.addListener(UserProfile.PROFILE_LOADED, this.onLoadUserProfile.bind(this));
+				Core.EventManager.addListener(this.orgListTopic, this.onLoadOrgs.bind(this));
 				Core.EventManager.addListener("nics.data.onFileUploadSuccess", this.onFileImportSuccess.bind(this));
+				Core.EventManager.addListener("nics.incident.join", this.onJoinIncident.bind(this));
+				Core.EventManager.addListener("nics.incident.close", this.onCloseIncident.bind(this));
+				Core.EventManager.addListener("nics.collabroom.load", this.onLoadCollabRooms.bind(this));
+			},
+
+			onLoadUserProfile: function(e) {
+				var url = Ext.String.format('{0}/orgs/{1}?userId={2}',
+					Core.Config.getProperty(UserProfile.REST_ENDPOINT),
+					UserProfile.getWorkspaceId(), UserProfile.getUserId());
+
+				this.mediator.sendRequestMessage(url, this.orgListTopic);
+			},
+
+			onLoadOrgs: function(evt, response) {
+				if (response && response.organizations) {
+					var orgCombo = this.lookupReference('orgCombo');
+					orgCombo.store.loadData(response.organizations);
+					orgCombo.store.autoSync = false;
+					orgCombo.store.insert(0, {orgId: 'none', name: '&nbsp;'});
+				}
+			},
+
+			onJoinIncident: function(evt, incident) {
+				// Send a request for the list of collab rooms for this incident
+				this.mediator.sendRequestMessage(
+					this.getLoadCollabRoomUrl(incident.id, UserProfile.getUserId()), "nics.collabroom.load");
+			},
+
+			onCloseIncident: function(evt, incidentId) {
+				// Clear and disable the collab room selector,
+				// since the user is no longer in the incident
+				this.getView().getCollabroomCombo().clearValue();
+				this.getView().getCollabroomCombo().setDisabled(true);
+			},
+
+			onLoadCollabRooms: function(evt, response) {
+				if (response) {
+					var rooms = response.results;
+					var roomCombo = this.getView().getCollabroomCombo();
+					// Populate the collab room selector
+					roomCombo.store.loadData(rooms);
+					roomCombo.store.autoSync = false;
+					roomCombo.store.insert(0, {collabroomId: 'none', name: '&nbsp;'});
+					// Enable the selector
+					roomCombo.setDisabled(false);
+				}
 			},
 			
 			updatePanelTitle: function() {
@@ -70,12 +130,13 @@ define(['ext', 'ol', "iweb/CoreModule", "nics/modules/UserProfileModule"],
 			},
 			
 			submitForm: function(b, e){
-				
+	
 				var form = this.getView().getFormPanel().getForm();
 				var fileType = this.dataSourceType;
 				var fileName = form.findField('fileName').getValue();
-				var url = this.url;
 				var displayname = form.findField('displayname').getValue();
+				var collabroomId = form.findField('collabroomId').getValue();
+				var url = this.url;
 				
 				if(fileType == 'kmz'){
 				
@@ -131,16 +192,15 @@ define(['ext', 'ol', "iweb/CoreModule", "nics/modules/UserProfileModule"],
 					});
 				}
 
-				console.log("Submitting form for "+ fileName +" to url: " + url);
+
 				
 				form.submit({
 					url: url,
 					params: {
-					
+						'fileType': fileType,
+						'collabroomId': collabroomId,
 						'usersessionid': UserProfile.getUserSessionId(),
-						'baselayer': true,
-						'fileType': fileType
-					
+						'baselayer': true
 					},
 					waitMsg: 'Uploading file...',
 					success: function(fp, o) {
@@ -155,7 +215,6 @@ define(['ext', 'ol', "iweb/CoreModule", "nics/modules/UserProfileModule"],
 						});
 					}
 				});
-				
 			},
 			
 			onFileImportSuccess: function(e, obj){
@@ -168,7 +227,12 @@ define(['ext', 'ol', "iweb/CoreModule", "nics/modules/UserProfileModule"],
 					buttons: Ext.Msg.OK
 				});
 			
+			},
+
+			getLoadCollabRoomUrl: function(incidentId, userid) {
+				return Ext.String.format("{0}/collabroom/{1}?userId={2}",
+					Core.Config.getProperty(UserProfile.REST_ENDPOINT),
+					incidentId, userid);
 			}
-			
 		});
 });

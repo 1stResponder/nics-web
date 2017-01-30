@@ -27,7 +27,7 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-define(['iweb/CoreModule', './FmagFormController', './FmagFormModel' , 'nics/modules/report/common/FormVTypes'],
+define(['iweb/CoreModule', './FmagFormController', './FmagFormModel' , 'iweb/core/FormVTypes'],
        
 function(Core, FmagFormController, FmagFormModel ) {
 
@@ -61,8 +61,10 @@ function(Core, FmagFormController, FmagFormModel ) {
 		         defaults: {
 		             anchor: '100%'
 		         },
+
 		    	 items:[ 
 		    	        {xtype: 'hiddenfield',bind:'{formTypeId}' },
+
 	    	 	        {bind:'{reportType}',fieldLabel: 'Report Type', xtype:'displayfield'},
 	    	 	        {bind:'{agencyRequest}',vtype:'simplealphanum',fieldLabel: 'Agency Making Request*',allowBlank:false,cls:'fmag-required'},
 	    	 	        {bind:'{requestDate}',xtype:'datefield', fieldLabel: 'Date/Time of Request:*',format: 'Y-m-d H:i:s',allowBlank:false,cls:'fmag-required'},

@@ -108,6 +108,7 @@ define(['ext', 'iweb/CoreModule', 'nics/modules/UserProfileModule'],
 				
 				this.lookupReference('userView').getController().loadUsers(null, selected[0].data.orgId);
 				this.lookupReference('archiveView').getController().loadIncidents(null, selected[0].data.orgId);
+				this.lookupReference('orgCapsView').getController().loadOrgCaps(selected[0].data.orgId);
 			}
 		},
 		

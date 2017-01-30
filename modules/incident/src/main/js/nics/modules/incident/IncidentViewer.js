@@ -27,7 +27,7 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
- define(['iweb/CoreModule', './IncidentController', 'nics/modules/report/common/FormVTypes'], function(Core ) {
+ define(['iweb/CoreModule', './IncidentController', 'iweb/core/FormVTypes'], function(Core ) {
 	Ext.define('modules.incident.IncidentViewer', {
 
 		extend: 'Ext.Button',

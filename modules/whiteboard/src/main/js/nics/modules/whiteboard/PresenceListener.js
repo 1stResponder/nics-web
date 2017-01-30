@@ -191,7 +191,10 @@ define(['ext', 'iweb/CoreModule', './ChatModel','nics/modules/UserProfileModule'
 		},
 		
 		getUrl: function(incidentId, collabroomId) {
-			return Ext.String.format("{0}/collabroom/{1}/{2}", 
+			/*return Ext.String.format("{0}/collabroom/{1}/{2}?username={3}", 
+					Core.Config.getProperty(UserProfile.REST_ENDPOINT),
+					incidentId, collabroomId, UserProfile.getUsername());*/
+			return Ext.String.format("{0}/collabroom/{1}/{2}",
 					Core.Config.getProperty(UserProfile.REST_ENDPOINT),
 					incidentId, collabroomId);
 		},

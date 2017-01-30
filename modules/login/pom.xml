@@ -36,7 +36,7 @@
   <parent>
   	<groupId>edu.mit.ll.nics</groupId>
   	<artifactId>web-modules</artifactId>
-  	<version>6.3</version>
+  	<version>6.4-SNAPSHOT</version>
   	<relativePath>../pom.xml</relativePath>
   </parent>
   
@@ -98,8 +98,19 @@
     </dependency>
 
     <dependency>
-        <groupId>org.owasp.esapi</groupId>
-        <artifactId>esapi</artifactId>
+		<groupId>org.apache.cxf.fediz</groupId>
+		<artifactId>fediz-spring</artifactId>
+		<version>${fediz-spring.version}</version>
+	</dependency>
+	<dependency>
+		<groupId>org.apache.commons</groupId>
+		<artifactId>commons-lang3</artifactId>
+		<version>${commons-lang.version}</version>
+  </dependency>
+
+    <dependency>
+      <groupId>org.owasp.esapi</groupId>
+      <artifactId>esapi</artifactId>
     </dependency>
   
     <!-- test dependencies -->

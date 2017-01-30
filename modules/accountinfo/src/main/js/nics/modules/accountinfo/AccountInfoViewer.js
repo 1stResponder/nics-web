@@ -27,7 +27,7 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
- define(['iweb/CoreModule', './AccountInfoController', './ChangeOrgViewer', 'nics/modules/report/common/FormVTypes' ], 
+ define(['iweb/CoreModule', './AccountInfoController', './ChangeOrgViewer',  'iweb/core/FormVTypes' ], 
 
  	function(Core, AccountInfoController, ChangeOrgViewer) {
  	
@@ -175,7 +175,7 @@
 				   			}],
 				   	plugins:[{
 							ptype: 'rowediting',
-							pluginId: 'rowediting',
+							pluginId: 'contactRowEditing',
 							
 							listeners:{
 								beforeedit: function(editor, context){
@@ -187,7 +187,7 @@
 									context.store.remove(record);
 								},
 								validateedit: function(editor, context) {
-									Core.EventManager.fireEvent('nics.user.contact.validate',context)
+									Core.EventManager.fireEvent('nics.user.contact.validate',context);
 								}
 							}
 					}],

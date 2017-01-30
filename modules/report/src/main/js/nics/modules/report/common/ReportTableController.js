@@ -43,6 +43,8 @@ function(ol, Core, MapModule, UserProfile, UserPicker) {
 
 		strokeColor : 'rgb(0,0,0)',
 
+		orgCaps: [],
+
 		init : function(args) {
 			this.mediator = Core.Mediator.getInstance();
 
@@ -63,6 +65,7 @@ function(ol, Core, MapModule, UserProfile, UserPicker) {
 			Core.EventManager.addListener("nics.incident.join", this.onJoinIncident.bind(this));
 			Core.EventManager.addListener("nics.incident.close", this.onCloseIncident.bind(this));
 			Core.EventManager.addListener(this.loadEvt, this.onLoadReports.bind(this));
+			Core.EventManager.addListener("nics.user.profile.loaded", this.updateOrgCapsListener.bind(this));
 			
 			Core.EventManager.fireEvent("nics.report.add", {
 				title : this.reportTitle,
@@ -74,6 +77,47 @@ function(ol, Core, MapModule, UserProfile, UserPicker) {
 			this.getGrid().on("selectionchange", this.onGridSelectionChange.bind(this));
 
 			MapModule.getMapStyle().addStyleFunction(this.styleReportFeature.bind(this));
+			
+			this.bindOrgCapUpdate = this.orgCapUpdate.bind(this);
+		},
+		
+		updateOrgCapsListener: function(evt, data){
+			
+			if(this.currentOrg){
+				this.mediator.unsubscribe("iweb.nics.orgcaps." + this.currentOrg + "." + this.reportType);
+				Core.EventManager.removeListener("iweb.nics.orgcaps." + this.currentOrg + "." + this.reportType, this.bindOrgCapUpdate);
+			}
+			
+			this.currentOrg = UserProfile.getOrgId();
+			
+			var orgCapInArray = false;
+			
+			for(var i = 0; i < this.orgCaps.length; i++){
+				if(this.orgCaps[i].currentOrg == this.currentOrg && this.orgCaps[i].reportType == this.reportType){
+					orgCapInArray = true;
+				}
+			}
+			
+			if(!orgCapInArray){
+				Core.EventManager.addListener("iweb.nics.orgcaps." + this.currentOrg + "." + this.reportType, this.bindOrgCapUpdate);
+				this.orgCaps.push({ 'orgId': this.currentOrg , 'reportType': this.reportType });
+			}
+			
+			this.mediator.subscribe("iweb.nics.orgcaps." + this.currentOrg + "." + this.reportType);
+
+		},
+		
+		orgCapUpdate: function(evt, orgcap){
+
+			if(orgcap.activeWeb){
+				this.getView().enable();
+			}
+			else{
+				this.getView().disable();
+			}
+		
+			UserProfile.setOrgCap(orgcap.cap.name,orgcap.activeWeb);
+		
 		},
 		
 		onJoinIncident : function(e, incident) {
@@ -81,7 +125,7 @@ function(ol, Core, MapModule, UserProfile, UserPicker) {
 			this.incidentId = incident.id;
 
 			this.getView().enable();
-
+	
 			this.mediator.sendRequestMessage(Core.Config
 					.getProperty(UserProfile.REST_ENDPOINT)
 					+ "/reports/" + this.incidentId + '/' + this.reportType,

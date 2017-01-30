@@ -54,6 +54,7 @@ define(["iweb/CoreModule", 'ol', 'iweb/modules/MapModule'],
 			var isSuperUser;
 			var isAdminUser;
 			var incidentMapName;
+			var orgCaps;
 			
 			var propertiesLoadedEvt = "nics.user.properties.loaded";
 			var profileLoadedEvt = "nics.user.profile.loaded";
@@ -64,6 +65,7 @@ define(["iweb/CoreModule", 'ol', 'iweb/modules/MapModule'],
 				Core.EventManager.addListener("nics.userorg.change", requestUserProfile.bind(this));
 				Core.EventManager.addListener("nics.user.profile.set", setUserProfile.bind(this));
 				Core.EventManager.addListener("nics.user.map.org", setOrgLocation.bind(this));
+				Core.EventManager.addListener("nics.user.profile.orgcaps", setOrgCaps.bind(this));
 			};
 			
 			function loadUserProperties(){
@@ -110,6 +112,7 @@ define(["iweb/CoreModule", 'ol', 'iweb/modules/MapModule'],
 			};
 			
 			function setUserProfile(e, data){
+				
 				incidentTypes = data.incidentTypes;
 				orgPrefix = data.orgPrefix;
 				firstName = data.userFirstname;
@@ -137,8 +140,28 @@ define(["iweb/CoreModule", 'ol', 'iweb/modules/MapModule'],
 							var latAndLonValues = [organization.defaultlongitude,organization.defaultlatitude];
 							var center = ol.proj.transform(latAndLonValues,'EPSG:4326','EPSG:3857');
 							MapModule.getMap().getView().setCenter(center);
+							
+							var endpoint = Core.Config.getProperty("endpoint").rest;
+							var url = Ext.String.format("{0}/orgs/{1}/orgcaps/{2}",
+								endpoint,
+								workspaceId,
+								orgId);
+								
+							Core.Mediator.getInstance().sendRequestMessage(url, "nics.user.profile.orgcaps");
 						}
 					});
+				}
+
+			};
+			
+			function setOrgCaps(e, response){
+				
+				orgCaps = response.orgCaps;
+				
+				if(orgCaps){
+					for(var i = 0; i < orgCaps.length; i++){	
+						Core.EventManager.fireEvent("iweb.nics.orgcaps." + orgCaps[i].orgId + "." + orgCaps[i].cap.name, orgCaps[i]);					
+					}
 				}
 				
 			};
@@ -271,6 +294,35 @@ define(["iweb/CoreModule", 'ol', 'iweb/modules/MapModule'],
 				
 				setJobTitle: function(jobtitle){
 					jobTitle = jobtitle;
+				},
+				
+				setOrgCaps: function(orgCaps){
+					orgCaps = orgCaps;
+				},
+				
+				isOrgCapEnabled: function(orgCapName){
+				
+				if(orgCaps){
+					for(var i = 0; i < orgCaps.length; i++){
+						if(orgCaps[i].cap.name == orgCapName && orgCaps[i].activeWeb){
+							return true;
+						}
+						else if(orgCaps[i].cap.name == orgCapName && !orgCaps[i].activeWeb){
+							return false;
+						}
+					}
+				}
+					return false;
+				},
+				
+				setOrgCap: function(orgCapName, value){
+				
+					for(var i = 0; i < orgCaps.length; i++){
+						if(orgCaps[i].cap.name == orgCapName){
+							orgCaps[i].activeWeb = value;
+						}
+					}
+				
 				},
 				
 				isSuperUser: function(){

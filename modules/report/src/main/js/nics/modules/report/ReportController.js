@@ -142,6 +142,7 @@ define(['iweb/CoreModule',
 				}
 				//remove print frame
 				this.destroyPrintFrame();
+				this.getView().disable();
 			},
 			
 			//Add hidden iframe used to print reports

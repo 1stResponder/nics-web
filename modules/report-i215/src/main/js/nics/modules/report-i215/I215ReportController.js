@@ -36,7 +36,8 @@ function(Core, UserProfile, I215ReportView, I215FormView) {
 	Ext.define('modules.report-i215.I215ReportController', {
 		extend : 'Ext.app.ViewController',
 		alias : 'controller.I215reportcontroller',
-		
+		orgCapName: '215',
+		orgIds: [],
 		
 		init : function(args) {
 		
@@ -63,6 +64,9 @@ function(Core, UserProfile, I215ReportView, I215FormView) {
 			});
 			this.mediator.sendRequestMessage(Core.Config.getProperty(UserProfile.REST_ENDPOINT) +
 					"/reports/types", topic);
+			
+
+			this.bindOrgCaps = this.orgCapUpdate.bind(this);
 		},
 		
 		bindEvents: function(){
@@ -73,14 +77,45 @@ function(Core, UserProfile, I215ReportView, I215FormView) {
 			Core.EventManager.addListener("Print215Report", this.onReportReady.bind(this));
 			Core.EventManager.addListener("Cancel215Report", this.onCancel.bind(this));
 			Core.EventManager.fireEvent("nics.report.add", {title: "215", component: this.getView()});
+			Core.EventManager.addListener("nics.user.profile.loaded", this.updateOrgCapsListener.bind(this));
+		},
+	
+		updateOrgCapsListener: function(evt, data){
+		
+			if(this.currentOrg){
+				this.mediator.unsubscribe("iweb.nics.orgcaps." + this.currentOrg + "." + this.orgCapName);
+				Core.EventManager.removeListener("iweb.nics.orgcaps." + this.currentOrg + "." + this.orgCapName, this.bindOrgCaps);
+			}
+			
+			this.currentOrg = UserProfile.getOrgId();
+			
+			if(this.orgIds.indexOf(UserProfile.getOrgId()) == -1){
+				Core.EventManager.addListener("iweb.nics.orgcaps." + this.currentOrg + "." + this.orgCapName, this.bindOrgCaps);
+				this.orgIds.push(this.currentOrg);
+			}
+
+			this.mediator.subscribe("iweb.nics.orgcaps." + this.currentOrg + "." + this.orgCapName);
+			
+		},
+		
+		orgCapUpdate: function(evt, orgcap){
+		
+			if(orgcap.activeWeb){
+				this.getView().enable();
+			}
+			else{
+				this.getView().disable();
+			}
+		
+			UserProfile.setOrgCap(orgcap.cap.name,orgcap.activeWeb);
+		
 		},
 	
 		onJoinIncident: function(e, incident) {
 			this.incidentName = incident.name;
 			this.incidentId = incident.id;
 			
-			
-			this.getView().enable();				
+			this.getView().enable();	
 			
 			var endpoint = Core.Config.getProperty(UserProfile.REST_ENDPOINT);
 			//Load reports
@@ -229,7 +264,8 @@ function(Core, UserProfile, I215ReportView, I215FormView) {
 					this.lookupReference('printButton').disable();
 					
 				}
-				I215Form.viewModel.set(formData.report);
+			
+				if (I215Form.viewModel) I215Form.viewModel.set(formData.report);
 			}
 			
 			
@@ -241,7 +277,9 @@ function(Core, UserProfile, I215ReportView, I215FormView) {
 			this.lookupReference('createButton').disable();
 			this.lookupReference('viewButton').enable();
 			this.lookupReference('printButton').enable();
+
 			
+
 			if (this.hasFinalForm){
 				this.lookupReference('updateButton').disable();
 				this.lookupReference('finalButton').disable();
@@ -257,7 +295,7 @@ function(Core, UserProfile, I215ReportView, I215FormView) {
 		
 		onLoadReports: function(e, response) {
 			var newReports = [];
-			//var isFinal = false;
+
 			var combo = this.lookupReference('I215List');
 			if(response) {
 				if(response.reports && 

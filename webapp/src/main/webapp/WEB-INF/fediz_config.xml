@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+Copyright (c) 2016, Ardent Management Consulting, All Rights Reserved
+-->
+<FedizConfig>
+    <contextConfig name="/nics">
+        <audienceUris>
+            <audienceItem></audienceItem>
+        </audienceUris>
+        <certificateStores>
+            <trustManager>
+                <keyStore file="" password="" type="JKS" />
+            </trustManager>
+        </certificateStores>
+        <trustedIssuers>
+            <issuer certificateValidation="PeerTrust" />
+        </trustedIssuers>
+        <maximumClockSkew>1000</maximumClockSkew>
+        <protocol xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+            xsi:type="federationProtocolType" version="1.0.0">
+            <realm></realm>
+            <issuer></issuer>
+            <roleDelimiter>,</roleDelimiter>
+            <roleURI>http://schemas.xmlsoap.org/ws/2005/05/identity/claims/role</roleURI>
+            <reply>/j_spring_fediz_security_check</reply>
+            <claimTypesRequested>
+                <claimType type="http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name" optional="false" />				
+				<claimType type="http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress" optional="false" />
+				<claimType type="http://schemas.microsoft.com/ws/2008/06/identity/claims/role" optional="true" />				
+            </claimTypesRequested>
+            <tokenValidators>
+                <validator>com.ardentmc.dhs.nics.NICSSAMLTokenValidator</validator>
+            </tokenValidators>            
+        </protocol>
+    </contextConfig>
+</FedizConfig>
+

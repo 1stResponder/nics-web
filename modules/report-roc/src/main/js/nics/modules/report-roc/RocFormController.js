@@ -45,6 +45,10 @@ define(['iweb/CoreModule', "nics/modules/UserProfileModule", './RocReportView', 
 				this.callParent();
 				
 			},
+			onJoinIncident: function(e, incident) {
+				
+				this.getView().enable();		
+			},
 			clearForm: function () {
 				
 			 var username  = UserProfile.getFirstName() + " " + UserProfile.getLastName();	

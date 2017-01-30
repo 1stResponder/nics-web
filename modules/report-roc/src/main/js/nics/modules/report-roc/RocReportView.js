@@ -40,12 +40,10 @@ define(['iweb/CoreModule','./RocReportController', './RocReportModel'],
             emptyText: 'There are no reports'
         },
         
-        
         listeners: {
         	selectionchange: 'onSelectionChange'
-        	
-        
         },
+        
 	    reference: 'rocPanel',
 	    autoScroll: true,
         referenceHolder: true,

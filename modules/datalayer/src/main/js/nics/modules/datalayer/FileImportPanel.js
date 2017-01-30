@@ -82,18 +82,51 @@
 					data: [[0, '0'],[30, '0:30'],[60, '1:00'], [90, '1:30'], [180, '3:00'], [300, '5:00']]
 				}),
 				valueField: 'value',
-				displayField: 'text'
+				displayField: 'text',
+				editable: false
+			},
+			{
+				xtype: 'combo',
+				name: 'orgid',
+				reference: 'orgCombo',
+				fieldLabel: 'Restrict to organization',
+				valueField: 'orgId',
+				displayField: 'name',
+				queryMode: 'local',
+				store: {
+					sorters: 'name'
+				},
+				forceSelection: true,
+				editable: false,
+				emptyText: 'None'
+			},
+			{
+				xtype: 'combo',
+				name: 'collabroomId',
+				reference: 'collabroomCombo',
+				fieldLabel: 'Restrict to room',
+				valueField: 'collabRoomId',
+				displayField: 'name',
+				queryMode: 'local',
+				disabled: true,
+				forceSelection: true,
+				editable: false,
+				emptyText: 'None'
 			}],
 		    buttons: [{
 				    text: 'Upload',
-				    handler :  'submitForm'
+				    handler : 'submitForm'
 			}]
 		}],
 		
 		getFormPanel: function() {
 			return	this.lookupReference('formPanel');
-		}
-		
+		},
+
+			getCollabroomCombo: function() {
+				return this.lookupReference('collabroomCombo');
+			}
+
 		}
 	});
 });
