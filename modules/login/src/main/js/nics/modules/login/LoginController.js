@@ -45,9 +45,9 @@ define([
 			    
 			    var timeout = Core.Config.getProperty("token.timeout");//in minutes
 			    if(!timeout){
-			    	timeout = 1810 * 1000;
+			    	timeout = 30 * 60000; // Defaults to 30 minutes
 			    }else{
-			    	timeout = timeout * 6000;
+			    	timeout = timeout * 60000;
 			    }
 			    
 			    window.setInterval(this.refreshToken.bind(this), timeout);
