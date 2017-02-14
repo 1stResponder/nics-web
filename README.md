@@ -19,6 +19,9 @@ Or a 'production' build using:
 
 Both options will build nics.war to the webapp/target/ directory
 
+## Token Refresh
+
+Tokens' passed to NICS are manually refreshed on the interval set by core.properties 'token.timeout' value.  As long as the token is valid and the max session time (set in OpenAM) has not been reached, the token will be refreshed indefinitely.  Note that the Token's idle time (set in OpenAM) must be greater than the interval time.  Otherwise, the token will be invalid before the first refresh and NICS will end at the time set by 'token.timeout'.
 
 ## Frequently Asked Questions
 

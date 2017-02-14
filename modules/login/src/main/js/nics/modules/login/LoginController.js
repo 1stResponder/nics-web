@@ -45,7 +45,7 @@ define([
 			    
 			    var timeout = Core.Config.getProperty("token.timeout");//in minutes
 			    if(!timeout){
-			    	timeout = 30 * 60000; // Defaults to 30 minutes
+			    	timeout = 29 * 60000; // Interval defaults to 29 minutes
 			    }else{
 			    	timeout = timeout * 60000;
 			    }
