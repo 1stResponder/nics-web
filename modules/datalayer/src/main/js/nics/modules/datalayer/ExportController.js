@@ -80,7 +80,7 @@ define(['ext', "iweb/CoreModule", 'nics/modules/UserProfileModule'],
 					
 					this.getView().hide();
 					
-					window.open(url);							
+					window.open(url);
 				}
 				else{
 					Ext.MessageBox.alert("Export Current Room", "You are not currently in a collaboration room.");

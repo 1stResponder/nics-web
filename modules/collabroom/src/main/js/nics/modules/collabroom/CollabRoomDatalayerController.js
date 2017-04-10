@@ -179,7 +179,7 @@ define(['ext', 'iweb/CoreModule','nics/modules/UserProfileModule','nics/modules/
 	 		}
 	 		
 	 		store.load();
-	 	},	
+	 	},
 	 	
 	 	onActivateCollabRoom: function(e, collabRoomId, readOnly, collabRoomName) {
 	 		//Turn off current layers

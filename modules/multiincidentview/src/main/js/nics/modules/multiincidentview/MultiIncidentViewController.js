@@ -179,7 +179,7 @@ define(['ext', 'iweb/CoreModule', 'ol', './MultiIncidentViewModel', 'nics/module
 			}
 			
 			//Request the org ownership if the user is an admin or a super user
-			if(UserProfile.getSystemRoleId() == 4){
+			if(UserProfile.getSystemRoleId() == 4 || UserProfile.getSystemRoleId() == 0){
 				this.loadIncidentOrgs();
 			}
 			

@@ -53,6 +53,9 @@ import edu.mit.ll.iweb.websocket.Config;
 import edu.mit.ll.nics.sso.util.SSOUtil;
 import edu.mit.ll.nics.util.CookieTokenUtil;
 import org.apache.log4j.Logger;
+import com.iplanet.sso.SSOException;
+import com.iplanet.sso.SSOToken;
+import com.iplanet.sso.SSOTokenManager;
 
 @WebServlet("/refresh")
 public class TokenRefresher extends HttpServlet implements Servlet {
@@ -60,7 +63,8 @@ public class TokenRefresher extends HttpServlet implements Servlet {
 	private static String CURRENT_USER_SESSION_ID = "currentUserSessionId";
 	private static String restEndpoint;
 	public static String WORKSPACE_ID = "workspaceId";
-	
+	protected SSOTokenManager manager = null;
+
 	public TokenRefresher(){}
 	
 	@Override
@@ -89,34 +93,88 @@ public class TokenRefresher extends HttpServlet implements Servlet {
 	public boolean refreshToken(String sessionId, String currentUserSessionId){
 		logger.info("Trying to refresh token");
 		String token = (String) SessionHolder.getData(sessionId, SessionHolder.TOKEN);
-		SSOUtil ssoUtil = new SSOUtil();
-		if(!ssoUtil.refreshSessionToken(token)){
-			logger.info("removing token from database");
-			//remove from database
-			CookieTokenUtil tokenUtil = new CookieTokenUtil();
-			Client jerseyClient = ClientBuilder.newClient();
-			WebTarget target = jerseyClient.target(
-					restEndpoint
-					+ "/users/" 
-					+ SessionHolder.getSessionInfo(sessionId).get(WORKSPACE_ID)
-					+ "/removesession?currentUserSessionId=" 
-					+ currentUserSessionId);
+		Boolean openAmIdentity = Config.getInstance().getConfiguration().getBoolean("openAm.Identity", false);
 
-			Builder builder = target.request(MediaType.APPLICATION_JSON_TYPE);
-			tokenUtil.setCookies(builder);
+		if(openAmIdentity)
+		{
+			SSOUtil ssoUtil = new SSOUtil();
+			if(!ssoUtil.refreshSessionToken(token)){
+				logger.info("removing token from database");
+				//remove from database
+				CookieTokenUtil tokenUtil = new CookieTokenUtil();
+				Client jerseyClient = ClientBuilder.newClient();
+				WebTarget target = jerseyClient.target(
+						restEndpoint
+						+ "/users/" 
+						+ SessionHolder.getSessionInfo(sessionId).get(WORKSPACE_ID)
+						+ "/removesession?currentUserSessionId=" 
+						+ currentUserSessionId);
 
-			Entity<String> entity = Entity.entity("{}", MediaType.APPLICATION_JSON);
-	    	Response response = builder.post(entity);
-			response.close();
-			jerseyClient.close();
+				Builder builder = target.request(MediaType.APPLICATION_JSON_TYPE);
+				tokenUtil.setCookies(builder);
 
-			tokenUtil.destroyToken();
-			
-			return false;
+				Entity<String> entity = Entity.entity("{}", MediaType.APPLICATION_JSON);
+		    	Response response = builder.post(entity);
+				response.close();
+				jerseyClient.close();
+
+				tokenUtil.destroyToken();
+				
+				return false;
+			}
+
+		} else
+		{
+			//return refreshToken(token);
 		}
 
-		logger.info("Refreshed token");
 		return true;
 	}
 
+	protected boolean refreshToken(String tokenID)
+	{
+		try{
+
+			if (manager == null)
+			{
+				manager = SSOTokenManager.getInstance();
+			}
+
+			SSOToken token = manager.createSSOToken(tokenID);
+
+			if (manager.isValidToken(token, true)) // if it's valid, the token's idle time gets refreshed.
+			{
+				debug("Created valid token fromk TOKENID: " + tokenID);
+				info("SSOToken hostname: " + token.getHostName());
+				info("SSOToken Principal name: " + token.getPrincipal().getName());
+				info("SSOToken Auth type user: " + token.getAuthType());
+				info("IP addr of host: " + token.getIPAddress().getHostAddress());
+				info("Max Idle Time: " + token.getMaxIdleTime());
+				info("Max Session Time: " + token.getMaxSessionTime());
+				info("New Idle Time: " + token.getIdleTime());
+				manager.refreshSession(token);
+				return true;
+			}
+		}catch (Exception ae)
+		{
+			ae.printStackTrace();
+			error("Exception when refreshing token: " + ae);
+		}
+		return false;
+	}
+
+	public void info(String msg)
+	{
+		logger.info(msg);
+	}
+
+	public void debug(String msg)
+	{
+		logger.debug(msg);
+	}
+
+	public void error(String msg)
+	{
+		logger.error(msg);
+	}
 }

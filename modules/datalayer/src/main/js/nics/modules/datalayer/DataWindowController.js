@@ -37,7 +37,9 @@ define(['ext', 'iweb/CoreModule', 'nics/modules/UserProfileModule',
 			WindowController, ImportWindow, DatasourceImportPanel,
 			FileImportPanel, ShapeFileImportPanel, ImageImportPanel,
 			WFSCapabilities, WMSCapabilities, ArcGISCapabilities){
-	
+
+		var myWin;
+
 		return Ext.define('modules.datalayer.DataWindowController', {
 			extend : 'modules.datalayer.WindowController',
 			
@@ -46,13 +48,47 @@ define(['ext', 'iweb/CoreModule', 'nics/modules/UserProfileModule',
 			init: function() {
 				this.callParent();
 				Core.EventManager.addListener(UserProfile.PROFILE_LOADED, this.onUserProfileLoad.bind(this));
+				this.mediator = Core.Mediator.getInstance();
 			},
 
 			onImportClick: function() {
-				if (!this.importWindow) {
-					this.importWindow = this.createImportWindow();
+					
+					var win = Ext.WindowManager.getActive();
+		            if (win) {
+		                win.close();
+		            }
+
+					Ext.getBody().mask("Please wait...");
+
+					var url = Ext.String.format('/em-api/v1/datalayer/{0}/login',
+					UserProfile.getWorkspaceId());
+
+					var topic = Ext.String.format('iweb.NICS.{0}.user.userlogin',
+					UserProfile.getWorkspaceId());
+
+					var winProps = "width=1,height=1,status=0, scrollbars=0, resizable=0, left=1, top=1";
+
+					this.myWin = window.open(url,'_blank',winProps);
+
+					this.myWin.blur();
+					window.focus();
+
+					Core.EventManager.addListener(topic, this.onUserLogIn.bind(this));
+					this.mediator.subscribe(topic);
+			},
+
+			onUserLogIn: function() {
+				var that = this;
+
+				that.myWin.close();
+				Ext.getBody().unmask();
+
+
+				if (!that.importWindow) {
+					that.importWindow = that.createImportWindow();
 				}
-				this.importWindow.show();
+
+				that.importWindow.show();
 			},
 
 			onUserProfileLoad: function() {
@@ -62,7 +98,7 @@ define(['ext', 'iweb/CoreModule', 'nics/modules/UserProfileModule',
 			
 			createImportWindow: function() {
 				var win = new ImportWindow();
-				var tabPanel = win.getTabPanel();				
+				var tabPanel = win.getTabPanel();
 				
 				var kmlUrl = Ext.String.format("/em-api/v1/datalayer/{0}/sources/{1}/document/{2}?username={3}",
 						UserProfile.getWorkspaceId(),

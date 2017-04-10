@@ -3,23 +3,28 @@
  */
 package com.ardentmc.dhs.nics;
 
+import edu.mit.ll.iweb.session.SessionHolder;
+import edu.mit.ll.iweb.websocket.Config;
+import edu.mit.ll.nics.util.CookieTokenUtil;
+
 import java.io.IOException;
 import java.io.StringWriter;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+
+import java.util.*;
 
 import javax.servlet.FilterChain;
-import javax.servlet.ServletException;
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
 import javax.servlet.http.Cookie;
+import javax.servlet.http.HttpSession;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.ProcessingException;
 import javax.ws.rs.WebApplicationException;
+import javax.servlet.ServletException;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
+
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Invocation.Builder;
@@ -27,31 +32,37 @@ import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.ProcessingException;
+import javax.ws.rs.WebApplicationException;
+
+import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.OutputKeys;
+import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
 import org.apache.commons.configuration.Configuration;
+
 import org.apache.cxf.fediz.core.Claim;
 import org.apache.cxf.fediz.core.ClaimCollection;
-import org.apache.cxf.fediz.core.SecurityTokenThreadLocal;
 import org.apache.cxf.fediz.core.processor.FedizResponse;
-import org.apache.cxf.fediz.spring.FederationUser;
+import org.apache.cxf.fediz.core.SecurityTokenThreadLocal;
 import org.apache.cxf.fediz.spring.authentication.FederationAuthenticationToken;
+import org.apache.cxf.fediz.spring.FederationUser;
+
 import org.apache.log4j.Logger;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.filter.GenericFilterBean;
-import org.w3c.dom.Element;
 
-import edu.mit.ll.iweb.session.SessionHolder;
-import edu.mit.ll.iweb.websocket.Config;
-import edu.mit.ll.nics.util.CookieTokenUtil;
+import org.w3c.dom.Element;
 
 public class NICSSecurityFilter extends GenericFilterBean {
 
@@ -74,16 +85,20 @@ public class NICSSecurityFilter extends GenericFilterBean {
 	private static final String LOGIN_ERROR_NOWORKSPACE_DESCRIPTION = "login.error.noworkspace.description";
 	private static final String LOGIN_ERROR_APIERROR_DESCRIPTION = "login.error.apierror.description";
 	private static final String LOGIN_ERROR_CONFIGURATION_MESSAGE = "login.error.configuration.message";
+	private static final String OPENAM_AS_IDP = "openAm.Identity";
+
 	
 	private String workspaceUrl;
 	private String restEndpoint;
 	private String cookieDomain;
+	private Boolean openAmIdentity;
 	
 	@Override
 	protected void initFilterBean() throws ServletException {
 		Configuration config = Config.getInstance().getConfiguration();
 		restEndpoint = config.getString("endpoint.rest");
 		cookieDomain = config.getString("private.cookie.domain");
+		openAmIdentity = config.getBoolean(OPENAM_AS_IDP,false);
 
 		try {
 
@@ -93,7 +108,7 @@ public class NICSSecurityFilter extends GenericFilterBean {
 			}
 		} catch (URISyntaxException e) {
 			logger.error("Failed to initialize workspace API endpoint", e);
-		}		
+		}
 	}
 
 	@Override
@@ -105,36 +120,54 @@ public class NICSSecurityFilter extends GenericFilterBean {
 		
 		String requestURI = req.getRequestURI();
 		logger.info("requestURI: "+requestURI);
-		try {
-			
-			//Do not cache the home page to allow the filter to redirect if the user 
+		try
+		{
+			//Do not cache the home page to allow the filter to redirect if the user
 			//is not validated
 			if(requestURI.equalsIgnoreCase(DEFAULT_REQUEST_URI) || requestURI.endsWith(HOME_PAGE)){
 				resp.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0, post-check=0, pre-check=0");
 		        resp.setHeader("Pragma", "no-cache");
 		        resp.setDateHeader("Expires", 0);
-			}			
+			}
 
 	        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-	        if (auth instanceof FederationAuthenticationToken) {
+	        if (auth instanceof FederationAuthenticationToken) 
+	        {
+	        	Date tokenExpires = ((FederationAuthenticationToken)auth).getResponse().getTokenExpires();
+
+	        	logger.info("Token Expires A: " + tokenExpires);
+
 	        		        		        	
-	            FederationAuthenticationToken fedAuthToken = (FederationAuthenticationToken)auth;	            
-	            if (fedAuthToken.getUserDetails() instanceof FederationUser) {
-	            	
-		        	// Check to see if this user is already logged in, if not log them into NICS with their claims
-		        	if(false == isUserLoggedIn(req, fedAuthToken)) {	            
-		                	
-						logUserIn(req, resp, fedAuthToken);							
-		        	}
+	            FederationAuthenticationToken fedAuthToken = (FederationAuthenticationToken)auth;
+
+	            if (fedAuthToken.getUserDetails() instanceof FederationUser)
+            	{
 	
-	            } else {
+						// Check to see if this user is already logged in, if not log them into NICS with their claims
+			        	if(false == isUserLoggedIn(req, fedAuthToken))
+			        	{		                	
+							logUserIn(req, resp, fedAuthToken);
+
+			        	} else
+			        	{
+			        		HttpSession session = req.getSession(false);
+							if(session==null || !req.isRequestedSessionIdValid())
+							{
+							    resp.sendRedirect("/login?loggedOut=true&reason=invalidSession");
+							}
+
+						}
+
+		        	} else
+		        	{
 	            	logger.info("FederationAuthenticationToken found but not FederationUser");
 	            }
 	            
 	        } else {
 	            logger.info("No FederationAuthenticationToken found in Spring Security Context.");
 	        }
-		} catch(Exception ex) {
+		} catch(Exception ex)
+		{
 			logger.error("Redirecting to the error page due to an uncaught exception.", ex);
 			redirectToErrorGeneric(req, resp);
 		}
@@ -158,7 +191,7 @@ public class NICSSecurityFilter extends GenericFilterBean {
 			Object claimValue = claimValuesByTypeMap.get("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress");
 			String emailAddress = (String)claimValue;
 			logger.info("Looking up NICS user based on emailaddress claim: "+emailAddress);
-			loginWithEmailAddress(req, resp, fedAuthToken, emailAddress);		                	
+			loginWithEmailAddress(req, resp, fedAuthToken, emailAddress);
 		} else {
 		    // Try sub-claims first
 		    Object idpClaimValue = claimValuesByTypeMap.get("http://identityserver.thinktecture.com/claims/identityprovider");
@@ -190,8 +223,8 @@ public class NICSSecurityFilter extends GenericFilterBean {
 	}
 
 	private void loginWithEmailAddress(final HttpServletRequest req, final HttpServletResponse resp, FederationAuthenticationToken fedAuthToken, String emailAddress) {
-		FedizResponse fResp = fedAuthToken.getResponse();	        	
-		String uniqueTokenId = fResp.getUniqueTokenId();	        					        				
+		FedizResponse fResp = fedAuthToken.getResponse();
+		String uniqueTokenId = fResp.getUniqueTokenId();
 		Map<String, Object> data = new HashMap<String, Object>();
 		data.put(SessionHolder.TOKEN, uniqueTokenId);
 		data.put(USERNAME, emailAddress);
@@ -203,7 +236,7 @@ public class NICSSecurityFilter extends GenericFilterBean {
 			Integer workspaceId = (Integer)firstWorkspace.get("workspaceid");
 			
 			// see if this user is registered with NICS
-			if(nicsUser(emailAddress, String.valueOf(workspaceId))) {									
+			if(nicsUser(emailAddress, String.valueOf(workspaceId))) {
 				data.put(WORKSPACE_ID, Integer.valueOf(workspaceId));
 
 				SessionHolder.addSession(req.getSession().getId(), data);
@@ -216,7 +249,7 @@ public class NICSSecurityFilter extends GenericFilterBean {
 					resp.sendRedirect("/nics/register");
 				} catch (IOException ioe) {
 					logger.error("Could not redirect to the registration page due to the following error.", ioe);
-				}					
+				}
 			}
 		} else {
 			logger.error("Redirecting to error page - No Workspaces found.");
@@ -246,14 +279,14 @@ public class NICSSecurityFilter extends GenericFilterBean {
 	
 	private List<?> getWorkspaces(final HttpServletRequest req, final HttpServletResponse resp) {
 		
-		CookieTokenUtil tokenUtil = new CookieTokenUtil();
+		//CookieTokenUtil tokenUtil = new CookieTokenUtil();
 		Client jerseyClient = ClientBuilder.newClient();
 		Response response = null;
 		
 		List<?> workspaces = null;
 		try {
 			String hostname = req.getServerName();
-			URI uri = new URI(workspaceUrl).resolve(hostname);			
+			URI uri = new URI(workspaceUrl).resolve(hostname);
 			WebTarget target = jerseyClient.target(uri);
 	
 			Builder builder = target.request(MediaType.APPLICATION_JSON_TYPE);
@@ -270,19 +303,19 @@ public class NICSSecurityFilter extends GenericFilterBean {
 			logger.error("Unable to retrieve workspaces due to the following error.", e);
 		} finally {
 			if(response != null) {
-				response.close();				
+				response.close();
 			}
 			
 			jerseyClient.close();
 			
-			tokenUtil.destroyToken();	
-		}	
+			//tokenUtil.destroyToken();	
+		}
 		return workspaces;
 	}
 	private String getToken() {
 		String token = null;
         Element el = SecurityTokenThreadLocal.getToken();
-        if (el != null) {            
+        if (el != null) {
             try {
                 TransformerFactory transFactory = TransformerFactory.newInstance();
                 Transformer transformer = transFactory.newTransformer();
@@ -300,23 +333,27 @@ public class NICSSecurityFilter extends GenericFilterBean {
 	}
 	
 	private void setCookies(HttpServletResponse resp, String token) {
-		Cookie amCookie = new Cookie("AMAuthCookie", token);
-		if (cookieDomain != null) {
-			amCookie.setDomain(cookieDomain);
-		}
-		amCookie.setHttpOnly(true);
-		amCookie.setSecure(true);
-		amCookie.setPath("/");
-		resp.addCookie(amCookie);
-		
-		Cookie iCookie = new Cookie("iPlanetDirectoryPro", token);
-		if (cookieDomain != null) {
-			iCookie.setDomain(cookieDomain);
-		}
-		iCookie.setHttpOnly(true);
-		iCookie.setSecure(true);
-		iCookie.setPath("/");
-		resp.addCookie(iCookie);
+
+		if(openAmIdentity)
+		{
+			Cookie amCookie = new Cookie("AMAuthCookie", token);
+			if (cookieDomain != null) {
+				amCookie.setDomain(cookieDomain);
+			}
+			amCookie.setHttpOnly(true);
+			amCookie.setSecure(true);
+			amCookie.setPath("/");
+			resp.addCookie(amCookie);
+			
+			Cookie iCookie = new Cookie("iPlanetDirectoryPro", token);
+			if (cookieDomain != null) {
+				iCookie.setDomain(cookieDomain);
+			}
+			iCookie.setHttpOnly(true);
+			iCookie.setSecure(true);
+			iCookie.setPath("/");
+			resp.addCookie(iCookie);
+		} 
 	}
 	
 	private boolean nicsUser(String username, String workspaceId) {
@@ -328,13 +365,13 @@ public class NICSSecurityFilter extends GenericFilterBean {
 										"users/%s/systemStatus?userName=%s",
 										workspaceId, username)).toASCIIString();
 				
-				CookieTokenUtil tokenUtil = new CookieTokenUtil();
+				//CookieTokenUtil tokenUtil = new CookieTokenUtil();
 				Client jerseyClient = ClientBuilder.newClient();
 				WebTarget target = jerseyClient.target(url.toString());
 
 				Builder builder = target
 						.request(MediaType.APPLICATION_JSON_TYPE);
-				tokenUtil.setCookies(builder);
+				//tokenUtil.setCookies(builder);
 
 				Response response = builder.get();
 				Map<String, Object> entity = builder
@@ -343,7 +380,7 @@ public class NICSSecurityFilter extends GenericFilterBean {
 				int count = (Integer) entity.get("count");
 				response.close();
 				jerseyClient.close();
-				tokenUtil.destroyToken();
+			//	tokenUtil.destroyToken();
 
 				return count == 1; // Returned one valid user
 			} catch (URISyntaxException exception) {
@@ -357,25 +394,35 @@ public class NICSSecurityFilter extends GenericFilterBean {
 	}
 
 	private boolean isUserLoggedIn(HttpServletRequest req, FederationAuthenticationToken fedAuthToken){
-		FedizResponse fResp = fedAuthToken.getResponse();	        	
-		String uniqueTokenId = fResp.getUniqueTokenId();	
-		String token = (String) SessionHolder.getData(req.getSession().getId(), SessionHolder.TOKEN);		
-		if(uniqueTokenId.equalsIgnoreCase(token)){
-			return true;
-		}else if(req.getQueryString() != null && 
-				req.getQueryString().indexOf(REINIT_PARAM) > -1){
-			
+		FedizResponse fResp = fedAuthToken.getResponse();
+		String uniqueTokenId = fResp.getUniqueTokenId();
+
+		if(req.getSession(false) != null)
+		{
+			String exisTokenId = (String) SessionHolder.getData(req.getSession(false).getId(), SessionHolder.TOKEN);
+
+			if(uniqueTokenId.equalsIgnoreCase(exisTokenId)){
+				// should be checking here if the token/session is valid
+				return true;
+			}
+		}
+
+		if(req.getQueryString() != null &&
+				req.getQueryString().indexOf(REINIT_PARAM) > -1)
+		{
 			String userid = req.getParameter(REINIT_PARAM);
 			String sessionId = req.getParameter(SESSION_ID);
 			
-			if(SessionHolder.hasSession(sessionId)){
-				logger.info("Adding New Session Id info...");
-				SessionHolder.addSession(req.getSession().getId(), 
-						SessionHolder.getSessionInfo(sessionId));
-				SessionHolder.removeSession(sessionId);
-			}
+			// should be checking here if the token/session is valid
+			logger.info("Adding New Session Id info...");
+			SessionHolder.addSession(req.getSession().getId(),
+			SessionHolder.getSessionInfo(sessionId));
+			SessionHolder.removeSession(sessionId);
+
 			return true;
+			
 		}
+
 		return false;
-	}	
+	}
 }

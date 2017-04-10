@@ -42,50 +42,12 @@
 		<param-value>WEB-INF/log4j.xml</param-value>
 	</context-param>
 
-	<context-param>
-		<param-name>contextConfigLocation</param-name>
-		<param-value>WEB-INF/applicationContext-security.xml</param-value>
-	</context-param>
-		
-	<filter>
-	  <filter-name>CorsFilter</filter-name>
-	  <filter-class>org.apache.catalina.filters.CorsFilter</filter-class>
-	</filter>
-	
-	<filter-mapping>
-	  <filter-name>CorsFilter</filter-name>
-	  <url-pattern>/*</url-pattern>
-	</filter-mapping>
-
-	<filter>
-		<filter-name>springSecurityFilterChain</filter-name>
-		<filter-class>org.springframework.web.filter.DelegatingFilterProxy</filter-class>
-		<async-supported>true</async-supported>
-	</filter>
-		
-	<filter-mapping>
-		<filter-name>springSecurityFilterChain</filter-name>
-		<url-pattern>/*</url-pattern>
-	</filter-mapping>
-
-	<listener>
-		<listener-class>org.springframework.web.context.ContextLoaderListener</listener-class>
-	</listener>
-
-	<listener>
-		<listener-class>
-		  org.springframework.security.web.session.HttpSessionEventPublisher
-		</listener-class>
-	</listener> 
-		
 	<session-config>
-		<session-timeout>30</session-timeout>
-		<cookie-config>
+        <session-timeout>-1</session-timeout>
+	    <cookie-config>
 		<http-only>true</http-only>
 		<!--<secure>true</secure>-->
-		</cookie-config>
+	    </cookie-config>
 	</session-config>
-	<welcome-file-list>
-		<welcome-file>home.html</welcome-file>
-	</welcome-file-list>
+
 </web-app>

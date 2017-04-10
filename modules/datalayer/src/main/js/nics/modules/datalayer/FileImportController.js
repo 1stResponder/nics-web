@@ -113,7 +113,7 @@ define(['ext', 'ol', "iweb/CoreModule", "nics/modules/UserProfileModule"],
 					// Populate the collab room selector
 					roomCombo.store.loadData(rooms);
 					roomCombo.store.autoSync = false;
-					roomCombo.store.insert(0, {collabroomId: 'none', name: '&nbsp;'});
+					
 					// Enable the selector
 					roomCombo.setDisabled(false);
 				}
@@ -132,8 +132,8 @@ define(['ext', 'ol', "iweb/CoreModule", "nics/modules/UserProfileModule"],
 			submitForm: function(b, e){
 	
 				var form = this.getView().getFormPanel().getForm();
-				var fileType = this.dataSourceType;
-				var fileName = form.findField('fileName').getValue();
+				var fileType = this.dataSourceType.toLowerCase();
+				var fileName = form.findField('fileName').getValue().toLowerCase();
 				var displayname = form.findField('displayname').getValue();
 				var collabroomId = form.findField('collabroomId').getValue();
 				var url = this.url;
@@ -182,8 +182,7 @@ define(['ext', 'ol', "iweb/CoreModule", "nics/modules/UserProfileModule"],
 					}
 
 				}
-				
-				
+							
 				if(!displayname){
 					return Ext.Msg.show({
 						title: 'File Import',
@@ -202,6 +201,10 @@ define(['ext', 'ol', "iweb/CoreModule", "nics/modules/UserProfileModule"],
 						'usersessionid': UserProfile.getUserSessionId(),
 						'baselayer': true
 					},
+					headers: {
+						'Content-Type':'multipart/form-data; charset=UTF-8',
+						'Access-Control-Allow-Origin': '*'
+					},
 					waitMsg: 'Uploading file...',
 					success: function(fp, o) {
 						 Core.EventManager.fireEvent('nics.data.onFileUploadSuccess');
@@ -215,6 +218,7 @@ define(['ext', 'ol', "iweb/CoreModule", "nics/modules/UserProfileModule"],
 						});
 					}
 				});
+			
 			},
 			
 			onFileImportSuccess: function(e, obj){

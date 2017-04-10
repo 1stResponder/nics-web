@@ -50,6 +50,7 @@ define([
 			    	timeout = timeout * 60000;
 			    }
 			    
+			    this.refreshToken.bind(this);
 			    window.setInterval(this.refreshToken.bind(this), timeout);
 			},
 			

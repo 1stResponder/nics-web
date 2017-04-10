@@ -30,8 +30,7 @@
  define(["iweb/CoreModule", './WindowController'], function(Core) {
 	return Ext.define('modules.datalayer.ImportWindow', {
 		extend: 'Ext.Window',
-		
-		config: {
+        config: {
 			referenceHolder:true,
 			
 			resizable: true,
@@ -41,7 +40,7 @@
 
 			layout: 'fit',
 
-			width: 500, 
+			width: 500,
 			height: 400
 		},
 		

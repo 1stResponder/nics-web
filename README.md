@@ -2,6 +2,10 @@
 
 The Next-Generation Incident Command System (NICS) web application
 
+## Important to Note
+
+There are many places where links and emails have been hard coded.  For example, in Register.jsp the support email is hard coded.
+
 ## Dependencies
 - nics-tools
 - iweb-modules

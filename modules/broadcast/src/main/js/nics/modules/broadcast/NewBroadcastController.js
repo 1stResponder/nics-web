@@ -87,7 +87,7 @@ define(['ext', "iweb/CoreModule", 'nics/modules/UserProfileModule', 'nics/module
                                    "",""]);
                 }
                 grid.getStore().loadData(data, true);
-                grid.getSelectionModel().selectRange(numOfUsers, (numOfUsers + data.length) - 1, true);
+                grid.getSelectionModel().selectRange(0, (numOfUsers + data.length) - 1, true);
                 
                 this.lookupWindow.controller.clearGrid();
             },

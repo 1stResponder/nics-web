@@ -86,6 +86,7 @@
     <nics.common.version>${project.version}</nics.common.version>
     <sso.tools.version>${project.version}</sso.tools.version>
     <openam.tools.version>${project.version}</openam.tools.version>
+    <bouncycastle.version>1.55</bouncycastle.version>
 
 	<!-- Fediz-Spring -->
 	<slf4j.version>1.7.1</slf4j.version>
@@ -100,6 +101,28 @@
 
   <dependencyManagement>
     <dependencies>
+
+    <dependency>
+        <groupId>org.springframework.session</groupId>
+        <artifactId>spring-session</artifactId>
+        <version>1.2.2.RELEASE</version>
+    </dependency>
+
+    <dependency>
+            <groupId>org.springframework.session</groupId>
+            <artifactId>spring-session-jdbc</artifactId>
+            <version>1.2.2.RELEASE</version>
+    </dependency>
+    <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-jdbc</artifactId>
+    </dependency>
+    
+    <dependency>
+        <groupId>org.springframework</groupId>
+        <artifactId>spring-jdbc</artifactId>
+        <version>4.2.5.RELEASE</version>
+    </dependency>
 
       <dependency>
         <groupId>edu.mit.ll.iweb</groupId>

@@ -31,61 +31,44 @@
 
 -->
 <web-app version="3.0" xmlns="http://java.sun.com/xml/ns/javaee"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd">
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd">
 
-	<display-name>NICS</display-name>
-	<description>Next-Generation Incident Command System</description>
+    <display-name>NICS</display-name>
+    <description>Next-Generation Incident Command System</description>
 
-	<context-param>
-		<param-name>log4jConfigLocation</param-name>
-		<param-value>WEB-INF/log4j.xml</param-value>
-	</context-param>
+    <context-param>
+        <param-name>log4jConfigLocation</param-name>
+        <param-value>WEB-INF/log4j.xml</param-value>
+    </context-param>
+    <context-param>
+        <param-name>contextConfigLocation</param-name>
+        <param-value>WEB-INF/applicationContext-security.xml</param-value>
+    </context-param>
+        
+    <filter>
+        <filter-name>springSecurityFilterChain</filter-name>
+        <filter-class>org.springframework.web.filter.DelegatingFilterProxy</filter-class>
+        <async-supported>true</async-supported>
+    </filter>
+        
+    <filter-mapping>
+        <filter-name>springSecurityFilterChain</filter-name>
+        <url-pattern>/*</url-pattern>
+    </filter-mapping>
 
-	<context-param>
-		<param-name>contextConfigLocation</param-name>
-		<param-value>WEB-INF/applicationContext-security.xml</param-value>
-	</context-param>
-		
-	<filter>
-	  <filter-name>CorsFilter</filter-name>
-	  <filter-class>org.apache.catalina.filters.CorsFilter</filter-class>
-	</filter>
-	
-	<filter-mapping>
-	  <filter-name>CorsFilter</filter-name>
-	  <url-pattern>/*</url-pattern>
-	</filter-mapping>
-
-	<filter>
-		<filter-name>springSecurityFilterChain</filter-name>
-		<filter-class>org.springframework.web.filter.DelegatingFilterProxy</filter-class>
-		<async-supported>true</async-supported>
-	</filter>
-		
-	<filter-mapping>
-		<filter-name>springSecurityFilterChain</filter-name>
-		<url-pattern>/*</url-pattern>
-	</filter-mapping>
-
-	<listener>
-		<listener-class>org.springframework.web.context.ContextLoaderListener</listener-class>
-	</listener>
-
-	<listener>
-		<listener-class>
-		  org.springframework.security.web.session.HttpSessionEventPublisher
-		</listener-class>
-	</listener> 
-		
-	<session-config>
-		<session-timeout>30</session-timeout>
-		<cookie-config>
-		<http-only>true</http-only>
-		<!--<secure>true</secure>-->
-		</cookie-config>
-	</session-config>
-	<welcome-file-list>
-		<welcome-file>home.html</welcome-file>
-	</welcome-file-list>
+    <listener>
+        <listener-class>org.springframework.web.context.ContextLoaderListener</listener-class>
+    </listener>
+    
+    <session-config>
+        <session-timeout>-1</session-timeout>
+        <cookie-config>
+        <http-only>true</http-only>
+        <!--<secure>true</secure>-->
+        </cookie-config>
+    </session-config>
+    <welcome-file-list>
+        <welcome-file>home.html</welcome-file>
+    </welcome-file-list>
 </web-app>

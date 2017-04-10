@@ -201,12 +201,18 @@ define(['ext', 'iweb/CoreModule','nics/modules/UserProfileModule', 'nics/modules
 							if(!response.users || response.users.length != 1){ //we are enabling one at a time atm..
 								Ext.MessageBox.alert("Status", "There was an issue enabling the user.");
 							}else{
-								//Update OpenAM if it's the first time the user is enabled or
-								//They are no longer enabled in any other orgs
-								if((type == "enable" && response.orgCount ==1) ||
-										(type == "disable" && response.orgCount == 0)){
-									_this.updateOpenAM(username, type, userorgworkspaceid);
-								}
+
+								var openAMIdentity = Core.Config.getProperty("openAm.Identity");
+
+								if(openAMIdentity == "true")
+								{
+									//Update OpenAM if it's the first time the user is enabled or
+									//They are no longer enabled in any other orgs
+									if((type == "enable" && response.orgCount ==1) || (type == "disable" && response.orgCount == 0))
+									{
+										_this.updateOpenAM(username, type, userorgworkspaceid);
+									}
+								}							
 							}
 						},
 						[record.data.username]

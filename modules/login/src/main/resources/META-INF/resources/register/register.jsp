@@ -477,7 +477,7 @@
 	                	<div style="font-size: small; vertical-align: middle">
 	                    	<img src="register/images/stopsign32px.png" style="width:32px;height:32px"/>
                     	    If your organization is not available, contact 
-                    		<a href="mailto:nicssupport@ll.mit.edu">NICSsupport@LL.MIT.edu</a> to request
+                    		<a href="mailto:YOUR_EMAIL">YOUR_EMAIL</a> to request
                     		a new organization
 	                    </div>
 	                    <br/>

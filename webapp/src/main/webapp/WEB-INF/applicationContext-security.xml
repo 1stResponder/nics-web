@@ -25,12 +25,18 @@ Copyright (c) 2016, Ardent Management Consulting, All Rights Reserved
 	<sec:http pattern="/**/*.png" security="none" />
 	<sec:http pattern="/register" security="none" />
 	<sec:http pattern="/login" security="none" />
+    <sec:http pattern="/forgotpassword" security="none" />
+    <sec:http pattern="/resetpassword" security="none" />
+    <sec:http pattern="/forgotpasswordFailed.jsp" security="none" />
+    <sec:http pattern="/forgotpasswordSuccess.jsp" security="none" />
+    <sec:http pattern="/j_spring_fediz_security_check?wa=wsignoutcleanup1.0" security="none" />
     <sec:http entry-point-ref="federationEntryPoint" use-expressions="true" >
         <sec:intercept-url pattern="/**" access="isAuthenticated()" />
+        <sec:custom-filter ref="concurrencyFilter" position="CONCURRENT_SESSION_FILTER" />
         <sec:custom-filter ref="federationFilter" after="BASIC_AUTH_FILTER" />
-        <sec:custom-filter ref="nicsSecurityFilter" before="SERVLET_API_SUPPORT_FILTER" />        
+        <sec:custom-filter ref="nicsSecurityFilter" before="SERVLET_API_SUPPORT_FILTER" />
         <sec:session-management session-authentication-strategy-ref="sas" />
-        <sec:logout delete-cookies="JSESSIONID" />
+        <sec:logout delete-cookies="JSESSIONID" invalidate-session="true" />
     </sec:http>
 
     <sec:authentication-manager alias="authManager">
@@ -40,8 +46,14 @@ Copyright (c) 2016, Ardent Management Consulting, All Rights Reserved
     <!-- NOTE: Not loading any properties files, but using this to load system environment variables. -->
 	<bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer" >
 		<property name="searchSystemEnvironment" value="true" />
-		<property name="systemPropertiesModeName" value="SYSTEM_PROPERTIES_MODE_OVERRIDE" />		    
+		<property name="systemPropertiesModeName" value="SYSTEM_PROPERTIES_MODE_OVERRIDE" />
 	</bean>
+
+    <bean id="concurrencyFilter"
+       class="org.springframework.security.web.session.ConcurrentSessionFilter">
+        <property name="sessionRegistry" ref="sessionRegistry" />
+        <property name="expiredUrl" value="/session-expired.htm" />
+    </bean>
 
     <bean id="fedizConfig" class="org.apache.cxf.fediz.spring.FederationConfigImpl"
         init-method="init" p:configFile="file:${NICS_CONFIG}/fediz_config-nics.xml" />
@@ -53,13 +65,15 @@ Copyright (c) 2016, Ardent Management Consulting, All Rights Reserved
     <bean id="federationFilter"
         class="org.apache.cxf.fediz.spring.web.FederationAuthenticationFilter"
         p:authenticationManager-ref="authManager">
-
+        <property name="sessionAuthenticationStrategy" ref="sas" />
         <property name="authenticationFailureHandler">
             <bean
                 class="org.springframework.security.web.authentication.SimpleUrlAuthenticationFailureHandler" />
         </property>
     </bean>
-    <bean id="nicsSecurityFilter" class="com.ardentmc.dhs.nics.NICSSecurityFilter" />    
+
+
+    <bean id="nicsSecurityFilter" class="com.ardentmc.dhs.nics.NICSSecurityFilter" /> 
 
     <bean id="federationAuthProvider"
         class="org.apache.cxf.fediz.spring.authentication.FederationAuthenticationProvider"
@@ -70,7 +84,14 @@ Copyright (c) 2016, Ardent Management Consulting, All Rights Reserved
         </property>
     </bean>
 
-    <bean id="sas"
-        class="org.springframework.security.web.authentication.session.SessionFixationProtectionStrategy" />
+    <bean id="sas" class=
+     "org.springframework.security.web.authentication.session.ConcurrentSessionControlStrategy">
+      <constructor-arg name="sessionRegistry" ref="sessionRegistry" />
+      <property name="maximumSessions" value="2" />
+    </bean>
+
+    <bean id="sessionRegistry"
+    class="org.springframework.security.core.session.SessionRegistryImpl" />
 </beans>
+
 

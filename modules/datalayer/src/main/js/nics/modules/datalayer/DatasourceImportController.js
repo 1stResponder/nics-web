@@ -101,7 +101,6 @@ define(['ext', 'ol', "iweb/CoreModule", "nics/modules/UserProfileModule", "./Tok
 					// Populate the collab room selector
 					roomCombo.store.loadData(rooms);
 					roomCombo.store.autoSync = false;
-					roomCombo.store.insert(0, {collabroomId: 'none', name: '&nbsp;'});
 				}
 			},
 

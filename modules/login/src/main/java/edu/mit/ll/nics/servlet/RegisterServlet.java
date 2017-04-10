@@ -145,7 +145,7 @@ public class RegisterServlet extends HttpServlet implements Servlet {
 	private static final String PASSWORD_REQUIREMENTS_KEY = "password.requirements";
 	private static final String PASSWORD_PATTERN_KEY = "password.pattern";
 	
-	//private CookieTokenUtil tokenUtil;
+	//private CookieTokenUtil tokenUtil = null;
 	//private static SSOUtil util;
 	private String workspaceUrl;
 	private String allOrgsUrl;
@@ -154,6 +154,8 @@ public class RegisterServlet extends HttpServlet implements Servlet {
 	private String registerUserUrl;
 	private String warVersion;
 	private String registerHelp;
+	private Boolean openAmIdentity;
+
 	
 	public RegisterServlet() {
 	}
@@ -163,6 +165,7 @@ public class RegisterServlet extends HttpServlet implements Servlet {
 		Configuration config = Config.getInstance().getConfiguration();
 		String restEndpoint = config.getString("endpoint.rest");
 		registerHelp = config.getString("registration.help.info"," NICS Support - nicssupport@ll.mit.edu");
+		openAmIdentity = config.getBoolean("openAm.Identity", false);
 		
 		//System.setProperty("ssoToolsPropertyPath", "/opt/data/nics/config"); //CONFIGURE THIS!!
 		//System.setProperty("openamPropertiesPath", "/opt/data/nics/config"); //CONFIGURE THIS!!
@@ -407,23 +410,21 @@ public class RegisterServlet extends HttpServlet implements Servlet {
 	    } else {
 	    	userMap.put("teams", null);
 	    }
-	    CookieTokenUtil tokenUtil = new CookieTokenUtil();
-	    String token = tokenUtil.getAdminToken();
+
 		String regUserStatus = registerUser(userMap);
-		tokenUtil.destroyToken();
 		
 		if(regUserStatus != null && !regUserStatus.isEmpty()) {
 			logger.info("\nGot user registration message back: " + regUserStatus);
 			if(regUserStatus.contains("Successfully registered")) { // TODO: make constant/json
 								
-				req.setAttribute(ERROR_MESSAGE_KEY, REGISTER_SUCCESS_MESSAGE);				
-				req.getRequestDispatcher(SUCCESS_JSP_PATH).forward(req, resp);				
+				req.setAttribute(ERROR_MESSAGE_KEY, REGISTER_SUCCESS_MESSAGE);
+				req.getRequestDispatcher(SUCCESS_JSP_PATH).forward(req, resp);
 			} else {
 				// error, forward on to error page with relevant message
 				logger.info("Registration failed: " + regUserStatus);
 								
 				logger.info("\nAssuming user reg failed, response was null/empty");
-				req.setAttribute(ERROR_MESSAGE_KEY, REGISTER_ERROR_INVALID_MESSAGE);				
+				req.setAttribute(ERROR_MESSAGE_KEY, REGISTER_ERROR_INVALID_MESSAGE);
 				req.setAttribute(ERROR_DESCRIPTION_KEY, REGISTER_ERROR_INVALID_DESCRIPTION);
 				req.setAttribute("REASON", regUserStatus);
 				req.getRequestDispatcher(FAILED_JSP_PATH).forward(req, resp);
@@ -436,16 +437,26 @@ public class RegisterServlet extends HttpServlet implements Servlet {
 		Client jerseyClient = ClientBuilder.newClient();
 		URI uri = new URI(workspaceUrl).resolve(hostname);
 		WebTarget target = jerseyClient.target(uri);
-		CookieTokenUtil tokenUtil = new CookieTokenUtil();
 		Builder builder = target.request(MediaType.APPLICATION_JSON_TYPE);
-		tokenUtil.setCookies(builder);
-		
+		CookieTokenUtil tokenUtil = null;
+
+		if(openAmIdentity)
+        {
+			tokenUtil = new CookieTokenUtil();		
+			tokenUtil.setCookies(builder);
+		}
+
 		Response response = builder.get();
 		Map<String,Object> entity = builder.get(new GenericType<Map<String,Object>>(){});
 		List<?> ret = (List<?>) entity.get("workspaces");
 		response.close();
 		jerseyClient.close();
-		tokenUtil.destroyToken();
+
+		if(openAmIdentity)
+        {
+			tokenUtil.destroyToken();
+		}
+
 		return ret;
 	}
 	
@@ -454,16 +465,26 @@ public class RegisterServlet extends HttpServlet implements Servlet {
 		Client jerseyClient = ClientBuilder.newClient();
 		URI uri = new URI(orgTypesUrl);
 		WebTarget target = jerseyClient.target(uri);
+		CookieTokenUtil tokenUtil = null;
 		
 		Builder builder = target.request(MediaType.APPLICATION_JSON_TYPE);
-		CookieTokenUtil tokenUtil = new CookieTokenUtil();
-		tokenUtil.setCookies(builder);
+		if(openAmIdentity)
+        {
+			tokenUtil = new CookieTokenUtil();
+			tokenUtil.setCookies(builder);
+		}
+
 		Response response = builder.get();
 		Map<String,Object> entity = builder.get(new GenericType<Map<String,Object>>(){});
 		List<?> ret = (List<?>) entity.get("orgTypes");
 		response.close();
 		jerseyClient.close();
-		tokenUtil.destroyToken();
+
+		if(openAmIdentity)
+        	{
+			tokenUtil.destroyToken();
+		}
+
 		return ret;
 	}
 	
@@ -472,16 +493,27 @@ public class RegisterServlet extends HttpServlet implements Servlet {
 		Client jerseyClient = ClientBuilder.newClient();
 		URI uri = new URI(orgOrgTypeUrl);
 		WebTarget target = jerseyClient.target(uri);
+		CookieTokenUtil tokenUtil = null;
 		
 		Builder builder = target.request(MediaType.APPLICATION_JSON_TYPE);
-		CookieTokenUtil tokenUtil = new CookieTokenUtil();
-		tokenUtil.setCookies(builder);
+
+		if(openAmIdentity)
+        	{
+			tokenUtil = new CookieTokenUtil();
+			tokenUtil.setCookies(builder);
+		}
+
 		Response response = builder.get();
 		Map<String,Object> entity = builder.get(new GenericType<Map<String,Object>>(){});
 		List<?> ret = (List<?>) entity.get("orgOrgTypes");
 		response.close();
 		jerseyClient.close();
-		tokenUtil.destroyToken();
+
+		if(openAmIdentity)
+        	{
+			tokenUtil.destroyToken();
+		}
+
 		return ret;
 	}
 	
@@ -489,16 +521,27 @@ public class RegisterServlet extends HttpServlet implements Servlet {
 		Client jerseyClient = ClientBuilder.newClient();
 		URI uri = new URI(allOrgsUrl);
 		WebTarget target = jerseyClient.target(uri);
+		CookieTokenUtil tokenUtil = null;
 		
 		Builder builder = target.request(MediaType.APPLICATION_JSON_TYPE);
-		CookieTokenUtil tokenUtil = new CookieTokenUtil();
-		tokenUtil.setCookies(builder);
+
+		if(openAmIdentity)
+        	{
+			tokenUtil = new CookieTokenUtil();
+			tokenUtil.setCookies(builder);
+		}
+
 		Response response = builder.get();
 		Map<String,Object> entity = builder.get(new GenericType<Map<String,Object>>(){});
 		List<?> ret = (List<?>) entity.get("organizations");
 		response.close();
 		jerseyClient.close();
-		tokenUtil.destroyToken();
+
+		if(openAmIdentity)
+        	{
+			tokenUtil.destroyToken();
+		}
+
 		return ret;
 	}
 	
@@ -506,16 +549,20 @@ public class RegisterServlet extends HttpServlet implements Servlet {
 		String ret = null;
 		try {
 			Client jerseyClient = ClientBuilder.newClient();
+			CookieTokenUtil tokenUtil = null;
 			URI uri = new URI(registerUserUrl);
 			logger.info("URL: " + registerUserUrl);
 			logger.info("user: " + user.toString());
 			
-			WebTarget target = jerseyClient.target(uri);
-			
+			WebTarget target = jerseyClient.target(uri);			
 			Builder builder = target.request(MediaType.APPLICATION_JSON_TYPE);
-			CookieTokenUtil tokenUtil = new CookieTokenUtil();
-			tokenUtil.setCookies(builder);
-			
+
+			if(openAmIdentity)
+            		{
+    			tokenUtil = new CookieTokenUtil();
+				tokenUtil.setCookies(builder);
+            		}
+
 			Response response = builder.post(Entity.entity(user, MediaType.APPLICATION_JSON));
 						
 			String result = "";
@@ -553,7 +600,11 @@ public class RegisterServlet extends HttpServlet implements Servlet {
 					((message == null) ? "No reason given" : message));
 			response.close();
 			jerseyClient.close();
-			tokenUtil.destroyToken();
+
+			if(openAmIdentity)
+            		{
+				tokenUtil.destroyToken();
+			}
 			
 		} catch(Exception e) {
 			logger.error("Unhandled exception registering user: " + e.getMessage(), e);

@@ -74,6 +74,7 @@ import edu.mit.ll.nics.util.CookieTokenUtil;
 
 /**
  * Created by cbudny on 1/29/16.
+ * Depends on OpenAM and should never be called when using our IDP.
  */
 
 @WebServlet("/forgotpassword")
