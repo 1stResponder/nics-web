@@ -109,7 +109,34 @@ define(["iweb/CoreModule",
 					text: 'Export Room',
 					handler: function(){
 						if(view.getController().collabRoomId && view.getController().incidentId){
-							view.show();
+							// Attempt to log in before getting export file
+							Ext.getBody().mask("Please wait...");
+
+							var url = Ext.String.format('/em-api/v1/datalayer/{0}/login',
+							UserProfile.getWorkspaceId());
+
+							var topic = Ext.String.format('iweb.NICS.{0}.user.userlogin',
+							UserProfile.getWorkspaceId());
+
+							var winProps = "width=1,height=1,status=0, scrollbars=0, resizable=0, left=1, top=1";
+
+							this.myWin = window.open(url,'_blank',winProps);
+
+							this.myWin.blur();
+							window.focus();
+
+							Core.EventManager.addListener(topic, function()
+							{
+								var that = this;
+								that.myWin.close();
+
+								Ext.getBody().unmask();
+								view.show();
+							}.bind(this));
+
+							this.mediator = Core.Mediator.getInstance();
+							this.mediator.subscribe(topic);
+
 						}else{
 							Ext.MessageBox.alert("Export Current Room", "You are not currently in a collaboration room.");
 						}

@@ -72,13 +72,16 @@ function(Core, UserProfile, FmagReportView, FmagFormView) {
 		},
 		
 		bindEvents: function(){
+
+			this.title="FMAG - ABC";
+
 			//Bind UI Elements
 			Core.EventManager.addListener("nics.incident.join", this.onJoinIncident.bind(this));
 			Core.EventManager.addListener("nics.incident.close", this.onCloseIncident.bind(this));
 			Core.EventManager.addListener("LoadFmagReports", this.onLoadReports.bind(this));
 			Core.EventManager.addListener("PrintFmagReport", this.onReportReady.bind(this));
 			Core.EventManager.addListener("CancelFmagReport", this.onCancel.bind(this));
-			Core.EventManager.fireEvent("nics.report.add", {title: "FMAG - ABC", component: this.getView()});
+			Core.EventManager.fireEvent("nics.report.add", {title: this.title, component: this.getView()});
 			Core.EventManager.addListener("nics.user.profile.loaded", this.updateOrgCapsListener.bind(this));
 		},
 	
@@ -104,9 +107,11 @@ function(Core, UserProfile, FmagReportView, FmagFormView) {
 
 			if(orgcap.activeWeb){
 				this.getView().enable();
+				this.getView().up('tabpanel').down('tab[text=' + this.title +']').enable();
 			}
 			else{
 				this.getView().disable();
+				this.getView().up('tabpanel').down('tab[text=' + this.title +']').disable();
 			}
 		
 			UserProfile.setOrgCap(orgcap.cap.name,orgcap.activeWeb);
@@ -118,7 +123,14 @@ function(Core, UserProfile, FmagReportView, FmagFormView) {
 			this.incidentName = incident.name;
 			this.incidentId = incident.id;
 
-			this.getView().enable();
+			if(UserProfile.isOrgCapEnabled(this.orgCapName)){
+				this.getView().enable();
+				this.getView().up('tabpanel').down('tab[text=' + this.title +']').enable();
+			}
+			else{
+				this.getView().disable();
+				this.getView().up('tabpanel').down('tab[text=' + this.title +']').disable();
+			}
 
 			var endpoint = Core.Config.getProperty(UserProfile.REST_ENDPOINT);
 			this.hasFinalForm = false;

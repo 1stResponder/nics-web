@@ -36,7 +36,6 @@ define(['iweb/CoreModule','./I215ReportController', './I215ReportModel' , 'iweb/
 		//extend: 'Ext.grid.Panel',
 	 	controller: 'I215reportcontroller',
 	    header: false,
-	 	title: 'ICS 215 Worksheet',
         viewConfig: {
             emptyText: 'There are no reports'
         },

@@ -63,7 +63,13 @@
 			{
 				xtype:'filefield',
 				name: 'fileName',
-				buttonText: 'Browse'
+				buttonText: 'Browse',
+				listeners: {
+				    change: function(f,v){
+				        var node = Ext.DomQuery.selectNode('input[id='+f.getInputId()+']');
+				        node.value = v.replace("C:\\fakepath\\","");
+				    }
+				}
 			},
 		    {
 		    	fieldLabel: 'Create Display Name in NICS',

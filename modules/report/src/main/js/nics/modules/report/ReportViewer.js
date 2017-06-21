@@ -63,7 +63,7 @@
 				if(!report.component.title) {
 					report.component.title = report.title;
 				}
-				report.component.visible = true;
+				//report.component.visible = true;
 								
 				this.add(report.component);
 				

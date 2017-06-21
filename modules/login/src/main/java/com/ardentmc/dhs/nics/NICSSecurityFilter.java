@@ -51,7 +51,6 @@ import org.apache.cxf.fediz.core.processor.FedizResponse;
 import org.apache.cxf.fediz.core.SecurityTokenThreadLocal;
 import org.apache.cxf.fediz.spring.authentication.FederationAuthenticationToken;
 import org.apache.cxf.fediz.spring.FederationUser;
-
 import org.apache.log4j.Logger;
 
 import org.json.JSONArray;
@@ -135,9 +134,12 @@ public class NICSSecurityFilter extends GenericFilterBean {
 	        {
 	        	Date tokenExpires = ((FederationAuthenticationToken)auth).getResponse().getTokenExpires();
 
-	        	logger.info("Token Expires A: " + tokenExpires);
+	        	Date now = new Date();
+	        	logger.info("Token Expires A: " + tokenExpires + " Now: " + now);
 
-	        		        		        	
+	        	if(!(tokenExpires.before(now)))
+	        	{
+ 		        		        	
 	            FederationAuthenticationToken fedAuthToken = (FederationAuthenticationToken)auth;
 
 	            if (fedAuthToken.getUserDetails() instanceof FederationUser)
@@ -145,7 +147,7 @@ public class NICSSecurityFilter extends GenericFilterBean {
 	
 						// Check to see if this user is already logged in, if not log them into NICS with their claims
 			        	if(false == isUserLoggedIn(req, fedAuthToken))
-			        	{		                	
+			        	{
 							logUserIn(req, resp, fedAuthToken);
 
 			        	} else
@@ -161,7 +163,14 @@ public class NICSSecurityFilter extends GenericFilterBean {
 		        	} else
 		        	{
 	            	logger.info("FederationAuthenticationToken found but not FederationUser");
-	            }
+	           	 	}
+			} else
+			{
+				logger.info("Token Expired! " + tokenExpires);
+
+				FederationAuthenticationToken fedAuthToken = (FederationAuthenticationToken)auth;
+				logUserIn(req, resp, fedAuthToken);
+			}
 	            
 	        } else {
 	            logger.info("No FederationAuthenticationToken found in Spring Security Context.");
@@ -182,44 +191,20 @@ public class NICSSecurityFilter extends GenericFilterBean {
 		for (Claim c: claims) {
 			String claimType = c.getClaimType().toString();
 			Object claimValue = c.getValue();
-//							logger.info(claimType + ": " + claimValue);
+
 			claimValuesByTypeMap.put(claimType, claimValue);
 		}
-		
-		if(claimValuesByTypeMap.containsKey("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress")) {
-			// email address claim
-			Object claimValue = claimValuesByTypeMap.get("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress");
-			String emailAddress = (String)claimValue;
-			logger.info("Looking up NICS user based on emailaddress claim: "+emailAddress);
-			loginWithEmailAddress(req, resp, fedAuthToken, emailAddress);
-		} else {
-		    // Try sub-claims first
-		    Object idpClaimValue = claimValuesByTypeMap.get("http://identityserver.thinktecture.com/claims/identityprovider");
-		    if(idpClaimValue != null) {	                	
-		    	String idpClaim = (String)idpClaimValue;
-		    	String subClaimType = "http://identityserver.thinktecture.com/claims/provider:"+idpClaim.toLowerCase();
-		    	Object subClaim = claimValuesByTypeMap.get(subClaimType);
-		    	JSONArray subClaimsJSONArray = new JSONArray(subClaim.toString());	
-		    	Map<String, Object> subClaimValuesByTypeMap = new HashMap<String, Object>();
-		    	for(int i = 0; i < subClaimsJSONArray.length(); i++) {
-		    		JSONObject aSubClaimJSON = subClaimsJSONArray.getJSONObject(i);
-		    		String aSubClaimType = aSubClaimJSON.getString("Type");
-		    		String aSubClaimValue = aSubClaimJSON.getString("Value");
-					subClaimValuesByTypeMap.put(aSubClaimType, aSubClaimValue);
-		    	}
-		    	
-		    	String nameidentifierSubClaimValue = (String)subClaimValuesByTypeMap.get("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier");
-				if(nameidentifierSubClaimValue != null) {
-					
-					logger.info("Looking up NICS user based on emailaddress subClaim: "+nameidentifierSubClaimValue);
-					loginWithEmailAddress(req, resp, fedAuthToken, nameidentifierSubClaimValue);
-					
-				} else {
-					throw new RuntimeException("Could not find emailaddress claim for identity provider: "+idpClaim);
-				}
-		    	
-		    }
-		}
+
+		String username = fedAuthToken.getUserDetails().getUsername();
+
+			if(username != null && !username.isEmpty())
+    		{
+				logger.info("Looking up NICS user based on username claim: " + username);
+				loginWithEmailAddress(req, resp, fedAuthToken, username);
+			} else
+			{
+				throw new RuntimeException("Could not find username claim");
+			}
 	}
 
 	private void loginWithEmailAddress(final HttpServletRequest req, final HttpServletResponse resp, FederationAuthenticationToken fedAuthToken, String emailAddress) {
@@ -234,26 +219,51 @@ public class NICSSecurityFilter extends GenericFilterBean {
 		if(workspaces != null && !workspaces.isEmpty()) {
 			Map<String, Object> firstWorkspace = (Map<String, Object>)workspaces.get(0);
 			Integer workspaceId = (Integer)firstWorkspace.get("workspaceid");
-			
+
 			// see if this user is registered with NICS
-			if(nicsUser(emailAddress, String.valueOf(workspaceId))) {
-				data.put(WORKSPACE_ID, Integer.valueOf(workspaceId));
+			if(isUser(emailAddress, String.valueOf(workspaceId))) {
 
-				SessionHolder.addSession(req.getSession().getId(), data);
+				// see if the user is valid
+				if(nicsUser(emailAddress, String.valueOf(workspaceId))) {
+					data.put(WORKSPACE_ID, Integer.valueOf(workspaceId));
 
-				setCookies(resp, uniqueTokenId);
+					SessionHolder.addSession(req.getSession().getId(), data);
+
+					setCookies(resp, uniqueTokenId);
+				} else {
+					// user is not registered with NICS
+					logger.info("User is not enabled or active with NICS, redirect to error page...");
+					redirectToErrorNotValid(req, resp);
+				}
 			} else {
 				// user is not registered with NICS
-				logger.info("User is not registered with NICS, redirect to the registration page...");
-				try {
-					resp.sendRedirect("/nics/register");
-				} catch (IOException ioe) {
-					logger.error("Could not redirect to the registration page due to the following error.", ioe);
-				}
+				logger.info("User is not registered with NICS, redirect...");
+				redirectToUserNotFound(req, resp);
 			}
+			
 		} else {
 			logger.error("Redirecting to error page - No Workspaces found.");
 			redirectToErrorNoWorkspaces(req, resp);
+		}
+	}
+
+	private void redirectToUserNotFound(final HttpServletRequest req, final HttpServletResponse resp) {
+		req.setAttribute(ERROR_MESSAGE_KEY, "login.error.notregistered.message");
+		req.setAttribute(ERROR_DESCRIPTION_KEY, "login.error.notregistered.description");
+		try {
+			req.getRequestDispatcher(FAILED_JSP_PATH).forward(req, resp);
+		} catch (ServletException | IOException e) {
+			logger.error("Could not redirect to the login error page due to the following error.", e);
+		}
+	}
+
+	private void redirectToErrorNotValid(final HttpServletRequest req, final HttpServletResponse resp) {
+		req.setAttribute(ERROR_MESSAGE_KEY, "login.error.inactive.message");
+		req.setAttribute(ERROR_DESCRIPTION_KEY, "login.error.inactive.description");
+		try {
+			req.getRequestDispatcher(FAILED_JSP_PATH).forward(req, resp);
+		} catch (ServletException | IOException e) {
+			logger.error("Could not redirect to the login error page due to the following error.", e);
 		}
 	}
 
@@ -355,9 +365,48 @@ public class NICSSecurityFilter extends GenericFilterBean {
 			resp.addCookie(iCookie);
 		} 
 	}
+
+	private boolean isUser(String username, String workspaceId)
+	{
+		if (restEndpoint != null) {
+
+			try {
+				String url = new java.net.URI(restEndpoint.concat("/"))
+						.resolve(
+								String.format(
+										"users/%s/isUser?userName=%s",
+										workspaceId, username)).toASCIIString();
+				
+				//CookieTokenUtil tokenUtil = new CookieTokenUtil();
+				Client jerseyClient = ClientBuilder.newClient();
+				WebTarget target = jerseyClient.target(url.toString());
+
+				Builder builder = target
+						.request(MediaType.APPLICATION_JSON_TYPE);
+				//tokenUtil.setCookies(builder);
+
+				Response response = builder.get();
+				Map<String, Object> entity = builder
+						.get(new GenericType<Map<String, Object>>() {
+						});
+				int count = (Integer) entity.get("count");
+				response.close();
+				jerseyClient.close();
+
+				return count == 1; // Returned one valid user
+			} catch (URISyntaxException exception) {
+				logger.error(String.format(
+						"URISyntax error validatin the user: %s", username));
+			}
+		} else {
+			logger.error("Failed to initialize workspace API endpoint");
+		}
+		return false;
+	}
 	
 	private boolean nicsUser(String username, String workspaceId) {
 		if (restEndpoint != null) {
+
 			try {
 				String url = new java.net.URI(restEndpoint.concat("/"))
 						.resolve(

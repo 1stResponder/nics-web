@@ -54,8 +54,9 @@ define([
 			]);
 			
 			var collabRoomDatalayerView = new CollabRoomDatalayerView();
+			collabRoomDatalayerView.setDisabled(true); // Enables when user joins an collabroom
 			Core.View.addToSidePanel(collabRoomDatalayerView);
-			collabRoomDatalayerView.show();
+			//collabRoomDatalayerView.show();
 
 		};
 		

@@ -75,7 +75,7 @@ define(['ext', "iweb/CoreModule", 'nics/modules/UserProfileModule'],
 			exportDatalayer: function(type, format){
 				if(this.collabRoomId && this.incidentId){
 					var url = Ext.String.format('{0}/collab/export/{1}/incident/{2}/user/{3}/type/{4}/format/{5}/username/{6}',
-							Core.Config.getProperty(UserProfile.REST_ENDPOINT),
+							Core.Config.getProperty(UserProfile.PUBLIC_REST_ENDPOINT),
 							this.collabRoomId, this.incidentId, UserProfile.getUserId(), type, format, UserProfile.getUsername());
 					
 					this.getView().hide();
@@ -91,7 +91,7 @@ define(['ext', "iweb/CoreModule", 'nics/modules/UserProfileModule'],
 			exportCapabilities: function(exportFormat){
 				if(this.incidentId){
 					var url = Ext.String.format('{0}/collab/export/incident/{1}/user/{2}/format/{3}',
-						Core.Config.getProperty(UserProfile.REST_ENDPOINT),
+						Core.Config.getProperty(UserProfile.PUBLIC_REST_ENDPOINT),
 						this.incidentId, UserProfile.getUserId(), exportFormat);
 						
 					this.getView().hide();

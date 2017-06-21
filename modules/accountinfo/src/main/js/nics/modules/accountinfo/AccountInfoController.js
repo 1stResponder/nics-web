@@ -230,12 +230,13 @@ define(['iweb/CoreModule',  './AccountInfoModel','nics/modules/UserProfileModule
 				
 				this.getView().userAccountTab.getForm().findField('sysrole').setValue(profile.sysRoleId);
 				//Only a super user can modify a super user
-				if(profile.sysRoleId == 0 && !UserProfile.isSuperUser()){
-					this.getView().userAccountTab.getForm().findField('sysrole').disable();
-				}else if(UserProfile.isAdminUser() || UserProfile.isSuperUser()){
-					this.getView().userAccountTab.getForm().findField('sysrole').enable();
-				}else{
-					this.getView().userAccountTab.getForm().findField('sysrole').disable();
+				if(UserProfile.isElevatedUser())
+				{
+					this.getView().userAccountTab.getForm().findField('sysrole').show();
+				}
+				else
+				{
+					this.getView().userAccountTab.getForm().findField('sysrole').hide();
 				}
 			},
 			

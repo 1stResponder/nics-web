@@ -81,7 +81,7 @@ define(['iweb/CoreModule',
 				Core.EventManager.addListener("nics.archived.incident.join", this.onJoinArchivedIncident.bind(this));
 			},
 
-			populateModel: function(e, userProfile){
+			populateModel: function(e, data){
 
 			
 				//Handler for new incidents
@@ -101,7 +101,8 @@ define(['iweb/CoreModule',
 				this.mediator.sendRequestMessage(url, "nics.incident.load");
 				//Core.EventManager.fireEvent('nics.incident.orgs.get',UserProfile);
 				//Get the list of organizations, so we can create the list of prefixes used for updating incidents
-				if(UserProfile.isSuperUser() || UserProfile.isAdminUser()){
+				if(UserProfile.isElevatedUser())
+				{
 					var orgsURL = Ext.String.format('{0}/orgs/{1}/all', 
 						Core.Config.getProperty(UserProfile.REST_ENDPOINT), 
 						UserProfile.getWorkspaceId());

@@ -6,6 +6,8 @@ The Next-Generation Incident Command System (NICS) web application
 
 There are many places where links and emails have been hard coded.  For example, in Register.jsp the support email is hard coded.
 
+The default expired URL for Spring Security is set to be /spring_logout
+
 ## Dependencies
 - nics-tools
 - iweb-modules

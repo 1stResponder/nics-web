@@ -99,7 +99,8 @@ define(['ext', 'iweb/CoreModule', 'ol', './MultiIncidentViewModel', 'nics/module
 		loadAllIncidents: function() {
 			var grid = this.lookupReference('multiincidentsgrid');
 			
-			if(UserProfile.isAdminUser() || UserProfile.isSuperUser()){
+			if(UserProfile.isElevatedUser())
+			{
 				this.lookupReference('miveditbutton').show()
 			}
 			else {
@@ -179,7 +180,8 @@ define(['ext', 'iweb/CoreModule', 'ol', './MultiIncidentViewModel', 'nics/module
 			}
 			
 			//Request the org ownership if the user is an admin or a super user
-			if(UserProfile.getSystemRoleId() == 4 || UserProfile.getSystemRoleId() == 0){
+			if(UserProfile.isElevatedUser())
+			{
 				this.loadIncidentOrgs();
 			}
 			
@@ -349,11 +351,11 @@ define(['ext', 'iweb/CoreModule', 'ol', './MultiIncidentViewModel', 'nics/module
 			
 			form.expand();
 			
-			if(UserProfile.getSystemRoleId() == 4){
+			if(!(UserProfile.isSuperUser()))
+			{
 				this.disableEditButton(($.inArray(selected[0].data.incidentid, this.incidentOrgs) == -1));
 			}
-			
-		}		
+		}
 		
 	});
 });

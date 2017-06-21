@@ -40,10 +40,14 @@ define(['ext', 'iweb/CoreModule','nics/modules/UserProfileModule', 'nics/modules
 			
 			this.mediator = Core.Mediator.getInstance();
 
+			this.mediator.subscribe("iweb.NICS.userChange");
+			Core.EventManager.addListener("iweb.NICS.userChange", this.loadUsers.bind(this));
+
 			Core.EventManager.addListener("nics.admin.org.clear", this.clearGrids.bind(this));
 			Core.EventManager.addListener("nics.admin.org.users.load", this.loadUsers.bind(this));
 			Core.EventManager.addListener(this.showUserProfileTopic, this.showUserProfile.bind(this));
-			Core.EventManager.addListener("nics.user.profile.loaded", this.loadUserProfile.bind(this));
+			Core.EventManager.addListener(UserProfile.PROFILE_LOADED, this.loadUserProfile.bind(this));
+			//Core.EventManager.addListener("nics.user.profile.loaded", this.loadUserProfile.bind(this));
 			
 			this.getView().getFirstGrid().getView().on('drop', this.enableUsers, this);
 			this.getView().getSecondGrid().getView().on('drop', this.disableUsers, this);
@@ -99,9 +103,9 @@ define(['ext', 'iweb/CoreModule','nics/modules/UserProfileModule', 'nics/modules
 				var userorgworkspaceid = selection[i].data.userorg_workspace_id;
 				var userid = selection[i].data.userid;
 
-				Ext.String.format('{0}/users/{1}/setActive/{2}/userid/{3}?active={4}',
+				var url = Ext.String.format('{0}/users/{1}/setactive/{2}/userid/{3}/requestuser/{4}?active={5}',
 					Core.Config.getProperty(UserProfile.REST_ENDPOINT),
-					UserProfile.getWorkspaceId(), userorgworkspaceid, userid, false);
+					UserProfile.getWorkspaceId(), userorgworkspaceid, userid,UserProfile.getUsername(),false);
 
 				this.mediator.sendPostMessage(url, topic, {});
 			}
@@ -217,11 +221,11 @@ define(['ext', 'iweb/CoreModule','nics/modules/UserProfileModule', 'nics/modules
 			AccountInfoModule.showViewer(userProfile);
 		},
 
-		loadUserProfile: function(evt, profile)
+		loadUserProfile: function(evt, data)
 		{
 			var view = this.getView(),
 					deleteButton = view.lookupReference('deleteUsersButton');
-			if (profile.isSuperUser && !deleteButton)
+			if (UserProfile.isElevatedUser() && !deleteButton)
 			{
 				view.add({
 					xtype: 'button',

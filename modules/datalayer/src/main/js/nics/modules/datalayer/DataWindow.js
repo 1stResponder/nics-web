@@ -36,7 +36,8 @@
 						
 			hideImportButton: function(e){
 				
-				if(UserProfile.getSystemRoleId() == 1 || UserProfile.getSystemRoleId() == 2){
+				if(!(UserProfile.isElevatedUser() || UserProfile.isGisUser()))
+				{
 					Ext.getCmp('importDataButton').hide();
 				}
 				

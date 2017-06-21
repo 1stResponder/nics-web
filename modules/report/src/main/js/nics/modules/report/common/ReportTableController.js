@@ -111,9 +111,11 @@ function(ol, Core, MapModule, UserProfile, UserPicker) {
 
 			if(orgcap.activeWeb){
 				this.getView().enable();
+				this.getView().up('tabpanel').down('tab[text=' + this.reportTitle +']').enable();
 			}
 			else{
 				this.getView().disable();
+				this.getView().up('tabpanel').down('tab[text=' + this.reportTitle +']').disable();
 			}
 		
 			UserProfile.setOrgCap(orgcap.cap.name,orgcap.activeWeb);
@@ -124,7 +126,14 @@ function(ol, Core, MapModule, UserProfile, UserPicker) {
 			this.incidentName = incident.name;
 			this.incidentId = incident.id;
 
-			this.getView().enable();
+			if(UserProfile.isOrgCapEnabled(this.reportType)){
+				this.getView().enable();
+				this.getView().up('tabpanel').down('tab[text=' + this.reportTitle +']').enable();
+			}
+			else{
+				this.getView().disable();
+				this.getView().up('tabpanel').down('tab[text=' + this.reportTitle +']').disable();
+			}
 	
 			this.mediator.sendRequestMessage(Core.Config
 					.getProperty(UserProfile.REST_ENDPOINT)
@@ -138,7 +147,6 @@ function(ol, Core, MapModule, UserProfile, UserPicker) {
 			this.newHandler = this.onLoadReports.bind(this)
 			Core.EventManager.addListener(this.newTopic, this.newHandler);
 		},
-
 		onCloseIncident : function(e, incidentId) {
 			this.mediator.unsubscribe(this.newTopic);
 
@@ -153,7 +161,6 @@ function(ol, Core, MapModule, UserProfile, UserPicker) {
 
 			this.getView().disable();
 		},
-
 		showUserPicker : function(callback, scope, record) {
 			var topic = "nics.report.user.picker";
 			Core.EventManager.createCallbackHandler(topic, this,

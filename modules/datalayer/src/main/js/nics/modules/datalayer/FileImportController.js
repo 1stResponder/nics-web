@@ -65,6 +65,9 @@ define(['ext', 'ol', "iweb/CoreModule", "nics/modules/UserProfileModule"],
 						refreshrate.setValue(0);
 					}
 				}
+
+				this.createTopic = "iweb.NICS.incident.{0}.newcollabroom";
+			    this.onNewCollabRoom = this.onNewCollabRoom.bind(this);
 			},
 			
 			bindEvents: function(){
@@ -97,6 +100,10 @@ define(['ext', 'ol', "iweb/CoreModule", "nics/modules/UserProfileModule"],
 				// Send a request for the list of collab rooms for this incident
 				this.mediator.sendRequestMessage(
 					this.getLoadCollabRoomUrl(incident.id, UserProfile.getUserId()), "nics.collabroom.load");
+
+				Core.EventManager.addListener(
+							Ext.String.format(this.createTopic, incident.id),
+							this.onNewCollabRoom);
 			},
 
 			onCloseIncident: function(evt, incidentId) {
@@ -104,6 +111,10 @@ define(['ext', 'ol', "iweb/CoreModule", "nics/modules/UserProfileModule"],
 				// since the user is no longer in the incident
 				this.getView().getCollabroomCombo().clearValue();
 				this.getView().getCollabroomCombo().setDisabled(true);
+
+				Core.EventManager.removeListener(
+						Ext.String.format(this.createTopic, this.currentIncidentId),
+						this.onNewCollabRoom);
 			},
 
 			onLoadCollabRooms: function(evt, response) {
@@ -113,10 +124,17 @@ define(['ext', 'ol', "iweb/CoreModule", "nics/modules/UserProfileModule"],
 					// Populate the collab room selector
 					roomCombo.store.loadData(rooms);
 					roomCombo.store.autoSync = false;
+					roomCombo.store.insert(0, {collabroomId: 'none', name: '&nbsp;'});
 					
 					// Enable the selector
 					roomCombo.setDisabled(false);
 				}
+			},
+
+			onNewCollabRoom: function(e, collabRoom)
+			{
+				var roomCombo = this.getView().getCollabroomCombo();
+				roomCombo.store.add(collabRoom);
 			},
 			
 			updatePanelTitle: function() {

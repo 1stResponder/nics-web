@@ -45,6 +45,7 @@ define(['ext', 'iweb/CoreModule', "./BroadcastModel",  "./NewBroadcastView", 'ni
 			Core.EventManager.addListener("nics.incident.join", this.onJoinIncident.bind(this));
 			Core.EventManager.addListener("nics.incident.close", this.removeAlertListener.bind(this));
 			Core.EventManager.addListener(UserProfile.PROFILE_LOADED, this.updateDeleteButton.bind(this));
+			Core.EventManager.addListener("nics.incident.close", this.onCloseIncident.bind(this));
 			
 			this.newBroadcastView = new NewBroadcastView();
 		},
@@ -54,12 +55,14 @@ define(['ext', 'iweb/CoreModule', "./BroadcastModel",  "./NewBroadcastView", 'ni
 		},
 		
 		updateDeleteButton: function(){
-			if(!(UserProfile.isAdminUser() || UserProfile.isSuperUser())){
+			if(!(UserProfile.isElevatedUser())){
 				this.lookupReference('deleteAlertButton').setHidden(true);
 			}
 		},
 		
 		onJoinIncident: function(e, incident){
+			this.getView().enable();
+
 			this.removeAlertListener();
 			
 			this.lookupReference('newAlertButton').enable();
@@ -81,9 +84,14 @@ define(['ext', 'iweb/CoreModule', "./BroadcastModel",  "./NewBroadcastView", 'ni
 			
 			this.newUserAlertTopic = Ext.String.format("iweb.NICS.{0}.{1}.alert", this.incidentId, UserProfile.getUserId());
 			this.mediator.subscribe(this.newUserAlertTopic);
-			
+	
 			Core.EventManager.addListener(this.newAlertTopic, this.onNewAlertCallback);
 			Core.EventManager.addListener(this.newUserAlertTopic, this.onNewAlertCallback);
+		},
+		
+		onCloseIncident: function(e, incidentId) {
+				// Disables the panel
+				this.getView().disable();
 		},
 		
 		onLoadAlerts: function(e, response) {

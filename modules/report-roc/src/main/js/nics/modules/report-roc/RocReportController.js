@@ -68,6 +68,9 @@ function(Core, UserProfile, RocReportView, RocFormView) {
 		},
 		
 		bindEvents: function(){
+
+			this.title="ROC";
+
 			//Bind UI Elements
 			Core.EventManager.addListener("nics.incident.join", this.onJoinIncident.bind(this));
 			Core.EventManager.addListener("nics.incident.close", this.onCloseIncident.bind(this));
@@ -75,7 +78,9 @@ function(Core, UserProfile, RocReportView, RocFormView) {
 			Core.EventManager.addListener("PrintROCReport", this.onReportReady.bind(this));
 			Core.EventManager.addListener("CancelROCReport", this.onCancel.bind(this));
 			
-			Core.EventManager.fireEvent("nics.report.add", {title: "ROC", component: this.getView()});
+
+
+			Core.EventManager.fireEvent("nics.report.add", {title: this.title, component: this.getView()});
 			Core.EventManager.addListener("LoadOrgAdminList", this.loadOrgAdminList.bind(this));
 			Core.EventManager.addListener("LoadOrgDistList", this.loadOrgDistList.bind(this));
 			Core.EventManager.addListener("nics.user.profile.loaded", this.updateOrgCapsListener.bind(this));
@@ -105,9 +110,11 @@ function(Core, UserProfile, RocReportView, RocFormView) {
 
 			if(orgcap.activeWeb){
 				this.getView().enable();
+				this.getView().up('tabpanel').down('tab[text=' + this.title +']').enable();
 			}
 			else{
 				this.getView().disable();
+				this.getView().up('tabpanel').down('tab[text=' + this.title +']').disable();
 			}
 		
 			UserProfile.setOrgCap(orgcap.cap.name,orgcap.activeWeb);
@@ -119,7 +126,14 @@ function(Core, UserProfile, RocReportView, RocFormView) {
 			this.incidentId = incident.id;
 			this.emailList ="";
 			
-			this.getView().enable();
+			if(UserProfile.isOrgCapEnabled(this.orgCapName)){
+				this.getView().enable();
+				this.getView().up('tabpanel').down('tab[text=' + this.title +']').enable();
+			}
+			else{
+				this.getView().disable();
+				this.getView().up('tabpanel').down('tab[text=' + this.title +']').disable();
+			}
 			
 			var endpoint = Core.Config.getProperty(UserProfile.REST_ENDPOINT);
 			this.hasFinalForm = false;

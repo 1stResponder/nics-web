@@ -73,6 +73,9 @@ function(Core, UserProfile, OrgChart,AbstractReportController, I207ReportView, I
 		},
 		
 		bindEvents: function(){
+
+			this.title="207";
+			
 			//Bind UI Elements
 			Core.EventManager.addListener("nics.incident.join", this.onJoinIncident.bind(this));
 			Core.EventManager.addListener("nics.incident.close", this.onCloseIncident.bind(this));
@@ -80,7 +83,7 @@ function(Core, UserProfile, OrgChart,AbstractReportController, I207ReportView, I
 			Core.EventManager.addListener("LoadReports203", this.onLoadReports.bind(this));
 			Core.EventManager.addListener("Load207201Reports", this.onLoad201Reports.bind(this));
 			Core.EventManager.addListener("CancelReport207", this.onCancel.bind(this));
-			Core.EventManager.fireEvent("nics.report.add", {title: "207", component: this.getView()});
+			Core.EventManager.fireEvent("nics.report.add", {title: this.title, component: this.getView()});
 			Core.EventManager.addListener("nics.user.profile.loaded", this.updateOrgCapsListener.bind(this));
 			this.bindOrgCaps = this.orgCapUpdate.bind(this);
 
@@ -108,19 +111,28 @@ function(Core, UserProfile, OrgChart,AbstractReportController, I207ReportView, I
 
 			if(orgcap.activeWeb){
 				this.getView().enable();
+				this.getView().up('tabpanel').down('tab[text=' + this.title +']').enable();
 			}
 			else{
 				this.getView().disable();
+				this.getView().up('tabpanel').down('tab[text=' + this.title +']').disable();
 			}
 		
 			UserProfile.setOrgCap(orgcap.cap.name,orgcap.activeWeb);
 		
-		},		
+		},
 		onJoinIncident: function(e, incident) {
 			this.incidentName = incident.name;
 			this.incidentId = incident.id;
 
-			this.getView().enable();
+			if(UserProfile.isOrgCapEnabled(this.orgCapName)){
+				this.getView().enable();
+				this.getView().up('tabpanel').down('tab[text=' + this.title +']').enable();
+			}
+			else{
+				this.getView().disable();
+				this.getView().up('tabpanel').down('tab[text=' + this.title +']').disable();
+			}
 			
 			var endpoint = Core.Config.getProperty(UserProfile.REST_ENDPOINT);
 			this.hasFinalForm = false;

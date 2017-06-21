@@ -35,6 +35,10 @@ define(['./CollabRoomDatalayerController', './CollabRoomDatalayerModel'], functi
 	 	controller: 'collabroomdatalayercontroller',
 	 	
 	 	title: 'Room Layers',
+
+        requires: [
+                    'modules.collabroom.CollabRoomDatalayerModel'
+                 ],
 	 	
         viewConfig: {
             emptyText: 'There are no layers associated with this room'

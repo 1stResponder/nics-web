@@ -67,16 +67,19 @@ function(Core, UserProfile, I215ReportView, I215FormView) {
 			
 
 			this.bindOrgCaps = this.orgCapUpdate.bind(this);
+
 		},
 		
 		bindEvents: function(){
 			//Bind UI Elements
+			this.title="215";
+
 			Core.EventManager.addListener("nics.incident.join", this.onJoinIncident.bind(this));
 			Core.EventManager.addListener("nics.incident.close", this.onCloseIncident.bind(this));
 			Core.EventManager.addListener("Load215Reports", this.onLoadReports.bind(this));
 			Core.EventManager.addListener("Print215Report", this.onReportReady.bind(this));
 			Core.EventManager.addListener("Cancel215Report", this.onCancel.bind(this));
-			Core.EventManager.fireEvent("nics.report.add", {title: "215", component: this.getView()});
+			Core.EventManager.fireEvent("nics.report.add", {title: this.title, component: this.getView()});
 			Core.EventManager.addListener("nics.user.profile.loaded", this.updateOrgCapsListener.bind(this));
 		},
 	
@@ -102,9 +105,11 @@ function(Core, UserProfile, I215ReportView, I215FormView) {
 		
 			if(orgcap.activeWeb){
 				this.getView().enable();
+				this.getView().up('tabpanel').down('tab[text=' + this.title +']').enable();
 			}
 			else{
 				this.getView().disable();
+				this.getView().up('tabpanel').down('tab[text=' + this.title +']').disable();
 			}
 		
 			UserProfile.setOrgCap(orgcap.cap.name,orgcap.activeWeb);
@@ -115,7 +120,16 @@ function(Core, UserProfile, I215ReportView, I215FormView) {
 			this.incidentName = incident.name;
 			this.incidentId = incident.id;
 			
-			this.getView().enable();	
+			if(UserProfile.isOrgCapEnabled(this.orgCapName)){
+				this.getView().enable();
+				this.getView().up('tabpanel').down('tab[text=' + this.title +']').enable();
+			}
+			else{
+				this.getView().disable();
+				this.getView().up('tabpanel').down('tab[text=' + this.title +']').disable();
+			}
+
+			//Core.EventManager.fireEvent("iweb.nics.orgcaps." + this.currentOrg + "." + this.orgCapName);
 			
 			var endpoint = Core.Config.getProperty(UserProfile.REST_ENDPOINT);
 			//Load reports
@@ -131,6 +145,8 @@ function(Core, UserProfile, I215ReportView, I215FormView) {
 			
 			this.newHandler = this.onReportAdded.bind(this)
 			Core.EventManager.addListener(this.newTopic, this.newHandler);
+
+
 		
 		},
 		onCloseIncident: function(e, incidentId) {

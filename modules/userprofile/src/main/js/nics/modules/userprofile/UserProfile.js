@@ -53,6 +53,8 @@ define(["iweb/CoreModule", 'ol', 'iweb/modules/MapModule'],
 			var description;
 			var isSuperUser;
 			var isAdminUser;
+			var isElevated;
+			var isGisUser;
 			var incidentMapName;
 			var orgCaps;
 			
@@ -122,6 +124,8 @@ define(["iweb/CoreModule", 'ol', 'iweb/modules/MapModule'],
 				jobTitle = data.jobTitle
 				isSuperUser = data.isSuperUser;
 				isAdminUser = data.isAdminUser;
+				isGisUser = data.isGisUser;
+				isElevated = isSuperUser || isAdminUser;
 				
 				var endpoint = Core.Config.getProperty("endpoint").rest;
 				var url = Ext.String.format("{0}/orgs/{1}?userId={2}",
@@ -179,6 +183,8 @@ define(["iweb/CoreModule", 'ol', 'iweb/modules/MapModule'],
 				REST_ENDPOINT: "endpoint.rest",
 				
 				GEOSERVER_ENDPOINT: "endpoint.geoserver",
+
+				PUBLIC_REST_ENDPOINT: "endpoint.public.rest",
 				
 				getIncidentMapName: function(){
 					if(!incidentMapName){
@@ -331,6 +337,14 @@ define(["iweb/CoreModule", 'ol', 'iweb/modules/MapModule'],
 				
 				isAdminUser: function(){
 					return isAdminUser;
+				},
+
+				isGisUser: function(){
+					return isGisUser;
+				},
+
+				isElevatedUser: function(){
+					return isElevated;
 				},
 
 				init: function(){

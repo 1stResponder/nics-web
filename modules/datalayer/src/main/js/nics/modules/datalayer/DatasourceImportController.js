@@ -42,6 +42,19 @@ define(['ext', 'ol', "iweb/CoreModule", "nics/modules/UserProfileModule", "./Tok
 				this.capabilitiesFormat = this.getView().capabilitiesFormat;
 				this.workspaceId = this.getView().workspaceId;
 				this.tokenHandlerTopic =  "nics.datasource.token." + this.dataSourceType;
+
+				this.lookupReference('orgCombo').on("select", function(combo, record, eOpts) {
+					if (record.data.orgId === 'none')
+						combo.clearValue();
+				});
+
+				this.getView().getCollabroomCombo().on("select", function(combo, record, eOpts) {
+					if (record.data.collabroomId === 'none')
+						combo.clearValue();
+				});
+
+				this.createTopic = "iweb.NICS.incident.{0}.newcollabroom";
+			    this.onNewCollabRoom = this.onNewCollabRoom.bind(this);
 				
 				this.mediator = Core.Mediator.getInstance();
 				
@@ -86,12 +99,21 @@ define(['ext', 'ol', "iweb/CoreModule", "nics/modules/UserProfileModule", "./Tok
 				// Send a request for the list of collab rooms for this incident
 				this.mediator.sendRequestMessage(
 					this.getLoadCollabRoomUrl(incident.id, UserProfile.getUserId()), "nics.collabroom.load");
+
+				Core.EventManager.addListener(
+							Ext.String.format(this.createTopic, incident.id),
+							this.onNewCollabRoom);
 			},
 
 			onCloseIncident: function(evt, incidentId) {
 				// Clear and disable the collab room selector,
 				// since the user is no longer in the incident
 				this.getView().getCollabroomCombo().clearValue();
+				this.getView().getCollabroomCombo().setDisabled(true);
+
+				Core.EventManager.removeListener(
+						Ext.String.format(this.createTopic, this.currentIncidentId),
+						this.onNewCollabRoom);
 			},
 
 			onLoadCollabRooms: function(evt, response) {
@@ -101,7 +123,16 @@ define(['ext', 'ol', "iweb/CoreModule", "nics/modules/UserProfileModule", "./Tok
 					// Populate the collab room selector
 					roomCombo.store.loadData(rooms);
 					roomCombo.store.autoSync = false;
+					roomCombo.store.insert(0, {collabroomId: 'none', name: '&nbsp;'});
+
+					roomCombo.setDisabled(false);
 				}
+			},
+
+			onNewCollabRoom: function(e, collabRoom)
+			{
+				var roomCombo = this.getView().getCollabroomCombo();
+				roomCombo.store.add(collabRoom);
 			},
 
 			updateGridTitle: function() {
@@ -356,11 +387,14 @@ define(['ext', 'ol', "iweb/CoreModule", "nics/modules/UserProfileModule", "./Tok
 					success: function(response) {
 						//can't use responseXML becaue the proxy doesn't return the correct content type
 						var caps;
-						if(dataSourceType != 'arcgisrest') {
-							var xmlDoc = new DOMParser().parseFromString(response.responseText, 'application/xml');
-							caps = this.capabilitiesFormat.read(xmlDoc);
-						} else {
-							caps = this.capabilitiesFormat.read(response.responseText);
+
+						if ($.trim(response.responseText)){
+							if(dataSourceType != 'arcgisrest') {
+								var xmlDoc = new DOMParser().parseFromString(response.responseText, 'application/xml');
+								caps = this.capabilitiesFormat.read(xmlDoc);
+							} else {
+								caps = this.capabilitiesFormat.read(response.responseText);
+							}
 						}
 						
 						if (!caps || !caps.layers) {

@@ -41,8 +41,8 @@ define(['ext', 'iweb/CoreModule', 'nics/modules/UserProfileModule'],
 		},
 		
 		loadUserProfile: function(evt){
-			if(UserProfile.isSuperUser() ||
-					UserProfile.isAdminUser()){
+			if(UserProfile.isElevatedUser())
+			{
 				var view = this.getView();
 				view.setTitle("Manage Settings - " + UserProfile.getOrgName());
 				var lastButtonText = Core.Ext.ToolsMenu.items.last().config.text;

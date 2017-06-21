@@ -102,7 +102,7 @@ define(['ext', "iweb/CoreModule", "./DatalayerBuilder",
 			},
 			
 			onLoadUserProfile: function(e){
-				if(UserProfile.isSuperUser() || UserProfile.isAdminUser()){
+				if(UserProfile.isElevatedUser()){
 					//add drag and drop support
 					var treeview = this.getView().getTree().getView();
 					treeview.addPlugin({
@@ -402,7 +402,7 @@ define(['ext', "iweb/CoreModule", "./DatalayerBuilder",
 					});
 				}
 				
-				if(UserProfile.isSuperUser() || UserProfile.isAdminUser()){
+				if(UserProfile.isElevatedUser()){
 					menuItems.push({
 							text: 'Folder Management',
 							menu: {

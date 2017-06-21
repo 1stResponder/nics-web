@@ -37,9 +37,16 @@ define(["ol",'ext', 'iweb/CoreModule','nics/modules/UserProfileModule'],
 		},
 		
 		render: function(container, feature) {
+
 			var props = feature.getProperties();
 			if (props && props.imageid && props.filename) {
-				var url = '/static/upload/image/' + props.filename;
+				//var url = '/static/upload/image/' + props.filename;
+				var imagepath = Core.Config.getProperty("image.url.path");
+
+				// adding end slash if not present
+				imagepath = imagepath.replace(/\/?$/, '/');
+
+				var url = imagepath + props.imageid + "/" + props.filename;
 				container.insert(0, new Ext.Img({
 					src: url,
 					style: {

@@ -34,8 +34,6 @@ define(['iweb/CoreModule','./I207ReportController' ],
 	return Ext.define('modules.report-opp.I207ReportView', {
 		extend: 'Ext.panel.Panel',
 		header: false,
-	 	
-
 		comboRef:'oppList207',
 		createRef:'create207',
 		viewRef:'view207',

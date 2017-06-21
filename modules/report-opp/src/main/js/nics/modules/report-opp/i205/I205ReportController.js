@@ -72,13 +72,16 @@ function(Core, UserProfile, AbstractReportController, I205ReportView, I205FormVi
 		},
 		
 		bindEvents: function(){
+
+			this.title="205";
+			
 			//Bind UI Elements
 			Core.EventManager.addListener("nics.incident.join", this.onJoinIncident.bind(this));
 			Core.EventManager.addListener("nics.incident.close", this.onCloseIncident.bind(this));
 			Core.EventManager.addListener("LoadReports205", this.onLoadReports.bind(this));
 			Core.EventManager.addListener("PrintReport205", this.onReportReady.bind(this));
 			Core.EventManager.addListener("CancelReport205", this.onCancel.bind(this));
-			Core.EventManager.fireEvent("nics.report.add", {title: "205", component: this.getView()});
+			Core.EventManager.fireEvent("nics.report.add", {title: this.title, component: this.getView()});
 			Core.EventManager.addListener("nics.user.profile.loaded", this.updateOrgCapsListener.bind(this));
 			this.bindOrgCaps = this.orgCapUpdate.bind(this);
 			
@@ -106,19 +109,28 @@ function(Core, UserProfile, AbstractReportController, I205ReportView, I205FormVi
 
 			if(orgcap.activeWeb){
 				this.getView().enable();
+				this.getView().up('tabpanel').down('tab[text=' + this.title +']').enable();
 			}
 			else{
 				this.getView().disable();
+				this.getView().up('tabpanel').down('tab[text=' + this.title +']').disable();
 			}
 		
 			UserProfile.setOrgCap(orgcap.cap.name,orgcap.activeWeb);
 		
-		},			
+		},
 		onJoinIncident: function(e, incident) {
 			this.incidentName = incident.name;
 			this.incidentId = incident.id;
 
-			this.getView().enable();
+			if(UserProfile.isOrgCapEnabled(this.orgCapName)){
+				this.getView().enable();
+				this.getView().up('tabpanel').down('tab[text=' + this.title +']').enable();
+			}
+			else{
+				this.getView().disable();
+				this.getView().up('tabpanel').down('tab[text=' + this.title +']').disable();
+			}
 
 			var endpoint = Core.Config.getProperty(UserProfile.REST_ENDPOINT);
 			this.hasFinalForm = false;

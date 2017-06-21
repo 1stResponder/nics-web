@@ -68,16 +68,23 @@ define(['ext', 'iweb/CoreModule','nics/modules/UserProfileModule'],
 		
 		load: function(){
 			
-			if(this.view.isManager){//User is an admin for this secured room
+			if(this.view.isManager)
+			{//User is an admin for this secured room
 				this.showGrids();
-			}else if((UserProfile.getSystemRoleId() == 4 || UserProfile.isSuperUser()) //user is a system admin or super user
-					&& this.collabRoomName !=  UserProfile.getIncidentMapName() && !this.readOnly){ 
-				if(this.collabRoomId != "myMap"){
+			}
+			else if(UserProfile.isElevatedUser() && this.collabRoomName != UserProfile.getIncidentMapName() && !this.readOnly)
+			{
+				if(this.collabRoomId != "myMap")
+				{
 					this.showGrids();
-				}else{
+				}
+				else
+				{
 					Ext.MessageBox.alert("Room Error", "Please join a collaboration room.");
 				}
-			}else{
+			}
+			else
+			{
 				Ext.MessageBox.alert("Permissions Error", "You do not have permissions to modify this room.");
 			}
 		},

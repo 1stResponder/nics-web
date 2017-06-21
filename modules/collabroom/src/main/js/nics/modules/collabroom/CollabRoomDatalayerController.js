@@ -50,6 +50,7 @@ define(['ext', 'iweb/CoreModule','nics/modules/UserProfileModule','nics/modules/
 			Core.EventManager.addListener("nics.collabroom.close", this.onCloseCollabRoom.bind(this));
 			Core.EventManager.addListener("nics.collabroom.activate", this.onActivateCollabRoom.bind(this));
 			Core.EventManager.addListener("nics.incident.join", this.onJoinIncident.bind(this));
+			Core.EventManager.addListener("nics.incident.close", this.onCloseIncident.bind(this));
 			Core.EventManager.addListener("nics.collabroom.data.select", this.selectRoomForLayer.bind(this));
 			Core.EventManager.addListener("nics.collabroom.data.add", this.onAddLayerToRoom.bind(this));
 			Core.EventManager.addListener(this.tokenHandlerTopic, this.addSecureLayer.bind(this));
@@ -182,6 +183,7 @@ define(['ext', 'iweb/CoreModule','nics/modules/UserProfileModule','nics/modules/
 	 	},
 	 	
 	 	onActivateCollabRoom: function(e, collabRoomId, readOnly, collabRoomName) {
+	 	
 	 		//Turn off current layers
 	 		this.updateLayers(false);
 	 		var contained = false;
@@ -194,6 +196,9 @@ define(['ext', 'iweb/CoreModule','nics/modules/UserProfileModule','nics/modules/
 	 		
 	 		if(collabRoomId != "myMap" && !contained){
 				
+				// Enable the panel
+				this.getView().enable();
+
 				//request layers
 				var url = Ext.String.format("{0}/datalayer/{1}/collabroom/{2}",
 					Core.Config.getProperty(UserProfile.REST_ENDPOINT),
@@ -289,6 +294,12 @@ define(['ext', 'iweb/CoreModule','nics/modules/UserProfileModule','nics/modules/
 					store.remove(record);
 				}
 			});
+
+			if(this.activeRooms.length == 0)
+			{
+				// Disables the panel
+				this.getView().disable();
+			}
 		},
 		
 		onJoinIncident: function(e, incident){
@@ -297,6 +308,11 @@ define(['ext', 'iweb/CoreModule','nics/modules/UserProfileModule','nics/modules/
 
 			//clear the grid
 			this.getView().getStore().removeAll();
+		},
+		
+		onCloseIncident: function(e, incidentId) {
+				// Disables the panel
+				this.getView().disable();
 		},
 		
 		addSecureLayer: function(event, layerObj){

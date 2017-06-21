@@ -109,9 +109,14 @@ define(['ext', 'iweb/CoreModule','nics/modules/UserProfileModule',
 							for(var i=0; i<response.data.length;i++){
 								var user = response.data[i];
 								var userData = [user.username, user.userid,	"", ""];
-								if(user.systemroleid == 4){
+
+								// This is not checking the user's system role but their role in the collabroom.
+								if(user.systemroleid == 4)
+								{
 									adminUsers.push(userData);
-								}else{
+								}
+								else
+								{
 									readWriteUsers.push(userData);
 								}
 							}

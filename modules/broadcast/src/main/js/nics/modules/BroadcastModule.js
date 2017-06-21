@@ -35,8 +35,9 @@ define([ "iweb/CoreModule", "./broadcast/BroadcastView" ],
 		BroadcastModule.prototype.load = function(){
 			
 			var alertsView = new BroadcastView();
+			alertsView.setDisabled(true); // Enables when user joins an incident
 			Core.View.addToSidePanel(alertsView);
-			alertsView.show();
+			//alertsView.show();
 		};
 		
 		return new BroadcastModule();

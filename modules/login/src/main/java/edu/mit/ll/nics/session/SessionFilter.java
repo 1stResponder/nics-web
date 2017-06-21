@@ -111,9 +111,9 @@ public class SessionFilter implements Filter {
 			req.getSession();
 			chain.doFilter(request, response);
 		}
-		//Redirect to the login page
+		//Invalid request, redirect to the login page
 		else{
-			redirect(resp);
+			//redirect(resp);
 		}
 	}
 	

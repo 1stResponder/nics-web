@@ -256,16 +256,6 @@ define(['ext', 'iweb/CoreModule','nics/modules/UserProfileModule', 'nics/modules
 			// TODO: nics-234 Do we want people in other orgs?
 			var orgId = profile.orgId;
 			Core.EventManager.fireEvent("nics.user.select.users.load", orgId);
-			
-			/*if (profile.isSuperUser)
-			{
-				this.getView().add({
-					xtype: 'button',
-					text: 'Delete selected users',
-					reference: 'deleteUsersButton',
-					handler: 'onDeleteUsers'
-				});
-			}*/
 		}
 	});
 });

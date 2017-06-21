@@ -67,7 +67,7 @@ public class WFSProxyServlet extends HttpServlet implements Servlet {
 		if(url.startsWith(Config.getInstance().getConfiguration().getString("endpoint.geoserver")) ||
 				url.startsWith(Config.getInstance().getConfiguration().getString("endpoint.upload"))){
 			String token = (String) SessionHolder.getData(request.getSession().getId(), SessionHolder.TOKEN);
-			headerOptions.put("Cookie", String.format("AMAuthCookie=%1$s;iPlanetDirectoryPro=%1$s", token));
+			//headerOptions.put("Cookie", String.format("AMAuthCookie=%1$s;iPlanetDirectoryPro=%1$s", token));
 		}
 		headerOptions.put("User-Agent", "");
         

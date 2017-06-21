@@ -27,7 +27,6 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-
 define(['iweb/CoreModule', 'ol', './TokenManager', './ArcGISFeatureRequestManager'], 
 		function(Core, ol, TokenManager, ArcGISFeatureRequest){
 	
@@ -48,6 +47,8 @@ define(['iweb/CoreModule', 'ol', './TokenManager', './ArcGISFeatureRequestManage
 			if(type == "wms"){
 				return this.buildWMSLayer(config.url, config.layername, config);
 			}else if(type == "wfs"){
+				return this.buildWFSLayer(config.url, config.layername, config);
+			}else if(type == "image"){
 				return this.buildWFSLayer(config.url, config.layername, config);
 			}else if(type == "kml"){
 				return this.buildKMLLayer(config.url, config.layername, config);

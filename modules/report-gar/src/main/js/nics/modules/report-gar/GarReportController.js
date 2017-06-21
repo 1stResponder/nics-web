@@ -69,13 +69,16 @@ function(Core, UserProfile, GarReportView, GarFormView) {
 		},
 		
 		bindEvents: function(){
+
+			this.title="GAR";
+
 			//Bind UI Elements
 			Core.EventManager.addListener("nics.incident.join", this.onJoinIncident.bind(this));
 			Core.EventManager.addListener("nics.incident.close", this.onCloseIncident.bind(this));
 			Core.EventManager.addListener("LoadGarReports", this.onLoadReports.bind(this));
 			Core.EventManager.addListener("PrintGarReport", this.onReportReady.bind(this));
 			Core.EventManager.addListener("CancelGarReport", this.onCancel.bind(this));
-			Core.EventManager.fireEvent("nics.report.add", {title: "GAR", component: this.getView()});
+			Core.EventManager.fireEvent("nics.report.add", {title: this.title, component: this.getView()});
 			Core.EventManager.addListener("nics.user.profile.loaded", this.updateOrgCapsListener.bind(this));
 		},
 	
@@ -101,9 +104,11 @@ function(Core, UserProfile, GarReportView, GarFormView) {
 
 			if(orgcap.activeWeb){
 				this.getView().enable();
+				this.getView().up('tabpanel').down('tab[text=' + this.title +']').enable();
 			}
 			else{
 				this.getView().disable();
+				this.getView().up('tabpanel').down('tab[text=' + this.title +']').disable();
 			}
 		
 			UserProfile.setOrgCap(orgcap.cap.name,orgcap.activeWeb);
@@ -113,9 +118,16 @@ function(Core, UserProfile, GarReportView, GarFormView) {
 		onJoinIncident: function(e, incident) {
 			
 			this.incidentName = incident.name;
-			this.incidentId = incident.id;
-			
-			this.getView().enable();
+			this.incidentId = incident.id;	
+
+			if(UserProfile.isOrgCapEnabled(this.orgCapName)){
+				this.getView().enable();
+				this.getView().up('tabpanel').down('tab[text=' + this.title +']').enable();
+			}
+			else{
+				this.getView().disable();
+				this.getView().up('tabpanel').down('tab[text=' + this.title +']').disable();
+			}
 
 			var endpoint = Core.Config.getProperty(UserProfile.REST_ENDPOINT);
 			//Load reports
