@@ -193,7 +193,50 @@ public class NICSSecurityFilter extends GenericFilterBean {
 			Object claimValue = c.getValue();
 
 			claimValuesByTypeMap.put(claimType, claimValue);
+			logger.debug(claimType + " : " + claimValue);
 		}
+
+		// Attempting to log in via Email Claim
+		if(claimValuesByTypeMap.containsKey("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress")) 
+		{
+			// email address claim
+			Object claimValue = claimValuesByTypeMap.get("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress");
+			String emailAddress = (String)claimValue;
+			logger.info("Looking up NICS user based on emailaddress claim: "+emailAddress);
+			loginWithEmailAddress(req, resp, fedAuthToken, emailAddress);
+		}
+		else // Custom SubClaim Type
+		{
+		    Object idpClaimValue = claimValuesByTypeMap.get("http://identityserver.thinktecture.com/claims/identityprovider");
+		    
+		    if(idpClaimValue != null) 
+		    {
+		    	String idpClaim = (String)idpClaimValue;
+		    	String subClaimType = "http://identityserver.thinktecture.com/claims/provider:" + idpClaim.toLowerCase();
+		    	Object subClaim = claimValuesByTypeMap.get(subClaimType);
+		    	JSONArray subClaimsJSONArray = new JSONArray(subClaim.toString());
+		    	Map<String, Object> subClaimValuesByTypeMap = new HashMap<String, Object>();
+		    	for(int i = 0; i < subClaimsJSONArray.length(); i++) {
+		    		JSONObject aSubClaimJSON = subClaimsJSONArray.getJSONObject(i);
+		    		String aSubClaimType = aSubClaimJSON.getString("Type");
+		    		String aSubClaimValue = aSubClaimJSON.getString("Value");
+					subClaimValuesByTypeMap.put(aSubClaimType, aSubClaimValue);
+		    	}
+		    	
+		    	String nameidentifierSubClaimValue = (String)subClaimValuesByTypeMap.get("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier");
+
+				if(nameidentifierSubClaimValue != null) {
+					
+					logger.info("Looking up NICS user based on emailaddress subClaim: " + nameidentifierSubClaimValue);
+					loginWithEmailAddress(req, resp, fedAuthToken, nameidentifierSubClaimValue);
+					
+				} else
+				{
+					throw new RuntimeException("Could not find emailaddress claim for identity provider: " + idpClaim);
+				}
+		    }
+		}
+
 
 		String username = fedAuthToken.getUserDetails().getUsername();
 
