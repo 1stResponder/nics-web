@@ -252,11 +252,10 @@ public class RegisterServlet extends HttpServlet implements Servlet {
 				}
 			} catch(Exception e) {
 				logger.error("Failed to retrieve workspaces or organization data", e);
-				throw e;
 			}
 			
 			
-		} catch (WebApplicationException | ProcessingException | URISyntaxException e) {
+		} catch (WebApplicationException | ProcessingException e) {
 			//logger.error("Failed to retrieve available workspaces", e);
 			req.setAttribute(ERROR_MESSAGE_KEY, REGISTER_ERROR_CONFIGURATION_MESSAGE);
 			req.setAttribute(ERROR_DESCRIPTION_KEY, REGISTER_ERROR_APIERROR_DESCRIPTION);
